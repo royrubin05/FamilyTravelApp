@@ -99,7 +99,7 @@ export async function parseTripDocument(formData: FormData) {
           "matched_city_key": "lowercase_city_key_for_images",
             "dates": "Start - End Date Year",
               "startDateISO": "YYYY-MM-DD",
-                "image_keyword": "Search term",
+                "image_keyword": "Arrival City Name ONLY (Do NOT use Origin)",
                   "travelers": [{ "id": "dad", "name": "Roy", "role": "Traveler" }],
                     "flights": [],
                       "hotels": [],
