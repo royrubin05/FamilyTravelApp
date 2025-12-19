@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Upload, FileText, Loader2, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { parseTripDocument } from "@/app/actions";
 
 interface UploadTripModalProps {
     isOpen: boolean;
@@ -12,7 +13,7 @@ interface UploadTripModalProps {
 
 export function UploadTripModal({ isOpen, onClose, onUploadComplete }: UploadTripModalProps) {
     const [isDragging, setIsDragging] = useState(false);
-    const [status, setStatus] = useState<"idle" | "uploading" | "parsing" | "complete">("idle");
+    const [status, setStatus] = useState<"idle" | "uploading" | "parsing" | "complete" | "error">("idle");
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -20,37 +21,43 @@ export function UploadTripModal({ isOpen, onClose, onUploadComplete }: UploadTri
         }
     };
 
-    const processFile = (file: File) => {
+    const processFile = async (file: File) => {
         setStatus("uploading");
+        const formData = new FormData();
+        formData.append("file", file);
 
-        // Simulate Upload
-        setTimeout(() => {
+        try {
             setStatus("parsing");
+            const result = await parseTripDocument(formData);
 
-            // Simulate AI Parsing
+            if (result.error) {
+                console.error(result.error);
+                setStatus("error");
+                return;
+            }
+
+            setStatus("complete");
+
+            // Ensure the new trip has an ID and Image logic
+            const newTrip = {
+                ...result,
+                id: result.destination?.toLowerCase() || `trip-${Date.now()}`,
+                // Use a default image if AI didn't provide one (or client logic handles fallback)
+                image: result.image_keyword
+                    ? `https://source.unsplash.com/random/800x600/?${result.image_keyword}`
+                    : "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop",
+                travelers: result.travelers || []
+            };
+
             setTimeout(() => {
-                setStatus("complete");
+                onUploadComplete(newTrip);
+                handleClose();
+            }, 1000);
 
-                // Mock Result
-                const newTrip = {
-                    id: `tokyo-${Date.now()}`,
-                    destination: "TOKYO",
-                    dates: "Summer 2025",
-                    image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1994&auto=format&fit=crop",
-                    travelers: [
-                        { id: "dad", name: "Dad", role: "Organizer", card: null },
-                        { id: "mom", name: "Mom", role: "Traveler", card: null }
-                    ]
-                };
-
-                // Delay closing to show success state
-                setTimeout(() => {
-                    onUploadComplete(newTrip);
-                    handleClose();
-                }, 1000);
-
-            }, 2000);
-        }, 1000);
+        } catch (e) {
+            console.error(e);
+            setStatus("error");
+        }
     };
 
     const handleClose = () => {
@@ -154,7 +161,29 @@ export function UploadTripModal({ isOpen, onClose, onUploadComplete }: UploadTri
                                     <CheckCircle className="h-8 w-8" />
                                 </div>
                                 <h3 className="text-lg font-medium text-white">Parser Successful!</h3>
-                                <p className="text-xs text-white/50 mt-1">Trip "Tokyo" has been added to your dashboard.</p>
+                                <p className="text-xs text-white/50 mt-1">Trip added to your dashboard.</p>
+                            </motion.div>
+                        )}
+
+                        {/* Error State */}
+                        {status === "error" && (
+                            <motion.div
+                                key="error"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="py-10 text-center"
+                            >
+                                <div className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4 text-red-500">
+                                    <X className="h-8 w-8" />
+                                </div>
+                                <h3 className="text-lg font-medium text-white">Parsing Failed</h3>
+                                <p className="text-xs text-white/50 mt-1 max-w-[200px] mx-auto">Could not extract data. Check API Key or file format.</p>
+                                <button
+                                    onClick={() => setStatus("idle")}
+                                    className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-xs"
+                                >
+                                    Try Again
+                                </button>
                             </motion.div>
                         )}
 

@@ -38,11 +38,22 @@ export default function TripContent() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.8 }}
-                    className="absolute inset-0 z-0"
+                    className="absolute inset-0 z-0 bg-neutral-900"
                 >
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 z-10" />
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={trip.image} alt={trip.destination} className="h-full w-full object-cover" />
+                    {trip.image ? (
+                        <img
+                            src={trip.image}
+                            alt={trip.destination}
+                            className="h-full w-full object-cover"
+                            onError={(e) => e.currentTarget.style.display = 'none'}
+                        />
+                    ) : (
+                        <div className="h-full w-full flex items-center justify-center bg-neutral-800">
+                            <span className="text-[20vw] font-serif text-white/5 select-none">{trip.destination.substring(0, 1)}</span>
+                        </div>
+                    )}
                 </motion.div>
             </AnimatePresence>
 
