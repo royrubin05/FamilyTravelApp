@@ -1,0 +1,95 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/client-name: gcloud
+    run.googleapis.com/client-version: 550.0.0
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/maxScale: '3'
+    run.googleapis.com/operation-id: a9e2f526-b519-4103-9275-af356c9f61b7
+    run.googleapis.com/urls: '["https://family-travel-app-805885329896.us-central1.run.app","https://family-travel-app-jbcpdo3upq-uc.a.run.app"]'
+    serving.knative.dev/creator: roy.rubin@gmail.com
+    serving.knative.dev/lastModifier: roy.rubin@gmail.com
+  creationTimestamp: '2025-12-19T22:47:42.274345Z'
+  generation: 1
+  labels:
+    cloud.googleapis.com/location: us-central1
+  name: family-travel-app
+  namespace: '805885329896'
+  resourceVersion: AAZGVd4NvCI
+  selfLink: /apis/serving.knative.dev/v1/namespaces/805885329896/services/family-travel-app
+  uid: ac988ff5-ba40-4a95-a090-c5276b85eba0
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 550.0.0
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: 'true'
+      labels:
+        client.knative.dev/nonce: bvxiciiuei
+        run.googleapis.com/startupProbeType: Default
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: GEMINI_API_KEY
+          value: AIzaSyBALdpS7TFZ9KRjqshg9FgTiiLjRw63LJA
+        image: us-central1-docker.pkg.dev/travelapp05/travel-app-repo/family-app:latest
+        volumeMounts:
+        - name: travel-data
+          mountPath: /app/src/data
+          subPath: data
+        - name: travel-data
+          mountPath: /app/public/images
+          subPath: public/images
+        - name: travel-data
+          mountPath: /app/public/documents
+          subPath: public/documents
+        ports:
+        - containerPort: 8080
+          name: http1
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 240
+      serviceAccountName: 805885329896-compute@developer.gserviceaccount.com
+      timeoutSeconds: 300
+      volumes:
+      - name: travel-data
+        csi:
+          driver: gcsfuse.run.googleapis.com
+          volumeAttributes:
+            bucketName: travelapp05-travel-data
+  traffic:
+  - latestRevision: true
+    percent: 100
+status:
+  address:
+    url: https://family-travel-app-jbcpdo3upq-uc.a.run.app
+  conditions:
+  - lastTransitionTime: '2025-12-19T22:47:51.870498Z'
+    status: 'True'
+    type: Ready
+  - lastTransitionTime: '2025-12-19T22:47:48.272468Z'
+    status: 'True'
+    type: ConfigurationsReady
+  - lastTransitionTime: '2025-12-19T22:47:51.825128Z'
+    status: 'True'
+    type: RoutesReady
+  latestCreatedRevisionName: family-travel-app-00001-wf2
+  latestReadyRevisionName: family-travel-app-00001-wf2
+  observedGeneration: 1
+  traffic:
+  - latestRevision: true
+    percent: 100
+    revisionName: family-travel-app-00001-wf2
+  url: https://family-travel-app-jbcpdo3upq-uc.a.run.app

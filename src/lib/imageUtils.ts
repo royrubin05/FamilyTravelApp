@@ -29,3 +29,19 @@ export function getDestinationImage(destination: string | undefined): string {
 
     return GENERIC_FALLBACK;
 }
+
+// Helper to generate candidate keys for image lookup (e.g. "Los Angeles, CA" -> ["los angeles, ca", "los angeles"])
+export function getNormalizedKeys(destination: string): string[] {
+    if (!destination) return [];
+    const clean = destination.toLowerCase().trim();
+    const keys = [clean];
+
+    // Attempt to strip state/country (e.g. "Los Angeles, CA" -> "Los Angeles")
+    if (clean.includes(",")) {
+        const cityOnly = clean.split(",")[0].trim();
+        if (cityOnly && cityOnly !== clean) {
+            keys.push(cityOnly);
+        }
+    }
+    return keys;
+}

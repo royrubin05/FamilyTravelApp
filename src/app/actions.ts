@@ -168,7 +168,36 @@ export async function parseTripDocument(formData: FormData) {
         .replace(/[\s_-]+/g, '-')
         .replace(/^-+|-+$/g, '');
       const newId = `${slug}-${date}`;
-      return { ...trip, id: newId };
+
+      // Validate & Dedup Source Documents
+      let validDocs = trip.sourceDocuments || [];
+      if (trip.sourceDocument) {
+        // Backwards compatibility for single doc field
+        validDocs.push({ url: trip.sourceDocument, name: trip.sourceFileName || "Document" });
+      }
+
+      // Deduplicate by URL
+      const uniqueDocs = new Map();
+      validDocs.forEach((d: any) => uniqueDocs.set(d.url, d));
+
+      // Check file existence
+      const finalDocs = Array.from(uniqueDocs.values()).filter((d: any) => {
+        try {
+          const localPath = path.join(process.cwd(), "public", d.url);
+          return fs.existsSync(localPath);
+        } catch (e) {
+          return false;
+        }
+      });
+
+      return {
+        ...trip,
+        id: newId,
+        sourceDocuments: finalDocs,
+        // Remove legacy single fields to suppress confusion
+        sourceDocument: undefined,
+        sourceFileName: undefined
+      };
     });
 
     // Persist to Disk (we already saved the file)

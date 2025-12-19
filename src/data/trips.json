@@ -1,11 +1,11 @@
 [
   {
-    "id": "tel-aviv-ori",
-    "destination": "TEL AVIV, ISRAEL",
-    "matched_city_key": "tel aviv",
+    "id": "tel-aviv-israel-2025-12-24",
+    "destination": "LOS ANGELES, CA",
+    "matched_city_key": "los angeles",
     "dates": "December 24, 2025",
     "startDateISO": "2025-12-24",
-    "image_keyword": "Tel Aviv",
+    "image_keyword": "Los Angeles",
     "travelers": [
       {
         "id": "ori",
@@ -28,11 +28,17 @@
     ],
     "hotels": [],
     "activities": [],
+    "sourceDocuments": [
+      {
+        "url": "/documents/1766185327420-itinerary_2025_10_21_0043.pdf",
+        "name": "itinerary_2025-10-21 0043.pdf"
+      }
+    ],
     "sourceDocument": "/documents/1766120778555-new_document.txt",
     "sourceFileName": "new_document.txt"
   },
   {
-    "id": "desert hot springs, ca",
+    "id": "desert-hot-springs-ca-2026-01-08",
     "destination": "DESERT HOT SPRINGS, CA",
     "dates": "January 8 - January 9, 2026",
     "startDateISO": "2026-01-08",
@@ -66,7 +72,7 @@
     "sourceFileName": "Gmail - Fwd_ Itinerary Confirmation.pdf"
   },
   {
-    "id": "miami",
+    "id": "miami-fl-2026-01-14",
     "destination": "MIAMI, FL",
     "matched_city_key": "miami",
     "dates": "January 14 - January 18, 2026",
@@ -164,7 +170,7 @@
     ]
   },
   {
-    "id": "tel-aviv",
+    "id": "tel-aviv-2026-02-08",
     "destination": "TEL AVIV",
     "matched_city_key": "tel aviv",
     "dates": "Feb 8 - Feb 16, 2026",
@@ -226,7 +232,7 @@
     "sourceFileName": "itinerary_2025-12-08 1809 (1).pdf"
   },
   {
-    "id": "miami-ori-2026",
+    "id": "miami-fl-2026-03-29",
     "destination": "MIAMI, FL",
     "matched_city_key": "miami",
     "dates": "March 29 - April 12, 2026",

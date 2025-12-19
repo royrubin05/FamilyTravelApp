@@ -12,6 +12,7 @@ interface SettingsModalProps {
     currentImages: Record<string, string>;
     currentSettings: { backgroundImage: string | null };
     onUpdateSettings: (newSettings: any) => void;
+    onUpdateImage: (city: string, url: string) => void;
 }
 
 export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, currentSettings, onUpdateSettings }: SettingsModalProps) {

@@ -7,9 +7,8 @@ import { User, Home, Plane, Building, Ticket, Share2, Check, Copy, X, FolderOpen
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTrips } from "@/context/TripContext";
-import { getDestinationImage, GENERIC_FALLBACK } from "@/lib/imageUtils";
-
-// ...
+import { getDestinationImage, GENERIC_FALLBACK, getNormalizedKeys } from "@/lib/imageUtils";
+import { getCheckInUrl } from "@/lib/airlineUtils";
 
 interface TripContentProps {
     destinationImages?: Record<string, string>;
@@ -59,8 +58,10 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
                         src={(() => {
                             // 1. Check dynamic images map first
                             if (destinationImages) {
-                                const key = trip.destination.toLowerCase().trim();
-                                if (destinationImages[key]) return destinationImages[key];
+                                const keys = getNormalizedKeys(trip.destination);
+                                for (const key of keys) {
+                                    if (destinationImages[key]) return destinationImages[key];
+                                }
                             }
 
                             // 2. Use trip image if valid
@@ -78,8 +79,10 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
 
                             // Check dynamic map first
                             if (destinationImages) {
-                                const key = trip.destination.toLowerCase().trim();
-                                if (destinationImages[key]) fallbackUrl = destinationImages[key];
+                                const keys = getNormalizedKeys(trip.destination);
+                                for (const key of keys) {
+                                    if (destinationImages[key]) fallbackUrl = destinationImages[key];
+                                }
                             }
 
                             if (target.src.includes(fallbackUrl) || target.src === GENERIC_FALLBACK) {
@@ -149,36 +152,50 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
                                                 <p className="text-xs text-white/50 uppercase tracking-wider">{flight.flightNumber}</p>
                                             </div>
                                             {flight.confirmation && (
-                                                <button
-                                                    onClick={() => handleCopyConfirmation(flight.confirmation)}
-                                                    className="group/code relative bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 px-4 py-2 rounded-lg backdrop-blur-md transition-all text-left w-full sm:w-auto min-w-[140px]"
-                                                    title="Copy Confirmation Code"
-                                                >
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <p className="text-[10px] text-green-400/60 uppercase tracking-widest leading-none mb-1">Confirmation</p>
-                                                            <p className="text-xl font-mono font-bold text-green-300 tracking-wider">
-                                                                {flight.confirmation}
-                                                            </p>
+                                                <div className="flex flex-col gap-2 items-end">
+                                                    <button
+                                                        onClick={() => handleCopyConfirmation(flight.confirmation)}
+                                                        className="group/code relative bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 px-4 py-2 rounded-lg backdrop-blur-md transition-all text-left w-full sm:w-auto min-w-[140px]"
+                                                        title="Copy Confirmation Code"
+                                                    >
+                                                        <div className="flex justify-between items-start">
+                                                            <div>
+                                                                <p className="text-[10px] text-green-400/60 uppercase tracking-widest leading-none mb-1">Confirmation</p>
+                                                                <p className="text-xl font-mono font-bold text-green-300 tracking-wider">
+                                                                    {flight.confirmation}
+                                                                </p>
+                                                            </div>
+                                                            <div className="opacity-0 group-hover/code:opacity-100 transition-opacity ml-3 mt-1">
+                                                                {copiedConfirmation === flight.confirmation ? (
+                                                                    <Check className="h-4 w-4 text-green-400" />
+                                                                ) : (
+                                                                    <Copy className="h-4 w-4 text-green-400/50" />
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <div className="opacity-0 group-hover/code:opacity-100 transition-opacity ml-3 mt-1">
-                                                            {copiedConfirmation === flight.confirmation ? (
-                                                                <Check className="h-4 w-4 text-green-400" />
-                                                            ) : (
-                                                                <Copy className="h-4 w-4 text-green-400/50" />
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    {copiedConfirmation === flight.confirmation && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, y: 5 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-green-400 text-xs px-2 py-1 rounded whitespace-nowrap"
+                                                        {copiedConfirmation === flight.confirmation && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, y: 5 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-green-400 text-xs px-2 py-1 rounded whitespace-nowrap"
+                                                            >
+                                                                Copied!
+                                                            </motion.div>
+                                                        )}
+                                                    </button>
+
+                                                    {getCheckInUrl(flight.airline) && (
+                                                        <a
+                                                            href={getCheckInUrl(flight.airline) as string}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-[10px] font-bold uppercase tracking-widest text-blue-300 hover:text-blue-200 flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-full border border-blue-500/20 transition-all"
                                                         >
-                                                            Copied!
-                                                        </motion.div>
+                                                            <span>Check In Online</span>
+                                                            <Share2 className="h-3 w-3 -rotate-45" />
+                                                        </a>
                                                     )}
-                                                </button>
+                                                </div>
                                             )}
                                         </div>
                                         <div className="flex justify-between items-center text-sm mb-4">

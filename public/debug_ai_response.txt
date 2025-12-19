@@ -29,6 +29,16 @@
     ],
     "hotels": [],
     "activities": [],
+    "sourceDocuments": [
+      {
+        "url": "/documents/1766120778555-new_document.txt",
+        "name": "new_document.txt"
+      },
+      {
+        "url": "/documents/1766185327420-itinerary_2025_10_21_0043.pdf",
+        "name": "itinerary_2025-10-21 0043.pdf"
+      }
+    ],
     "sourceDocument": "/documents/1766120778555-new_document.txt",
     "sourceFileName": "new_document.txt"
   },
@@ -149,8 +159,20 @@
       }
     ],
     "activities": [],
-    "sourceDocument": "/documents/1766120211000-gmail___your_trip_confirmation_lax_-_mia.pdf",
-    "sourceFileName": "Gmail - Your trip confirmation (LAX - MIA).pdf"
+    "sourceDocuments": [
+      {
+        "url": "/documents/adi-flight-miami.pdf",
+        "name": "Adi & Jonathan's Flight"
+      },
+      {
+        "url": "/documents/roy-flight-miami.pdf",
+        "name": "Roy's Flight"
+      },
+      {
+        "url": "/documents/hotel-booking-miami.pdf",
+        "name": "Hotel Booking Info"
+      }
+    ]
   },
   {
     "id": "tel-aviv",
