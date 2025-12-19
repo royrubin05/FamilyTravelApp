@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, Upload, FileText, Loader2, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { parseTripDocument } from "@/app/actions";
+import { saveTrip } from "@/app/trip-actions";
 
 interface UploadTripModalProps {
     isOpen: boolean;
@@ -36,23 +37,16 @@ export function UploadTripModal({ isOpen, onClose, onUploadComplete }: UploadTri
                 return;
             }
 
-            setStatus("complete");
-
-            // Ensure the new trip has an ID and Image logic
-            const newTrip = {
-                ...result,
-                id: result.destination?.toLowerCase() || `trip-${Date.now()}`,
-                // Use a default image if AI didn't provide one (or client logic handles fallback)
-                image: result.image_keyword
-                    ? `https://source.unsplash.com/random/800x600/?${result.image_keyword}`
-                    : "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop",
-                travelers: result.travelers || []
-            };
-
-            setTimeout(() => {
-                onUploadComplete(newTrip);
-                handleClose();
-            }, 1000);
+            if (result.success) {
+                setStatus("complete");
+                // Server handled saving and merging.
+                setTimeout(() => {
+                    onUploadComplete(null); // No specific new trip, whole list updated
+                    handleClose();
+                }, 1000);
+            } else {
+                setStatus("error");
+            }
 
         } catch (e) {
             console.error(e);

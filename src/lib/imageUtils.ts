@@ -1,0 +1,30 @@
+export const DESTINATION_IMAGES: Record<string, string> = {
+    "london": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1974&auto=format&fit=crop",
+    "paris": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1974&auto=format&fit=crop",
+    "aspen": "https://images.unsplash.com/photo-1551524559-8af4e66a3236?q=80&w=1974&auto=format&fit=crop",
+    "tel aviv": "/images/destinations/tel-aviv-real.jpg",
+
+    "new york": "https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?q=80&w=2070&auto=format&fit=crop",
+    "tokyo": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1994&auto=format&fit=crop",
+    "rome": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=1996&auto=format&fit=crop",
+    "berlin": "https://images.unsplash.com/photo-1560969184-10fe8719e047?q=80&w=2070&auto=format&fit=crop",
+    "amsterdam": "https://images.unsplash.com/photo-1512470876302-687da745313d?q=80&w=2070&auto=format&fit=crop"
+};
+
+// A high-quality generic travel image (airplane wing or clouds)
+export const GENERIC_FALLBACK = "https://images.unsplash.com/photo-1436491865332-7a61a109a33e?q=80&w=2074&auto=format&fit=crop";
+
+export function getDestinationImage(destination: string | undefined): string {
+    if (!destination) return GENERIC_FALLBACK;
+
+    const key = destination.toLowerCase().trim();
+
+    // Check direct match or partial match for mapped cities
+    for (const [city, url] of Object.entries(DESTINATION_IMAGES)) {
+        if (key.includes(city)) {
+            return url;
+        }
+    }
+
+    return GENERIC_FALLBACK;
+}

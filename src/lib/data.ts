@@ -34,9 +34,9 @@ export const TRIPS = [
                 }
             },
             {
-                id: "kids",
-                name: "Kids",
-                role: "Travelers",
+                id: "ori",
+                name: "Ori",
+                role: "Traveler",
                 card: {
                     type: "activity",
                     title: "Harry Potter World",
@@ -46,6 +46,12 @@ export const TRIPS = [
                     status: "Tickets Ready",
                     qrCode: true
                 }
+            },
+            {
+                id: "jonathan",
+                name: "Jonathan",
+                role: "Traveler",
+                card: null
             }
         ]
     },
@@ -82,8 +88,14 @@ export const TRIPS = [
                 card: null
             },
             {
-                id: "kids",
-                name: "Kids",
+                id: "ori",
+                name: "Ori",
+                role: "Ski School",
+                card: null
+            },
+            {
+                id: "jonathan",
+                name: "Jonathan",
                 role: "Ski School",
                 card: null
             }

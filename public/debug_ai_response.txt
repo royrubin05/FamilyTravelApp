@@ -1,0 +1,260 @@
+```json
+[
+  {
+    "id": "tel-aviv-ori",
+    "destination": "TEL AVIV, ISRAEL",
+    "matched_city_key": "tel aviv",
+    "dates": "December 24, 2025",
+    "startDateISO": "2025-12-24",
+    "image_keyword": "Tel Aviv",
+    "travelers": [
+      {
+        "id": "ori",
+        "name": "Ori",
+        "role": "Traveler",
+        "evidence": "Found 'ORI' in flight confirmation"
+      }
+    ],
+    "flights": [
+      {
+        "airline": "EL AL ISRAEL (LY)",
+        "flightNumber": "5",
+        "departure": "Wed, Dec 24, 2025 12:45 AM (Ben Gurion - TLV)",
+        "arrival": "Wed, Dec 24, 2025 6:00 AM (Los Angeles Intl - LAX)",
+        "confirmation": "3UINJQ",
+        "travelers": [
+          "Ori"
+        ]
+      }
+    ],
+    "hotels": [],
+    "activities": [],
+    "sourceDocument": "/documents/1766120778555-new_document.txt",
+    "sourceFileName": "new_document.txt"
+  },
+  {
+    "id": "desert hot springs, ca",
+    "destination": "DESERT HOT SPRINGS, CA",
+    "dates": "January 8 - January 9, 2026",
+    "startDateISO": "2026-01-08",
+    "image": "https://placehold.co/800x600/101010/FFF?text=Desert%20Hot%20Springs%20Spa",
+    "image_keyword": "Desert Hot Springs Spa",
+    "travelers": [
+      {
+        "id": "mom",
+        "name": "Adi",
+        "role": "Organizer",
+        "evidence": "Manual Entry"
+      },
+      {
+        "id": "dad",
+        "name": "Roy",
+        "role": "Recipient",
+        "evidence": "Manual Entry"
+      }
+    ],
+    "flights": [],
+    "hotels": [
+      {
+        "name": "Two Bunch Palms",
+        "address": "67425 Two Bunch Palms Trail, Desert Hot Springs, CA 92240, United States",
+        "checkIn": "Thursday, January 8, 2026",
+        "checkOut": "Friday, January 9, 2026",
+        "confirmation": "47527SF033156"
+      }
+    ],
+    "sourceDocument": "/documents/1766119110704-gmail___fwd__itinerary_confirmation.pdf",
+    "sourceFileName": "Gmail - Fwd_ Itinerary Confirmation.pdf"
+  },
+  {
+    "id": "miami",
+    "destination": "MIAMI, FL",
+    "matched_city_key": "miami",
+    "dates": "January 14 - January 18, 2026",
+    "startDateISO": "2026-01-14",
+    "image_keyword": "Miami Beach",
+    "travelers": [
+      {
+        "id": "mom",
+        "name": "Adi",
+        "role": "Traveler"
+      },
+      {
+        "id": "jonathan",
+        "name": "Jonathan",
+        "role": "Traveler"
+      },
+      {
+        "id": "dad",
+        "name": "Roy",
+        "role": "Traveler"
+      }
+    ],
+    "flights": [
+      {
+        "airline": "American Airlines (AA)",
+        "flightNumber": "2129",
+        "departure": "Wed, Jan 14, 2026 7:00 AM (Los Angeles Intl - LAX)",
+        "arrival": "Wed, Jan 14, 2026 2:56 PM (Miami - MIA)",
+        "confirmation": "ALNMWW",
+        "travelers": [
+          "Adi",
+          "Jonathan"
+        ]
+      },
+      {
+        "airline": "American Airlines (AA)",
+        "flightNumber": "1994",
+        "departure": "Sun, Jan 18, 2026 1:40 PM (Miami - MIA)",
+        "arrival": "Sun, Jan 18, 2026 4:40 PM (Los Angeles Intl - LAX)",
+        "confirmation": "ALNMWW",
+        "travelers": [
+          "Adi",
+          "Jonathan"
+        ]
+      },
+      {
+        "airline": "American Airlines (AA)",
+        "flightNumber": "2129",
+        "departure": "Mon, Jan 12, 2026 7:00 AM (Los Angeles Intl - LAX)",
+        "arrival": "Mon, Jan 12, 2026 2:56 PM (Miami - MIA)",
+        "confirmation": "ALBAOD",
+        "travelers": [
+          "Roy"
+        ]
+      },
+      {
+        "airline": "American Airlines (AA)",
+        "flightNumber": "1994",
+        "departure": "Sun, Jan 18, 2026 1:40 PM (Miami - MIA)",
+        "arrival": "Sun, Jan 18, 2026 4:40 PM (Los Angeles Intl - LAX)",
+        "confirmation": "ALBAOD",
+        "travelers": [
+          "Roy"
+        ]
+      }
+    ],
+    "hotels": [
+      {
+        "name": "The Diplomat Beach Resort, Curio Collection by Hilton",
+        "address": "3555 South Ocean Drive Hollywood, FL 33019",
+        "checkIn": "Wednesday, January 14, 2026",
+        "checkOut": "Sunday, January 18, 2026",
+        "confirmation": "WQKEI8GJ",
+        "roomType": "Diplomat Suite",
+        "travelers": [
+          "Roy",
+          "Adi"
+        ]
+      }
+    ],
+    "activities": [],
+    "sourceDocument": "/documents/1766120211000-gmail___your_trip_confirmation_lax_-_mia.pdf",
+    "sourceFileName": "Gmail - Your trip confirmation (LAX - MIA).pdf"
+  },
+  {
+    "id": "tel-aviv",
+    "destination": "TEL AVIV",
+    "matched_city_key": "tel aviv",
+    "dates": "Feb 8 - Feb 16, 2026",
+    "startDateISO": "2026-02-08",
+    "image": "/images/destinations/tel-aviv-real.jpg",
+    "image_keyword": "Tel Aviv",
+    "travelers": [
+      {
+        "id": "mom",
+        "name": "Adi",
+        "role": "Traveler"
+      }
+    ],
+    "flights": [
+      {
+        "airline": "UNITED (UA)",
+        "flightNumber": "1635",
+        "departure": "Sun, Feb 8, 2026 12:40 PM (Los Angeles Intl - LAX)",
+        "arrival": "Sun, Feb 8, 2026 8:35 PM (Washington Dulles Intl - IAD)",
+        "confirmation": "J8TG15",
+        "travelers": [
+          "Adi"
+        ]
+      },
+      {
+        "airline": "UNITED (UA)",
+        "flightNumber": "72",
+        "departure": "Sun, Feb 8, 2026 10:40 PM (Washington Dulles Intl - IAD)",
+        "arrival": "Mon, Feb 9, 2026 4:30 PM (Ben Gurion - TLV)",
+        "confirmation": "J8TG15",
+        "travelers": [
+          "Adi"
+        ]
+      },
+      {
+        "airline": "UNITED (UA)",
+        "flightNumber": "9121",
+        "departure": "Mon, Feb 16, 2026 5:15 AM (Ben Gurion - TLV)",
+        "arrival": "Mon, Feb 16, 2026 8:55 AM (Frankfurt Main - FRA)",
+        "confirmation": "J8TG15",
+        "travelers": [
+          "Adi"
+        ]
+      },
+      {
+        "airline": "UNITED (UA)",
+        "flightNumber": "8845",
+        "departure": "Mon, Feb 16, 2026 10:25 AM (Frankfurt Main - FRA)",
+        "arrival": "Mon, Feb 16, 2026 1:05 PM (Los Angeles Intl - LAX)",
+        "confirmation": "J8TG15",
+        "travelers": [
+          "Adi"
+        ]
+      }
+    ],
+    "hotels": [],
+    "activities": [],
+    "sourceDocument": "/documents/1766119614365-itinerary_2025_12_08_1809__1_.pdf",
+    "sourceFileName": "itinerary_2025-12-08 1809 (1).pdf"
+  },
+  {
+    "id": "miami-ori-2026",
+    "destination": "MIAMI, FL",
+    "matched_city_key": "miami",
+    "dates": "March 29 - April 12, 2026",
+    "startDateISO": "2026-03-29",
+    "image_keyword": "Miami Beach",
+    "travelers": [
+      {
+        "id": "ori",
+        "name": "Ori",
+        "role": "Traveler",
+        "evidence": "Found 'ORI' in flight confirmation"
+      }
+    ],
+    "flights": [
+      {
+        "airline": "EL AL ISRAEL (LY)",
+        "flightNumber": "17",
+        "departure": "Sun, Mar 29, 2026 1:00 AM (Ben Gurion - TLV)",
+        "arrival": "Sun, Mar 29, 2026 7:50 AM (Miami Intl - MIA)",
+        "confirmation": "BOQ3DD",
+        "travelers": [
+          "Ori"
+        ]
+      },
+      {
+        "airline": "EL AL ISRAEL (LY)",
+        "flightNumber": "106",
+        "departure": "Sat, Apr 11, 2026 11:15 PM (Los Angeles Intl - LAX)",
+        "arrival": "Sun. Apr. 12, 2026 11:10 PM (Ben Gurion - TLV)",
+        "confirmation": "BOQ3DD",
+        "travelers": [
+          "Ori"
+        ]
+      }
+    ],
+    "hotels": [],
+    "activities": [],
+    "sourceDocument": "/documents/1766120778555-new_document.txt",
+    "sourceFileName": "new_document.txt"
+  }
+]
+```
