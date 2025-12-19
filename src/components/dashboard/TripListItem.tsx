@@ -26,13 +26,20 @@ export function TripListItem({ id, destination, dates, image, travelerCount }: T
                 className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm transition-colors group"
             >
                 {/* Small Thumbnail */}
-                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-white/10 flex items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                        src={image}
+                        src={image || "/placeholder.jpg"}
                         alt={destination}
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement?.classList.add('fallback-icon');
+                        }}
                         className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                     />
+                    <div className="absolute inset-0 flex items-center justify-center -z-10">
+                        <span className="text-xs font-serif text-white/30">{destination.substring(0, 2)}</span>
+                    </div>
                 </div>
 
                 {/* Data Columns */}
