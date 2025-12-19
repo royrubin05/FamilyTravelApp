@@ -47,4 +47,8 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 - **Framework**: Next.js 14 (App Router)
 - **Styling**: Tailwind CSS + Framer Motion
 - **AI**: Google Gemini 1.5 Flash (`@google/generative-ai`)
-- **PDF**: `pdf-parse`
+### 6. Using with Antigravity (Agent)
+1.  **Clone** the repository on your new machine.
+2.  **Open Antigravity** and select **"Add Folder"**.
+3.  Choose the `FamilyTravelApp` directory.
+4.  The agent will automatically index the codebase and be ready to assist (the `task.md` and context will start fresh, but the code structure is self-documenting).
