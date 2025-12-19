@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FamilyTravelApp
+
+A data-centric family travel dashboard built with Next.js, featuring real AI trip parsing (Google Gemini), a list-based UI, and mobile optimization.
+
+## Features
+- **Dashboard**: "Upcoming" and "Completed" tabs for organizing trips.
+- **AI Import**: Upload PDF itineraries to automatically extract details (Destination, Dates, Travelers).
+- **Responsive**: Fully optimized for mobile and desktop.
+- **Visuals**: Auto-fallback for missing images; sleek dark mode UI.
 
 ## Getting Started
 
-First, run the development server:
+To run this project on another computer:
 
+### 1. Prerequisite
+Ensure you have **Node.js** (v18+) and **git** installed.
+
+### 2. Clone the Repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/royrubin05/FamilyTravelApp.git
+cd FamilyTravelApp
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Install Dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Configure Environment
+1. Copy the example env file:
+   ```bash
+   cp .env.example .env.local
+   ```
+2. Open `.env.local` and add your **Google Gemini API Key**:
+   ```
+   GEMINI_API_KEY=your_key_here
+   ```
+   (Get a free key at [Google AI Studio](https://aistudio.google.com))
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 5. Run the App
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech Stack
+- **Framework**: Next.js 14 (App Router)
+- **Styling**: Tailwind CSS + Framer Motion
+- **AI**: Google Gemini 1.5 Flash (`@google/generative-ai`)
+- **PDF**: `pdf-parse`
