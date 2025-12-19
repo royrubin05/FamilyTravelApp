@@ -2,7 +2,7 @@ export const DESTINATION_IMAGES: Record<string, string> = {
     "london": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1974&auto=format&fit=crop",
     "paris": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1974&auto=format&fit=crop",
     "aspen": "https://images.unsplash.com/photo-1551524559-8af4e66a3236?q=80&w=1974&auto=format&fit=crop",
-    "tel aviv": "/images/destinations/tel-aviv-real.jpg",
+    "tel aviv": "/images/destinations/tel-aviv.png",
 
     "new york": "https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?q=80&w=2070&auto=format&fit=crop",
     "tokyo": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1994&auto=format&fit=crop",

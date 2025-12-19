@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SmartCard } from "@/components/journey/SmartCard";
-import { User, Home, Plane, Building, Ticket } from "lucide-react";
+import { User, Home, Plane, Building, Ticket, Share2, Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTrips } from "@/context/TripContext";
@@ -13,15 +13,16 @@ import { getDestinationImage, GENERIC_FALLBACK } from "@/lib/imageUtils";
 
 interface TripContentProps {
     destinationImages?: Record<string, string>;
+    initialTrip?: any;
 }
 
-export default function TripContent({ destinationImages }: TripContentProps) {
+export default function TripContent({ destinationImages, initialTrip }: TripContentProps) {
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
     const { trips } = useTrips();
 
-    // Find trip from Context instead of static data
-    const trip = trips.find((t) => t.id === id) || trips[0];
+    // Prioritize initial SSR trip, then Context lookup, then fallback
+    const trip = initialTrip || trips.find((t) => t.id === id) || trips[0];
 
     // Derived state for sections
     const flights = trip.flights || [];
@@ -30,6 +31,13 @@ export default function TripContent({ destinationImages }: TripContentProps) {
     const hasDetails = flights.length > 0 || hotels.length > 0 || activities.length > 0;
 
     const [activeTab, setActiveTab] = useState<"overview" | "itinerary">("overview");
+    const [isShared, setIsShared] = useState(false);
+
+    const handleShare = () => {
+        navigator.clipboard.writeText(window.location.href);
+        setIsShared(true);
+        setTimeout(() => setIsShared(false), 2000);
+    };
 
     return (
         <div className="relative min-h-screen w-full bg-black text-white font-sans selection:bg-white/30 pb-20">
@@ -71,10 +79,10 @@ export default function TripContent({ destinationImages }: TripContentProps) {
                             }
                             target.src = fallbackUrl;
                         }}
-                        className="h-full w-full object-cover opacity-30"
+                        className="h-full w-full object-cover opacity-50"
                     />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/50" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
             </div>
 
             {/* Top Navigation */}
@@ -82,8 +90,17 @@ export default function TripContent({ destinationImages }: TripContentProps) {
                 <Link href="/" className="opacity-80 hover:opacity-100 transition-opacity p-2 -ml-2 bg-black/20 rounded-full backdrop-blur-md">
                     <Home className="h-6 w-6" />
                 </Link>
-                <div className="bg-black/20 rounded-full px-4 py-1 backdrop-blur-md border border-white/10">
-                    <span className="text-xs uppercase tracking-widest font-bold">{trip.dates}</span>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleShare}
+                        className="p-2 bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-md border border-white/10 transition-all text-white/80 hover:text-white"
+                        title="Share Trip"
+                    >
+                        {isShared ? <Check className="h-4 w-4 text-green-400" /> : <Share2 className="h-4 w-4" />}
+                    </button>
+                    <div className="bg-black/20 rounded-full px-4 py-1 backdrop-blur-md border border-white/10">
+                        <span className="text-xs uppercase tracking-widest font-bold">{trip.dates}</span>
+                    </div>
                 </div>
             </div>
 
@@ -230,6 +247,7 @@ export default function TripContent({ destinationImages }: TripContentProps) {
 
                 </div>
             </div>
+
         </div>
     );
 }
