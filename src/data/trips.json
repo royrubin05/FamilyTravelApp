@@ -148,8 +148,20 @@
       }
     ],
     "activities": [],
-    "sourceDocument": "/documents/1766120211000-gmail___your_trip_confirmation_lax_-_mia.pdf",
-    "sourceFileName": "Gmail - Your trip confirmation (LAX - MIA).pdf"
+    "sourceDocuments": [
+      {
+        "url": "/documents/1766121652798 -gmail___your_trip_confirmation__lax___mia_.pdf",
+        "name": "Adi & Jonathan's Flight"
+      },
+      {
+        "url": "/documents/1766121615833 -44gmail___your_trip_confirmation__lax___mia_.pdf",
+        "name": "Roy's Flight"
+      },
+      {
+        "url": "/documents/1766121896436 -242_confirmation.pdf ",
+        "name": "Hotel Booking Info"
+      }
+    ]
   },
   {
     "id": "tel-aviv",

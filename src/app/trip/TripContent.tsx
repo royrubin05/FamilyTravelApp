@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SmartCard } from "@/components/journey/SmartCard";
-import { User, Home, Plane, Building, Ticket, Share2, Check } from "lucide-react";
+import { User, Home, Plane, Building, Ticket, Share2, Check, Copy, X, FolderOpen } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTrips } from "@/context/TripContext";
@@ -38,6 +38,15 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
         setIsShared(true);
         setTimeout(() => setIsShared(false), 2000);
     };
+
+    const [copiedConfirmation, setCopiedConfirmation] = useState<string | null>(null);
+    const handleCopyConfirmation = (code: string) => {
+        navigator.clipboard.writeText(code);
+        setCopiedConfirmation(code);
+        setTimeout(() => setCopiedConfirmation(null), 2000);
+    };
+
+    const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
 
     return (
         <div className="relative min-h-screen w-full bg-black text-white font-sans selection:bg-white/30 pb-20">
@@ -93,10 +102,17 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
                 <div className="flex items-center gap-3">
                     <button
                         onClick={handleShare}
-                        className="p-2 bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-md border border-white/10 transition-all text-white/80 hover:text-white"
+                        className="flex items-center gap-2 px-3 py-2 bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-md border border-white/10 transition-all text-white/80 hover:text-white"
                         title="Share Trip"
                     >
-                        {isShared ? <Check className="h-4 w-4 text-green-400" /> : <Share2 className="h-4 w-4" />}
+                        {isShared ? (
+                            <>
+                                <Check className="h-4 w-4 text-green-400" />
+                                <span className="text-xs font-bold text-green-400 uppercase tracking-widest">Copied!</span>
+                            </>
+                        ) : (
+                            <Share2 className="h-4 w-4" />
+                        )}
                     </button>
                     <div className="bg-black/20 rounded-full px-4 py-1 backdrop-blur-md border border-white/10">
                         <span className="text-xs uppercase tracking-widest font-bold">{trip.dates}</span>
@@ -133,9 +149,36 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
                                                 <p className="text-xs text-white/50 uppercase tracking-wider">{flight.flightNumber}</p>
                                             </div>
                                             {flight.confirmation && (
-                                                <div className="bg-white/10 px-3 py-1 rounded text-xs font-mono">
-                                                    {flight.confirmation}
-                                                </div>
+                                                <button
+                                                    onClick={() => handleCopyConfirmation(flight.confirmation)}
+                                                    className="group/code relative bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 px-4 py-2 rounded-lg backdrop-blur-md transition-all text-left w-full sm:w-auto min-w-[140px]"
+                                                    title="Copy Confirmation Code"
+                                                >
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <p className="text-[10px] text-green-400/60 uppercase tracking-widest leading-none mb-1">Confirmation</p>
+                                                            <p className="text-xl font-mono font-bold text-green-300 tracking-wider">
+                                                                {flight.confirmation}
+                                                            </p>
+                                                        </div>
+                                                        <div className="opacity-0 group-hover/code:opacity-100 transition-opacity ml-3 mt-1">
+                                                            {copiedConfirmation === flight.confirmation ? (
+                                                                <Check className="h-4 w-4 text-green-400" />
+                                                            ) : (
+                                                                <Copy className="h-4 w-4 text-green-400/50" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {copiedConfirmation === flight.confirmation && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 5 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-green-400 text-xs px-2 py-1 rounded whitespace-nowrap"
+                                                        >
+                                                            Copied!
+                                                        </motion.div>
+                                                    )}
+                                                </button>
                                             )}
                                         </div>
                                         <div className="flex justify-between items-center text-sm mb-4">
@@ -231,19 +274,91 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
                         </div>
                     )}
 
-                    {/* Source Document Download - Moved to Bottom */}
-                    {trip.sourceDocument && (
-                        <div className="pt-12 flex justify-center pb-20">
-                            <a
-                                href={trip.sourceDocument}
-                                download={trip.sourceFileName || "trip-source.pdf"}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl backdrop-blur-md text-sm font-medium transition-all"
-                            >
-                                <Ticket className="h-4 w-4" />
-                                Download Source Document
-                            </a>
-                        </div>
-                    )}
+                    {/* Source Documents Section */}
+                    {(() => {
+                        const docs = [];
+                        if (trip.sourceDocuments && Array.isArray(trip.sourceDocuments)) {
+                            docs.push(...trip.sourceDocuments);
+                        } else if (trip.sourceDocument) {
+                            docs.push({ url: trip.sourceDocument, name: trip.sourceFileName || "Source Document" });
+                        }
+
+                        if (docs.length === 0) return null;
+
+                        return (
+                            <>
+                                <div className="pt-12 flex flex-col items-center gap-4 pb-20">
+                                    {docs.length > 1 ? (
+                                        <button
+                                            onClick={() => setIsDocsModalOpen(true)}
+                                            className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl backdrop-blur-md text-sm font-medium transition-all w-full max-w-xs justify-center group"
+                                        >
+                                            <FolderOpen className="h-4 w-4 text-white/70 group-hover:text-amber-300 transition-colors" />
+                                            <span>Download {docs.length} Source Documents</span>
+                                        </button>
+                                    ) : (
+                                        <a
+                                            href={docs[0].url}
+                                            download={docs[0].name}
+                                            className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl backdrop-blur-md text-sm font-medium transition-all w-full max-w-xs justify-center"
+                                        >
+                                            <Ticket className="h-4 w-4 shrink-0" />
+                                            <span className="truncate max-w-[250px]">{docs[0].name}</span>
+                                        </a>
+                                    )}
+                                </div>
+
+                                {/* Source Docs Modal */}
+                                <AnimatePresence>
+                                    {isDocsModalOpen && (
+                                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                onClick={() => setIsDocsModalOpen(false)}
+                                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                                            />
+                                            <motion.div
+                                                initial={{ scale: 0.95, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                exit={{ scale: 0.95, opacity: 0 }}
+                                                className="relative w-full max-w-md bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden"
+                                            >
+                                                <div className="flex justify-between items-center mb-6">
+                                                    <h3 className="font-serif text-xl">Source Documents</h3>
+                                                    <button onClick={() => setIsDocsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                                        <X className="h-5 w-5 opacity-70" />
+                                                    </button>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    {docs.map((doc: any, idx: number) => (
+                                                        <a
+                                                            key={idx}
+                                                            href={doc.url}
+                                                            download={doc.name}
+                                                            className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-xl transition-all group"
+                                                        >
+                                                            <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 group-hover:text-amber-300 transition-colors">
+                                                                <Ticket className="h-5 w-5" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-medium text-sm truncate">{doc.name}</p>
+                                                                <p className="text-xs text-white/40 truncate">PDF Document</p>
+                                                            </div>
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0">
+                                                                <Copy className="h-4 w-4 rotate-180" /> {/* Using Copy as 'Download' icon approximation or just generic arrow */}
+                                                            </div>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        </div>
+                                    )}
+                                </AnimatePresence>
+                            </>
+                        );
+                    })()}
 
                 </div>
             </div>
