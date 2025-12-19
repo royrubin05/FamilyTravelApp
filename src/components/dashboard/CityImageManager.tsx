@@ -19,8 +19,8 @@ export function CityImageManager({ isOpen, onClose, initialImages, onUpdate, emb
     const [images, setImages] = useState(initialImages);
     const [uploadingCity, setUploadingCity] = useState<string | null>(null);
 
-    // Collect all unique destinations from trips
-    const tripCities = new Set(trips.map(t => t.destination ? t.destination.toLowerCase().trim() : ""));
+    // Collect all unique destinations from trips, preferring the normalized key
+    const tripCities = new Set(trips.map(t => (t.matched_city_key || t.destination || "").toLowerCase().trim()));
     // Also include cities we have images for, even if not in current trips
     Object.keys(images).forEach(k => tripCities.add(k));
     tripCities.delete(""); // Remove empty

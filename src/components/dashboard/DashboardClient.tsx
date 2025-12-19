@@ -14,13 +14,15 @@ import { Settings } from "lucide-react";
 interface DashboardClientProps {
   initialImages: Record<string, string>;
   initialTrips: any[];
+  initialSettings: { backgroundImage: string | null };
 }
 
-export default function DashboardClient({ initialImages, initialTrips }: DashboardClientProps) {
+export default function DashboardClient({ initialImages, initialTrips, initialSettings }: DashboardClientProps) {
   const router = useRouter();
   const [filter, setFilter] = useState("all");
   const [statusTab, setStatusTab] = useState<"upcoming" | "completed">("upcoming");
   const { trips, addTrip, setTrips } = useTrips(); // We need to expose setTrips from context first!
+  const [currentSettings, setCurrentSettings] = useState(initialSettings);
 
   // Sync Server Data to Client Context on Mount
   useEffect(() => {
@@ -56,6 +58,11 @@ export default function DashboardClient({ initialImages, initialTrips }: Dashboa
   const handleImageUpdate = (city: string, url: string) => {
     setCurrentImages(prev => ({ ...prev, [city]: url }));
     router.refresh(); // Ensure server components (TripPage) get fresh data
+  };
+
+  const handleUpdateSettings = (newSettings: any) => {
+    setCurrentSettings(newSettings);
+    router.refresh();
   };
 
   // Extract unique members from all trips (using current state)
@@ -100,7 +107,12 @@ export default function DashboardClient({ initialImages, initialTrips }: Dashboa
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white p-4 md:p-8 font-sans">
+    <div
+      className="min-h-screen bg-neutral-950 text-white p-4 md:p-8 font-sans transition-all duration-700 bg-cover bg-center bg-fixed"
+      style={{
+        backgroundImage: currentSettings?.backgroundImage ? `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${currentSettings.backgroundImage})` : undefined
+      }}
+    >
 
       {/* Header */}
       <header className="flex justify-between items-center mb-8 max-w-4xl mx-auto">
@@ -132,6 +144,8 @@ export default function DashboardClient({ initialImages, initialTrips }: Dashboa
         onClose={() => setIsSettingsOpen(false)}
         currentImages={currentImages}
         onUpdateImage={handleImageUpdate}
+        currentSettings={currentSettings}
+        onUpdateSettings={handleUpdateSettings}
       />
 
       {/* Status Tabs */}
