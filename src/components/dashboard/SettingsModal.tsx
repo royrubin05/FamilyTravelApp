@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2 } from "lucide-react";
+import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CityImageManager } from "./CityImageManager";
 import { useState, useRef } from "react";
@@ -16,8 +16,9 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, currentSettings, onUpdateSettings }: SettingsModalProps) {
-    const [activeSection, setActiveSection] = useState<"images" | "appearance">("images");
+    const [activeSection, setActiveSection] = useState<"images" | "appearance" | "members">("images");
     const [isUploading, setIsUploading] = useState(false);
+    const [newMemberName, setNewMemberName] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +50,57 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
             console.error("Remove failed", error);
         } finally {
             setIsUploading(false);
+        }
+    };
+
+    const handleAddMember = async () => {
+        if (!newMemberName.trim()) return;
+        const id = newMemberName.toLowerCase().replace(/\s+/g, '-');
+        const newMember = {
+            id,
+            name: newMemberName,
+            role: "Traveler"
+        };
+
+        const currentMembers = (currentSettings as any).familyMembers || [];
+        // Prevent duplicates
+        if (currentMembers.some((m: any) => m.id === id)) {
+            alert("Member already exists");
+            return;
+        }
+
+        const newSettings = {
+            ...currentSettings,
+            familyMembers: [...currentMembers, newMember]
+        };
+
+        try {
+            // Optimistic update
+            onUpdateSettings(newSettings);
+            setNewMemberName("");
+
+            // Persist
+            const { updateSettings } = await import("@/app/settings-actions");
+            await updateSettings(newSettings);
+        } catch (error) {
+            console.error("Failed to add member", error);
+            // Revert? For now relying on props refresh
+        }
+    };
+
+    const handleRemoveMember = async (id: string) => {
+        const currentMembers = (currentSettings as any).familyMembers || [];
+        const newSettings = {
+            ...currentSettings,
+            familyMembers: currentMembers.filter((m: any) => m.id !== id)
+        };
+
+        try {
+            onUpdateSettings(newSettings);
+            const { updateSettings } = await import("@/app/settings-actions");
+            await updateSettings(newSettings);
+        } catch (error) {
+            console.error("Failed to remove member", error);
         }
     };
 
@@ -90,6 +142,16 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
                         >
                             <Layout className="h-4 w-4" />
                             Appearance
+                        </button>
+                        <button
+                            onClick={() => setActiveSection("members")}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "members"
+                                ? "bg-white/10 text-white"
+                                : "text-white/50 hover:text-white hover:bg-white/5"
+                                }`}
+                        >
+                            <User className="h-4 w-4" />
+                            Family Members
                         </button>
                     </div>
                 </div>
@@ -175,6 +237,63 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
                                         <p className="mt-3 text-xs text-white/40">
                                             Recommended size: 1920x1080 or larger. Supported formats: JPG, PNG, WebP.
                                         </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === "members" && (
+                            <div className="p-8 max-w-2xl">
+                                <h3 className="text-xl font-serif mb-6">Family Members</h3>
+
+                                <div className="space-y-6">
+                                    <div className="bg-black/20 border border-white/5 rounded-xl p-6">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <input
+                                                type="text"
+                                                value={newMemberName}
+                                                onChange={(e) => setNewMemberName(e.target.value)}
+                                                placeholder="Enter name (e.g. Grandma)"
+                                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-white/30"
+                                            />
+                                            <button
+                                                onClick={handleAddMember}
+                                                disabled={!newMemberName.trim()}
+                                                className="px-4 py-2 bg-white text-black font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-200 transition-colors"
+                                            >
+                                                Add
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {((currentSettings as any).familyMembers || []).map((member: any) => (
+                                                <div key={member.id} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-lg group hover:bg-white/10 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white/70">
+                                                            {member.name.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-medium text-white">{member.name}</p>
+                                                            <p className="text-[10px] text-white/40 uppercase tracking-wider">{member.role}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => handleRemoveMember(member.id)}
+                                                        className="p-2 text-white/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                                                        title="Remove member"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+
+                                            {(!currentSettings as any).familyMembers?.length && (
+                                                <div className="text-center py-8 text-white/30 text-sm">
+                                                    No family members added yet.
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

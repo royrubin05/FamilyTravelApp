@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { uploadCityImage } from "@/app/image-actions";
+import { uploadCityImage, deleteCityImage } from "@/app/image-actions";
 import { useTrips } from "@/context/TripContext";
-import { Upload, X, Check, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Upload, X, Check, Image as ImageIcon, Loader2, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CityImageManagerProps {
@@ -44,6 +44,23 @@ export function CityImageManager({ isOpen, onClose, initialImages, onUpdate, emb
         setUploadingCity(null);
     };
 
+    const handleDelete = async (city: string) => {
+        if (!confirm(`Are you sure you want to delete the image for ${city}?`)) return;
+
+        setUploadingCity(city);
+        const result = await deleteCityImage(city);
+
+        if (result.success) {
+            const newImages = { ...images };
+            delete newImages[city];
+            setImages(newImages);
+            if (onUpdate) onUpdate(city, ""); // Or handle removal
+        } else {
+            alert("Failed to delete image: " + result.error);
+        }
+        setUploadingCity(null);
+    };
+
     if (!isOpen && !embedded) return null; // Only return null if not embedded and not open
 
     const content = (
@@ -71,7 +88,18 @@ export function CityImageManager({ isOpen, onClose, initialImages, onUpdate, emb
                             </p>
                         </div>
 
-                        <div>
+                        <div className="flex items-center gap-2">
+                            {hasImage && (
+                                <button
+                                    onClick={() => handleDelete(city)}
+                                    disabled={!!uploadingCity}
+                                    className="p-2 text-white/20 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                    title="Delete Image"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </button>
+                            )}
+
                             <input
                                 type="file"
                                 id={`upload-${city}`}

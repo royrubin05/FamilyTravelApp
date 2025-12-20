@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useTrips } from "@/context/TripContext";
 import { getDestinationImage, GENERIC_FALLBACK, getNormalizedKeys } from "@/lib/imageUtils";
 import { getCheckInUrl } from "@/lib/airlineUtils";
+import { getStorageUrl } from "@/lib/storageUtils";
 
 interface TripContentProps {
     destinationImages?: Record<string, string>;
@@ -315,8 +316,10 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
                                         </button>
                                     ) : (
                                         <a
-                                            href={docs[0].url}
+                                            href={getStorageUrl(docs[0].url)}
                                             download={docs[0].name}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
                                             className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl backdrop-blur-md text-sm font-medium transition-all w-full max-w-xs justify-center"
                                         >
                                             <Ticket className="h-4 w-4 shrink-0" />
@@ -352,8 +355,10 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
                                                     {docs.map((doc: any, idx: number) => (
                                                         <a
                                                             key={idx}
-                                                            href={doc.url}
+                                                            href={getStorageUrl(doc.url)}
                                                             download={doc.name}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
                                                             className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-xl transition-all group"
                                                         >
                                                             <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 group-hover:text-amber-300 transition-colors">

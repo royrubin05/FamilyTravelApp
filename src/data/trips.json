@@ -46,13 +46,13 @@
     "image_keyword": "Desert Hot Springs Spa",
     "travelers": [
       {
-        "id": "mom",
+        "id": "adi",
         "name": "Adi",
-        "role": "Organizer",
+        "role": "Traveler",
         "evidence": "Manual Entry"
       },
       {
-        "id": "dad",
+        "id": "roy",
         "name": "Roy",
         "role": "Recipient",
         "evidence": "Manual Entry"
@@ -80,7 +80,7 @@
     "image_keyword": "Miami Beach",
     "travelers": [
       {
-        "id": "mom",
+        "id": "adi",
         "name": "Adi",
         "role": "Traveler"
       },
@@ -90,7 +90,7 @@
         "role": "Traveler"
       },
       {
-        "id": "dad",
+        "id": "roy",
         "name": "Roy",
         "role": "Traveler"
       }
@@ -179,7 +179,7 @@
     "image_keyword": "Tel Aviv",
     "travelers": [
       {
-        "id": "mom",
+        "id": "adi",
         "name": "Adi",
         "role": "Traveler"
       }

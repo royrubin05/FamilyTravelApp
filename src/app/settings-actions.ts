@@ -1,10 +1,10 @@
 "use server";
 
+import { db } from "@/lib/firebase";
 import fs from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
 
-const SETTINGS_FILE = path.join(process.cwd(), "src/data/settings.json");
 const BACKGROUNDS_DIR = path.join(process.cwd(), "public/images/backgrounds");
 
 async function ensureDir() {
@@ -17,10 +17,13 @@ async function ensureDir() {
 
 export async function getSettings() {
     try {
-        const data = await fs.readFile(SETTINGS_FILE, "utf-8");
-        return JSON.parse(data);
+        const doc = await db.collection("settings").doc("global").get();
+        if (doc.exists) {
+            return doc.data();
+        }
+        return { backgroundImage: null };
     } catch (error) {
-        // Return default if file doesn't exist yet
+        console.error("Error fetching settings:", error);
         return { backgroundImage: null };
     }
 }
@@ -40,14 +43,12 @@ export async function uploadBackgroundImage(formData: FormData) {
     try {
         await ensureDir();
 
-        // Save file
+        // Save file locally (Synced to GCS via volume mount)
         const arrayBuffer = await file.arrayBuffer();
         await fs.writeFile(filePath, Buffer.from(arrayBuffer));
 
-        // Update Settings JSON
-        const settings = await getSettings();
-        settings.backgroundImage = publicPath;
-        await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+        // Update Settings in Firestore
+        await db.collection("settings").doc("global").set({ backgroundImage: publicPath }, { merge: true });
 
         revalidatePath("/");
 
@@ -60,12 +61,21 @@ export async function uploadBackgroundImage(formData: FormData) {
 
 export async function removeBackgroundImage() {
     try {
-        const settings = await getSettings();
-        settings.backgroundImage = null;
-        await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+        await db.collection("settings").doc("global").set({ backgroundImage: null }, { merge: true });
         revalidatePath("/");
         return { success: true };
     } catch (error) {
         return { success: false, error: "Failed to remove background" };
+    }
+}
+
+export async function updateSettings(newSettings: any) {
+    try {
+        await db.collection("settings").doc("global").set(newSettings, { merge: true });
+        revalidatePath("/");
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update settings:", error);
+        return { success: false, error: "Failed to update settings" };
     }
 }

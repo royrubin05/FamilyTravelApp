@@ -67,12 +67,25 @@ echo "🐳 [3/4] Building and Pushing Docker Image (via Cloud Build)..."
 if ! gcloud artifacts repositories describe ${REPO_NAME} --location=${REGION} &>/dev/null; then
     gcloud artifacts repositories create ${REPO_NAME} --repository-format=docker --location=${REGION}
     echo "✅ Created Repository: ${REPO_NAME}"
+    echo "✅ Created Repository: ${REPO_NAME}"
 fi
 
-# Use Cloud Build instead of local docker
+# Step 3.5: Sync Data & Assets to GCS Bucket (Persistence Layer)
+echo ""
+echo "🔄 [3.5/4] Syncing Data & Assets to Persistence Bucket..."
+echo "Uploaded local changes to gs://${BUCKET_NAME}..."
+
+# Sync Data Files (trips.json, cityImages.json)
+gcloud storage cp src/data/*.json gs://${BUCKET_NAME}/data/
+
+# Sync Public Assets (Images & Docs) - recursive with rsync-like behavior
+gcloud storage cp -r public/images gs://${BUCKET_NAME}/public/
+gcloud storage cp -r public/documents gs://${BUCKET_NAME}/public/
+
+echo "✅ Data synced to bucket (overrides container content)"
 echo "📦 Uploading source to staging bucket..."
-# gcloud builds submit --tag ${IMAGE_PATH} . --gcs-source-staging-dir=gs://${BUCKET_NAME}/source
-echo "✅ Image built & pushed via Cloud Build (SKIPPED for retry)"
+gcloud builds submit --tag ${IMAGE_PATH} . --gcs-source-staging-dir=gs://${BUCKET_NAME}/source
+echo "✅ Image built & pushed via Cloud Build"
 
 # Step 4: Deploy to Cloud Run
 echo ""

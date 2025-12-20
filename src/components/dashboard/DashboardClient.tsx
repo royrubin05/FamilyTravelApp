@@ -65,19 +65,12 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
     router.refresh();
   };
 
-  // Extract unique members from all trips (using current state)
-  const allMembersMap = new Map();
-  trips.forEach(t => {
-    t.travelers.forEach((Traveler: any) => {
-      if (!allMembersMap.has(Traveler.id)) {
-        allMembersMap.set(Traveler.id, Traveler.name);
-      }
-    });
-  });
+  // Use family members from settings, or fallback to an empty array
+  const familyMembers = (initialSettings as any).familyMembers || [];
 
   const memberFilters = [
     { id: "all", label: "All Travelers" },
-    ...Array.from(allMembersMap.entries()).map(([id, name]) => ({ id, label: name as string }))
+    ...familyMembers.map((m: any) => ({ id: m.id, label: m.name }))
   ];
 
   // 1. Filter by Status Tab

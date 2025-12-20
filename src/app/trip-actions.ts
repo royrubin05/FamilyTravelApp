@@ -1,52 +1,61 @@
 "use server";
 
-import fs from "fs";
-import path from "path";
-import { revalidatePath } from "next/cache";
+"use server";
 
-const TRIPS_FILE = path.join(process.cwd(), "src/data/trips.json");
+import { db } from "@/lib/firebase";
+import { revalidatePath } from "next/cache";
 
 export async function getTrips() {
     try {
-        if (!fs.existsSync(TRIPS_FILE)) {
-            return []; // Should verify if we want to fallback to static or create empty
-        }
-        const data = fs.readFileSync(TRIPS_FILE, "utf-8");
-        return JSON.parse(data);
+        const snapshot = await db.collection("trips").get();
+        if (snapshot.empty) return [];
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-        console.error("Error reading trips.json:", error);
+        console.error("Error fetching trips:", error);
         return [];
     }
 }
 
 export async function saveTrip(newTrip: any) {
     try {
-        const trips = await getTrips();
-
         // 1. Check for Exact ID Match (Update existing)
-        const existingIdIndex = trips.findIndex((t: any) => t.id === newTrip.id);
-        if (existingIdIndex >= 0) {
-            // Merge logic for ID match could go here, but usually ID match means "Edit"
-            // For now, let's assume if IDs match, we overwrite or we are updating the same trip object
-            trips[existingIdIndex] = { ...trips[existingIdIndex], ...newTrip };
+        const docRef = db.collection("trips").doc(newTrip.id);
+        const docSnap = await docRef.get();
+
+        if (docSnap.exists) {
+            // Overwrite or Deep Merge?
+            // The JSON logic was "overwrite properties if array element matches, else append"
+            // Since we are moving to DB, let's keep it simple: Overwrite the doc with merged fields if necessary. 
+            // Actually, the previous logic did "Array Merging". Let's preserve that if possible or simplify.
+            // For simplicity and robustness given the switch to DB:
+            // Just update the doc. If complex merging matches are needed, read -> merge -> set.
+
+            // NOTE: The previous logic also checked for "Destination Aggregation / Fuzzy Match" which changes the ID!
+            // That is complex to port 1:1 without scanning all trips.
+            // Let's implement the fuzzy match scan.
+
+            await docRef.set(newTrip, { merge: true });
         } else {
             // 2. Check for Destination Aggregation (Fuzzy Match)
-            // If destination same, merge into it
+            // We need to fetch all trips to check this, unfortunately, unless we index destination.
+            // Given the scale is small "Family App", fetching all is fine.
+            const allTrips = await getTrips();
+
             const normalize = (s: string) => s?.toLowerCase().trim();
-            const matchIndex = trips.findIndex((t: any) =>
+            const match = allTrips.find((t: any) =>
                 normalize(t.destination) === normalize(newTrip.destination) ||
                 (t.matched_city_key && t.matched_city_key === newTrip.matched_city_key)
             );
 
-            if (matchIndex >= 0) {
+            if (match) {
                 // MERGE into existing trip
-                console.log(`[Server] Merging new data into existing trip: ${trips[matchIndex].destination}`);
-                const existing = trips[matchIndex];
+                console.log(`[Server] Merging new data into existing trip: ${match.destination}`);
+                const existing = match;
 
-                // Merge Arrays with unique keys composite
+                // Re-implement the merge logic
                 const uniqueFlightKey = (f: any) => `${f.confirmation}-${f.flightNumber}-${f.departure}`;
                 const uniqueHotelKey = (h: any) => `${h.confirmation}-${h.checkIn}-${h.name}`;
-                const uniqueActivityKey = (a: any) => `${a.title}-${a.detail1}-${a.detail2}`; // distinct enough?
+                const uniqueActivityKey = (a: any) => `${a.title}-${a.detail1}-${a.detail2}`;
 
                 const mergedFlights = [
                     ...(existing.flights || []),
@@ -69,41 +78,37 @@ export async function saveTrip(newTrip: any) {
                     index === self.findIndex((t) => uniqueActivityKey(t) === uniqueActivityKey(item))
                 );
 
-                // Merge Travelers (Unique by ID)
                 const existingTravelerIds = new Set((existing.travelers || []).map((t: any) => t.id));
                 const newUniqueTravelers = (newTrip.travelers || []).filter((t: any) => !existingTravelerIds.has(t.id));
                 const mergedTravelers = [...(existing.travelers || []), ...newUniqueTravelers];
 
-                trips[matchIndex] = {
+                const mergedTrip = {
                     ...existing,
                     flights: mergedFlights,
                     hotels: mergedHotels,
                     activities: mergedActivities,
-                    travelers: mergedTravelers,
-                    // Optionally update dates if existing is vague?
-                    // For now, keep existing metadata (ID, Image) to preserve manual edits
+                    travelers: mergedTravelers
                 };
+
+                await db.collection("trips").doc(existing.id).set(mergedTrip);
 
             } else {
                 // New Trip
-                trips.unshift(newTrip);
+                await db.collection("trips").doc(newTrip.id).set(newTrip);
             }
         }
 
-        fs.writeFileSync(TRIPS_FILE, JSON.stringify(trips, null, 2));
         revalidatePath("/");
         return { success: true };
     } catch (error) {
         console.error("Error saving trip:", error);
-        return { success: false, error: "Failed to save trip to disk" };
+        return { success: false, error: "Failed to save trip to Firestore" };
     }
 }
 
 export async function deleteTripAction(id: string) {
     try {
-        const trips = await getTrips();
-        const filtered = trips.filter((t: any) => t.id !== id);
-        fs.writeFileSync(TRIPS_FILE, JSON.stringify(filtered, null, 2));
+        await db.collection("trips").doc(id).delete();
         revalidatePath("/");
         return { success: true };
     } catch (error) {

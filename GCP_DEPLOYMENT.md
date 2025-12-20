@@ -130,3 +130,33 @@ Want your app at `travel.rubin.com` instead of the long generated URL?
 3.  **Wait for SSL**:
     - Google automatically provisions a managed SSL certificate (HTTPS) for you.
     - This can take **15-60 minutes** to propagate.
+
+## Step 6: Syncing Live Data Back to Local
+
+Since the app uses persistent storage in the cloud, changes made on the live site (new trips, user uploads) exist only in the Cloud Bucket initially. To save them to GitHub or your local machine:
+
+1.  **Run the Sync Script**:
+    ```bash
+    ./pull_from_gcp.sh
+    ```
+    This downloads the latest `trips.json`, images, and documents from the Cloud Bucket to your local `src/data` and `public` folders.
+
+2.  **Verify Locally**:
+    Run `npm run dev` and check that the new data appears in your local dashboard.
+
+3.  **Commit to GitHub**:
+    ```bash
+    git add .
+    git commit -m "feat: Sync latest live data from production"
+    git push
+    ```
+
+### Summary of Commands
+
+| Action | Command | Description |
+| :--- | :--- | :--- |
+| **Deploy** | `./deploy_gcp.sh` | Pushes local code & data -> Cloud Run (Overwrites Cloud with Local) |
+| **Sync Down** | `./pull_from_gcp.sh` | Pulls Cloud data -> Local (Overwrites Local with Cloud) |
+| **Dev** | `npm run dev` | Runs locally |
+
+> **⚠️ CAUTION:** Always run `./pull_from_gcp.sh` *before* working if you suspect someone added data on the live site. Otherwise, running `./deploy_gcp.sh` without pulling first might overwrite the live data with your stale local data.

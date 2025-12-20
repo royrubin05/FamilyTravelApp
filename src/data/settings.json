@@ -1,3 +1,25 @@
 {
-  "backgroundImage": "/images/backgrounds/bg-1766165588828.webp"
+  "backgroundImage": "/images/backgrounds/bg-1766165588828.webp",
+  "familyMembers": [
+    {
+      "id": "adi",
+      "name": "Adi",
+      "role": "Traveler"
+    },
+    {
+      "id": "roy",
+      "name": "Roy",
+      "role": "Traveler"
+    },
+    {
+      "id": "jonathan",
+      "name": "Jonathan",
+      "role": "Traveler"
+    },
+    {
+      "id": "ori",
+      "name": "Ori",
+      "role": "Traveler"
+    }
+  ]
 }
