@@ -1,19 +1,11 @@
 "use server";
 
 import { db } from "@/lib/firebase";
-import fs from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
 
-const BACKGROUNDS_DIR = path.join(process.cwd(), "public/images/backgrounds");
+// Removed local dir constants as they are no longer needed
 
-async function ensureDir() {
-    try {
-        await fs.access(BACKGROUNDS_DIR);
-    } catch {
-        await fs.mkdir(BACKGROUNDS_DIR, { recursive: true });
-    }
-}
 
 export async function getSettings() {
     try {
@@ -37,22 +29,19 @@ export async function uploadBackgroundImage(formData: FormData) {
 
     const ext = file.name.split(".").pop() || "jpg";
     const fileName = `bg-${Date.now()}.${ext}`;
-    const filePath = path.join(BACKGROUNDS_DIR, fileName);
-    const publicPath = `/images/backgrounds/${fileName}`;
+    const gcsPath = `images/backgrounds/${fileName}`;
 
     try {
-        await ensureDir();
-
-        // Save file locally (Synced to GCS via volume mount)
+        const { uploadToGCS } = await import("@/lib/gcs");
         const arrayBuffer = await file.arrayBuffer();
-        await fs.writeFile(filePath, Buffer.from(arrayBuffer));
+        const publicUrl = await uploadToGCS(Buffer.from(arrayBuffer), gcsPath, file.type);
 
         // Update Settings in Firestore
-        await db.collection("settings").doc("global").set({ backgroundImage: publicPath }, { merge: true });
+        await db.collection("settings").doc("global").set({ backgroundImage: publicUrl }, { merge: true });
 
         revalidatePath("/");
 
-        return { success: true, imagePath: publicPath };
+        return { success: true, imagePath: publicUrl };
     } catch (error) {
         console.error("Background upload failed", error);
         return { success: false, error: "Upload failed" };

@@ -37,12 +37,12 @@ export function UploadTripModal({ isOpen, onClose, onUploadComplete }: UploadTri
                 return;
             }
 
-            if (result.success) {
+            if (result.success && result.tripId) {
                 setStatus("complete");
-                // Server handled saving and merging.
+                // Redirect
                 setTimeout(() => {
-                    onUploadComplete(null); // No specific new trip, whole list updated
-                    handleClose();
+                    onClose();
+                    window.location.href = `/trip?id=${result.tripId}`;
                 }, 1000);
             } else {
                 setStatus("error");

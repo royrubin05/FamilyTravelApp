@@ -1,21 +1,11 @@
 "use server";
 
 import { db } from "@/lib/firebase";
-import fs from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
 import { FieldValue } from "firebase-admin/firestore";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public/images/destinations");
-
-// Ensure upload directory exists
-async function ensureDir() {
-    try {
-        await fs.access(UPLOAD_DIR);
-    } catch {
-        await fs.mkdir(UPLOAD_DIR, { recursive: true });
-    }
-}
 
 export async function getCityImages() {
     try {
@@ -42,30 +32,22 @@ export async function uploadCityImage(formData: FormData) {
     const safeName = cityKey.replace(/[^a-z0-9]/g, "-");
     const ext = file.name.split(".").pop() || "jpg";
     const fileName = `${safeName}-${Date.now()}.${ext}`;
-    const filePath = path.join(UPLOAD_DIR, fileName);
-    const publicPath = `/images/destinations/${fileName}`;
+    // Cloud Path
+    const gcsPath = `images/destinations/${fileName}`;
 
     try {
-        await ensureDir();
-
-        // Save file locally (Synced to GCS via volume mount)
+        const { uploadToGCS } = await import("@/lib/gcs");
         const arrayBuffer = await file.arrayBuffer();
-        await fs.writeFile(filePath, Buffer.from(arrayBuffer));
-
-        // Update Mapping in Firestore
-        // We use set with merge: true to update just this key, but set with merge
-        // expects an object structure. 
-        // We can also use update({ [key]: value }) if doc exists.
-        // Given we initialized it as a map, let's use set(..., { merge: true })
+        const publicUrl = await uploadToGCS(Buffer.from(arrayBuffer), gcsPath, file.type);
 
         await db.collection("city_images").doc("mapping").set({
-            [cityKey]: publicPath
+            [cityKey]: publicUrl
         }, { merge: true });
 
         revalidatePath("/");
         revalidatePath("/trip");
 
-        return { success: true, imagePath: publicPath };
+        return { success: true, imagePath: publicUrl };
     } catch (error) {
         console.error("Upload failed", error);
         return { success: false, error: "Upload failed" };

@@ -277,7 +277,6 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
                                         </div>
                                         <div>
                                             <p className="text-sm font-medium leading-none">{traveler.name}</p>
-                                            <p className="text-[10px] text-white/50 uppercase tracking-wider mt-0.5">{traveler.role}</p>
                                         </div>
                                     </div>
                                 ))}

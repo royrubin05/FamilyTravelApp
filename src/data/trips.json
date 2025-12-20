@@ -1,6 +1,6 @@
 [
   {
-    "id": "tel-aviv-israel-2025-12-24",
+    "id": "los-angeles-ca-2025-12-24",
     "destination": "LOS ANGELES, CA",
     "matched_city_key": "los angeles",
     "dates": "December 24, 2025",
@@ -33,9 +33,7 @@
         "url": "/documents/1766185327420-itinerary_2025_10_21_0043.pdf",
         "name": "itinerary_2025-10-21 0043.pdf"
       }
-    ],
-    "sourceDocument": "/documents/1766120778555-new_document.txt",
-    "sourceFileName": "new_document.txt"
+    ]
   },
   {
     "id": "desert-hot-springs-ca-2026-01-08",
@@ -68,8 +66,12 @@
         "confirmation": "47527SF033156"
       }
     ],
-    "sourceDocument": "/documents/1766119110704-gmail___fwd__itinerary_confirmation.pdf",
-    "sourceFileName": "Gmail - Fwd_ Itinerary Confirmation.pdf"
+    "sourceDocuments": [
+      {
+        "url": "/documents/1766119110704-gmail___fwd__itinerary_confirmation.pdf",
+        "name": "Gmail - Fwd_ Itinerary Confirmation.pdf"
+      }
+    ]
   },
   {
     "id": "miami-fl-2026-01-14",
@@ -228,8 +230,12 @@
     ],
     "hotels": [],
     "activities": [],
-    "sourceDocument": "/documents/1766119614365-itinerary_2025_12_08_1809__1_.pdf",
-    "sourceFileName": "itinerary_2025-12-08 1809 (1).pdf"
+    "sourceDocuments": [
+      {
+        "url": "/documents/1766119614365-itinerary_2025_12_08_1809__1_.pdf",
+        "name": "itinerary_2025-12-08 1809 (1).pdf"
+      }
+    ]
   },
   {
     "id": "miami-fl-2026-03-29",
@@ -244,6 +250,11 @@
         "name": "Ori",
         "role": "Traveler",
         "evidence": "Found 'ORI' in flight confirmation"
+      },
+      {
+        "id": "roy",
+        "name": "Roy",
+        "role": "Traveler"
       }
     ],
     "flights": [
@@ -268,9 +279,24 @@
         ]
       }
     ],
-    "hotels": [],
+    "hotels": [
+      {
+        "name": "Nassau Suite South Beach, an All Suite Hotel",
+        "address": "1414 Collins Avenue, Miami Beach, FL 33139, United States",
+        "checkIn": "Sunday, March 29, 2026",
+        "checkOut": "Monday, March 30, 2026",
+        "confirmation": "6656325648",
+        "travelers": [
+          "Roy"
+        ]
+      }
+    ],
     "activities": [],
-    "sourceDocument": "/documents/1766120778555-new_document.txt",
-    "sourceFileName": "new_document.txt"
+    "sourceDocuments": [
+      {
+        "url": "/documents/1766249581983-gmail______thanks__your_booking_is_confirmed_at_nassau_suite_south_beach__an_all_suite_hotel.pdf",
+        "name": "Gmail - 🛄 Thanks! Your booking is confirmed at Nassau Suite South Beach, an All Suite Hotel.pdf"
+      }
+    ]
   }
 ]

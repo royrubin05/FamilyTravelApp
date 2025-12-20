@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User } from "lucide-react";
+import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User, Edit2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CityImageManager } from "./CityImageManager";
 import { useState, useRef } from "react";
@@ -19,6 +19,8 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
     const [activeSection, setActiveSection] = useState<"images" | "appearance" | "members">("images");
     const [isUploading, setIsUploading] = useState(false);
     const [newMemberName, setNewMemberName] = useState("");
+    const [newMemberNickname, setNewMemberNickname] = useState("");
+    const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,42 +55,92 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
         }
     };
 
-    const handleAddMember = async () => {
+    const handleSaveMember = async () => {
         if (!newMemberName.trim()) return;
-        const id = newMemberName.toLowerCase().replace(/\s+/g, '-');
-        const newMember = {
-            id,
-            name: newMemberName,
-            role: "Traveler"
-        };
+
+        // Split nicknames by comma and clean up
+        const nicknameParams = newMemberNickname
+            .split(',')
+            .map(n => n.trim())
+            .filter(n => n.length > 0);
 
         const currentMembers = (currentSettings as any).familyMembers || [];
-        // Prevent duplicates
-        if (currentMembers.some((m: any) => m.id === id)) {
-            alert("Member already exists");
-            return;
-        }
 
-        const newSettings = {
-            ...currentSettings,
-            familyMembers: [...currentMembers, newMember]
-        };
+        let newSettings;
+
+        if (editingMemberId) {
+            // Updating existing member
+            const updatedMembers = currentMembers.map((m: any) => {
+                if (m.id === editingMemberId) {
+                    return {
+                        ...m,
+                        name: newMemberName,
+                        nicknames: nicknameParams.length > 0 ? nicknameParams : undefined,
+                        // remove old single nickname field if present
+                        nickname: undefined
+                    };
+                }
+                return m;
+            });
+
+            newSettings = {
+                ...currentSettings,
+                familyMembers: updatedMembers
+            };
+        } else {
+            // Adding new member
+            const id = newMemberName.toLowerCase().replace(/\s+/g, '-');
+            const newMember = {
+                id,
+                name: newMemberName,
+                nicknames: nicknameParams.length > 0 ? nicknameParams : undefined,
+                role: "Traveler"
+            };
+
+            // Prevent duplicates (only for new members)
+            if (currentMembers.some((m: any) => m.id === id)) {
+                alert("Member already exists");
+                return;
+            }
+
+            newSettings = {
+                ...currentSettings,
+                familyMembers: [...currentMembers, newMember]
+            };
+        }
 
         try {
             // Optimistic update
             onUpdateSettings(newSettings);
             setNewMemberName("");
+            setNewMemberNickname("");
+            setEditingMemberId(null);
 
             // Persist
             const { updateSettings } = await import("@/app/settings-actions");
             await updateSettings(newSettings);
         } catch (error) {
-            console.error("Failed to add member", error);
-            // Revert? For now relying on props refresh
+            console.error("Failed to save member", error);
         }
     };
 
+    const handleEditMember = (member: any) => {
+        setEditingMemberId(member.id);
+        setNewMemberName(member.name);
+        setNewMemberNickname(member.nicknames ? member.nicknames.join(", ") : (member.nickname || ""));
+    };
+
+    const handleCancelEdit = () => {
+        setEditingMemberId(null);
+        setNewMemberName("");
+        setNewMemberNickname("");
+    };
+
     const handleRemoveMember = async (id: string) => {
+        if (editingMemberId === id) {
+            handleCancelEdit();
+        }
+
         const currentMembers = (currentSettings as any).familyMembers || [];
         const newSettings = {
             ...currentSettings,
@@ -248,43 +300,81 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
 
                                 <div className="space-y-6">
                                     <div className="bg-black/20 border border-white/5 rounded-xl p-6">
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <input
-                                                type="text"
-                                                value={newMemberName}
-                                                onChange={(e) => setNewMemberName(e.target.value)}
-                                                placeholder="Enter name (e.g. Grandma)"
-                                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-white/30"
-                                            />
-                                            <button
-                                                onClick={handleAddMember}
-                                                disabled={!newMemberName.trim()}
-                                                className="px-4 py-2 bg-white text-black font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-200 transition-colors"
-                                            >
-                                                Add
-                                            </button>
+                                        <div className="flex flex-col gap-3 mb-6">
+                                            <div className="flex gap-3">
+                                                <input
+                                                    type="text"
+                                                    value={newMemberName}
+                                                    onChange={(e) => setNewMemberName(e.target.value)}
+                                                    placeholder="Full Name (e.g. Roee)"
+                                                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-white/30"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={newMemberNickname}
+                                                    onChange={(e) => setNewMemberNickname(e.target.value)}
+                                                    placeholder="Nicknames (comma separated)"
+                                                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-white/30"
+                                                />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={handleSaveMember}
+                                                    disabled={!newMemberName.trim()}
+                                                    className={`flex-1 px-4 py-2 font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${editingMemberId
+                                                            ? "bg-amber-500 text-black hover:bg-amber-400"
+                                                            : "bg-white text-black hover:bg-neutral-200"
+                                                        }`}
+                                                >
+                                                    {editingMemberId ? "Update Member" : "Add Member"}
+                                                </button>
+                                                {editingMemberId && (
+                                                    <button
+                                                        onClick={handleCancelEdit}
+                                                        className="px-4 py-2 bg-white/10 text-white font-medium rounded-lg hover:bg-white/20 transition-colors"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="space-y-2">
                                             {((currentSettings as any).familyMembers || []).map((member: any) => (
-                                                <div key={member.id} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-lg group hover:bg-white/10 transition-colors">
+                                                <div key={member.id} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-lg group hover:bg-white/10 transition-colors relative">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white/70">
-                                                            {member.name.charAt(0)}
+                                                            {(member.nicknames?.[0] || member.nickname || member.name).charAt(0)}
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-medium text-white">{member.name}</p>
+                                                            <div className="flex items-baseline gap-2">
+                                                                <p className="text-sm font-medium text-white">{member.name}</p>
+                                                                {(member.nicknames?.length > 0 || member.nickname) && (
+                                                                    <span className="text-xs text-white/50">
+                                                                        ({member.nicknames ? member.nicknames.join(", ") : member.nickname})
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             <p className="text-[10px] text-white/40 uppercase tracking-wider">{member.role}</p>
                                                         </div>
                                                     </div>
 
-                                                    <button
-                                                        onClick={() => handleRemoveMember(member.id)}
-                                                        className="p-2 text-white/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                                                        title="Remove member"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
+                                                    <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => handleEditMember(member)}
+                                                            className="p-2 text-white/40 hover:text-white transition-colors"
+                                                            title="Edit member"
+                                                        >
+                                                            <Edit2 className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleRemoveMember(member.id)}
+                                                            className="p-2 text-white/40 hover:text-red-400 transition-colors"
+                                                            title="Remove member"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
 

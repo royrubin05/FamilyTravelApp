@@ -35,71 +35,17 @@ export async function saveTrip(newTrip: any) {
             // Let's implement the fuzzy match scan.
 
             await docRef.set(newTrip, { merge: true });
+            revalidatePath("/");
+            return { success: true, id: newTrip.id };
         } else {
-            // 2. Check for Destination Aggregation (Fuzzy Match)
-            // We need to fetch all trips to check this, unfortunately, unless we index destination.
-            // Given the scale is small "Family App", fetching all is fine.
-            const allTrips = await getTrips();
-
-            const normalize = (s: string) => s?.toLowerCase().trim();
-            const match = allTrips.find((t: any) =>
-                normalize(t.destination) === normalize(newTrip.destination) ||
-                (t.matched_city_key && t.matched_city_key === newTrip.matched_city_key)
-            );
-
-            if (match) {
-                // MERGE into existing trip
-                console.log(`[Server] Merging new data into existing trip: ${match.destination}`);
-                const existing = match;
-
-                // Re-implement the merge logic
-                const uniqueFlightKey = (f: any) => `${f.confirmation}-${f.flightNumber}-${f.departure}`;
-                const uniqueHotelKey = (h: any) => `${h.confirmation}-${h.checkIn}-${h.name}`;
-                const uniqueActivityKey = (a: any) => `${a.title}-${a.detail1}-${a.detail2}`;
-
-                const mergedFlights = [
-                    ...(existing.flights || []),
-                    ...(newTrip.flights || [])
-                ].filter((item, index, self) =>
-                    index === self.findIndex((t) => uniqueFlightKey(t) === uniqueFlightKey(item))
-                );
-
-                const mergedHotels = [
-                    ...(existing.hotels || []),
-                    ...(newTrip.hotels || [])
-                ].filter((item, index, self) =>
-                    index === self.findIndex((t) => uniqueHotelKey(t) === uniqueHotelKey(item))
-                );
-
-                const mergedActivities = [
-                    ...(existing.activities || []),
-                    ...(newTrip.activities || [])
-                ].filter((item, index, self) =>
-                    index === self.findIndex((t) => uniqueActivityKey(t) === uniqueActivityKey(item))
-                );
-
-                const existingTravelerIds = new Set((existing.travelers || []).map((t: any) => t.id));
-                const newUniqueTravelers = (newTrip.travelers || []).filter((t: any) => !existingTravelerIds.has(t.id));
-                const mergedTravelers = [...(existing.travelers || []), ...newUniqueTravelers];
-
-                const mergedTrip = {
-                    ...existing,
-                    flights: mergedFlights,
-                    hotels: mergedHotels,
-                    activities: mergedActivities,
-                    travelers: mergedTravelers
-                };
-
-                await db.collection("trips").doc(existing.id).set(mergedTrip);
-
-            } else {
-                // New Trip
-                await db.collection("trips").doc(newTrip.id).set(newTrip);
-            }
+            // 2. Create New Trip
+            // We removed the fuzzy matching based on destination name because it was causing incorrect merges (e.g. different dates).
+            // The AI now handles the merging decision by returning the existing ID if it detects a match with dates.
+            console.log(`[Server] Creating new trip: ${newTrip.id}`);
+            await docRef.set(newTrip);
+            revalidatePath("/");
+            return { success: true, id: newTrip.id };
         }
-
-        revalidatePath("/");
-        return { success: true };
     } catch (error) {
         console.error("Error saving trip:", error);
         return { success: false, error: "Failed to save trip to Firestore" };

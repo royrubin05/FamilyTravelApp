@@ -2,7 +2,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { DESTINATION_IMAGES } from "@/lib/imageUtils";
-import fs from "fs";
 import path from "path";
 import { revalidatePath } from "next/cache";
 
@@ -16,31 +15,106 @@ export async function parseTripDocument(formData: FormData) {
       throw new Error("No file uploaded");
     }
 
-    // Convert File to Base64
+    // Convert File to Base64 (for Gemini inline)
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64Data = buffer.toString("base64");
 
-    // SAVE FILE FIRST to ensure we have the path for the AI
+    // SAVE FILE TO GCS
+    const { uploadToGCS } = await import("@/lib/gcs");
     const fileName = file.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
     const uniqueFileName = `${Date.now()}-${fileName}`;
-    const publicDocPath = path.join(process.cwd(), 'public', 'documents', uniqueFileName);
+    const gcsPath = `documents/${uniqueFileName}`;
+
+    // Upload returns public URL (https://storage.googleapis.com/...)
+    const publicUrl = await uploadToGCS(buffer, gcsPath, file.type);
+
+    // We use the path relative to bucket root for our system sometimes, or just the URL.
+    // The previous system used "/documents/..." relative paths.
+    // Let's stick to storing the relative GCS path for consistency if our UI expects it,
+    // OR switch to storing the full URL.
+    // Given our `getStorageUrl` utility handles "/documents/", let's store the relative path "documents/..."
+    // BUT `getStorageUrl` expects exactly what we store.
+    // If we store `documents/xyz.pdf`, `getStorageUrl` might need adjustment.
+    // The previous code stored `/documents/xyz`.
+    // Let's store `/documents/${uniqueFileName}` to match the convention the app expects for now (legacy compatible),
+    // merging it with our new Cloud reality.
+
     const webPath = `/documents/${uniqueFileName}`;
 
-    // Ensure directory exists
-    const publicDirPath = path.dirname(publicDocPath);
-    if (!fs.existsSync(publicDirPath)) {
-      fs.mkdirSync(publicDirPath, { recursive: true });
-    }
-    fs.writeFileSync(publicDocPath, buffer);
+    // 1. Fetch Context (Existing Trips + Settings)
+    const { getTrips } = await import("./trip-actions");
+    const { getSettings } = await import("./settings-actions");
 
-    // First pass: Extract raw text
-    const extractionModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-    const extractionPrompt = `
-      Extract all readable text content from this document. Do not summarize or interpret, just provide the raw text.
+    // Parallel Fetch
+    const [existingTrips, settings] = await Promise.all([
+      getTrips(),
+      getSettings()
+    ]);
+
+    const familyMembers = (settings as any).familyMembers || [];
+    const validMemberNames = familyMembers.map((m: any) => m.name).join(", ");
+
+    // Simplify existing trips for the prompt (save tokens)
+    const tripsSummary = existingTrips.map((t: any) => ({
+      id: t.id,
+      destination: t.destination,
+      dates: t.dates,
+      startDateISO: t.startDateISO
+    }));
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const prompt = `
+    You are an expert Travel Assistant.
+    Your task is to analyze a travel document and either **UPDATE** an existing trip or **CREATE** a new one.
+
+    **Context**:
+    - **Existing Trips**: ${JSON.stringify(tripsSummary)}
+    - **Approved Family Members**: ${validMemberNames}.
+
+    **Document Metadata**:
+    - Filename: "${file.name}"
+    - Storage Path: "${webPath}"
+
+    **Instructions**:
+    1. **Analyze** the document to find Destination, Dates, Flights, Hotels.
+    2. **Merge Decision**:
+       - Compare with "Existing Trips".
+       - If Destination matches AND Dates overlap (approx same week):
+         - Use the **Existing Trip ID**.
+       - If Dates are significantly different (e.g. diff month): **CREATE NEW TRIP** (New ID).
+       - If no match: **CREATE NEW TRIP**.
+
+    3. **Travelers**:
+       - **STRICTLY** only include travelers EXPLICITLY named in the document.
+       - **NO INFERENCE**: If only "Roy" is named, do NOT add the whole family.
+       - **VALIDATION**: Ignore any names not in the Approved Family Members list.
+       - Map found names to their correct Family IDs from the validated list.
+
+    4. **Output Format**:
+       - Return a **Single JSON Object**.
+       - **ID**: Existing ID or New ID ("slug-date").
+       - **sourceDocuments**: Include the new document.
+    
+    **Trip Schema**:
+    {
+      "id": "slug-date",
+      "destination": "CITY, COUNTRY",
+      "matched_city_key": "lowercase_city_key",
+      "dates": "Start - End Date Year",
+      "startDateISO": "YYYY-MM-DD",
+      "image_keyword": "Arrival City Name",
+      "travelers": [{ "id": "adi", "name": "Adi", "role": "Traveler" }],
+      "flights": [],
+      "hotels": [],
+      "activities": [],
+      "sourceDocuments": [ { "url": "${webPath}", "name": "${file.name}" } ]
+    }
     `;
-    const extractionResult = await extractionModel.generateContent([
-      extractionPrompt,
+
+    // Single Call with File + Context
+    const result = await model.generateContent([
+      prompt,
       {
         inlineData: {
           data: base64Data,
@@ -48,163 +122,65 @@ export async function parseTripDocument(formData: FormData) {
         }
       }
     ]);
-    const extractionResponse = await extractionResult.response;
-    const text = extractionResponse.text();
-
-    console.log("[Server] Gemini Raw Text Extraction Length:", text.length);
-
-    // Load existing trips
-    const tripsPath = path.join(process.cwd(), "src/data/trips.json");
-    let existingTrips = [];
-    if (fs.existsSync(tripsPath)) {
-      existingTrips = JSON.parse(fs.readFileSync(tripsPath, "utf-8"));
-    }
-
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-    const prompt = `
-    You are an expert Travel Assistant for the "Rubin" family (Roy, Adi, Ori, Jonathan).
-    Your task is to update the master list of trips based on a new travel document.
-
-    **Current Trips Database**:
-    ${JSON.stringify(existingTrips, null, 2)}
-
-    **New Document Content**:
-    "${text}"
-
-    **New Document Metadata**:
-    - Filename: "${file.name}"
-    - Storage Path: "${webPath}"
-
-      **Instructions**:
-    0.  **CRITICAL**: Return **ONLY VALID JSON**. No Markdown, no comments.
-      1.  Analyze the **New Document** to identify flights, hotels, or activities.
-    2. **Check** the **Current Trips** to see if this belongs to an existing trip (same Destination and roughly same Dates).
-        - If YES: **Merge** the new details into that trip.
-            - Add new travelers (only if named in text).
-            - Add new flights/hotels (Deduplicate).
-            - **SOURCE DOCUMENTS**: APPEND the new document to the "sourceDocuments" list. Do NOT overwrite. Keep existing.
-    -   If NO: **Create** a new trip entry.
-            - **SOURCE DOCUMENTS**: Initialize "sourceDocuments" list with this new document.
-    3. **Deduplicate Travelers**: 'dad'(Roy), 'mom'(Adi), 'ori', 'jonathan'.
-    4. **Formatting Rules**:
-       - **DATES**: Use "YYYY-MM-DD" for startDateISO.
-       - **QUOTES**: Do NOT use double quotes " inside strings. Use single quotes ' instead.
-      - **NO COMMENTS**.
-    6. **Assign Travelers to Items**.
-
-    **Trip Schema**:
-    {
-      "id": "slug-id",
-        "destination": "CITY, COUNTRY",
-          "matched_city_key": "lowercase_city_key_for_images",
-            "dates": "Start - End Date Year",
-              "startDateISO": "YYYY-MM-DD",
-                "image_keyword": "Arrival City Name ONLY (Do NOT use Origin)",
-                  "travelers": [{ "id": "dad", "name": "Roy", "role": "Traveler" }],
-                    "flights": [],
-                      "hotels": [],
-                        "activities": [],
-                          "sourceDocuments": [
-                            { "url": "${webPath}", "name": "${file.name}" }
-                          ]
-    }
-    `;
-
-    const result = await model.generateContent([prompt]);
     const response = await result.response;
     const responseText = response.text();
-    console.log("[Server] Gemini Merge Response Length:", responseText.length);
-
-    // DEBUG: Write to file
-    const debugPath = path.join(process.cwd(), "public", "debug_ai_response.txt");
-    fs.writeFileSync(debugPath, responseText);
+    console.log("[Server] Gemini Extraction Response:", responseText.length);
 
     // Cleaner JSON extraction
     let cleanText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
 
-    // Find the array bounds
-    let startIndex = cleanText.search(/\[\s*\{/);
-    if (startIndex === -1) {
-      startIndex = cleanText.indexOf("[");
-    }
-
-    const endIndex = cleanText.lastIndexOf("]");
+    // Find JSON object bounds
+    const startIndex = cleanText.indexOf("{");
+    const endIndex = cleanText.lastIndexOf("}");
 
     if (startIndex === -1 || endIndex === -1) {
-      console.error("[Server] JSON Extraction Failed. No Array found. Raw:", responseText);
-      throw new Error("AI did not return a JSON Array");
+      throw new Error("AI did not return a valid JSON object");
     }
 
     let jsonString = cleanText.substring(startIndex, endIndex + 1);
-
     // Remove comments
     jsonString = jsonString.replace(/^[ \t]*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
 
-    // Remove trailing commas
-    jsonString = jsonString.replace(/,\s*([\]}])/g, '$1');
-
-    let updatedTrips;
+    let newTrip;
     try {
-      updatedTrips = JSON.parse(jsonString);
+      newTrip = JSON.parse(jsonString);
+      console.log("Parsed Trip Travelers (Raw):", newTrip.travelers);
+
+      // Strict Enforcement: Only allow approved family members
+      if (newTrip.travelers && Array.isArray(newTrip.travelers)) {
+        newTrip.travelers = newTrip.travelers.filter((t: any) => {
+          const nameLower = t.name?.toLowerCase();
+          // Check against validMemberNames (from settings)
+          const match = familyMembers.find((m: any) =>
+            m.name.toLowerCase() === nameLower ||
+            (m.nicknames && m.nicknames.some((n: string) => n.toLowerCase() === nameLower))
+          );
+          return !!match;
+        }).map((t: any) => {
+          // Normalized Data
+          const match = familyMembers.find((m: any) =>
+            m.name.toLowerCase() === t.name.toLowerCase() ||
+            (m.nicknames && m.nicknames.some((n: string) => n.toLowerCase() === t.name.toLowerCase()))
+          );
+          return match ? { id: match.id || match.name.toLowerCase(), name: match.name, role: "Traveler" } : t;
+        });
+      }
+      console.log("Parsed Trip Travelers (Filtered):", newTrip.travelers);
+
     } catch (e) {
-      console.error("[Server] JSON Parse Error Details:", e);
-      console.error("[Server] Invalid JSON String Full:", jsonString);
-      throw new Error("AI returned invalid JSON structure");
+      console.error("JSON Parse Error:", e);
+      throw new Error("AI returned invalid JSON");
     }
 
-    // Programmatic Sort
-    updatedTrips.sort((a: any, b: any) => {
-      const dateA = a.startDateISO || "9999-99-99";
-      const dateB = b.startDateISO || "9999-99-99";
-      return dateA.localeCompare(dateB);
-    });
+    // Save/Merge via Firestore Action
+    const { saveTrip } = await import("./trip-actions");
+    const saveResult = await saveTrip(newTrip);
 
-    // Enforce Unique IDs (Slug-Date) wrapper
-    updatedTrips = updatedTrips.map((trip: any) => {
-      const dest = trip.destination || "unknown";
-      const date = trip.startDateISO || "9999-99-99";
-      const slug = dest.toLowerCase().trim()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/[\s_-]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-      const newId = `${slug}-${date}`;
-
-      // Validate & Dedup Source Documents
-      let validDocs = trip.sourceDocuments || [];
-      if (trip.sourceDocument) {
-        // Backwards compatibility for single doc field
-        validDocs.push({ url: trip.sourceDocument, name: trip.sourceFileName || "Document" });
-      }
-
-      // Deduplicate by URL
-      const uniqueDocs = new Map();
-      validDocs.forEach((d: any) => uniqueDocs.set(d.url, d));
-
-      // Check file existence
-      const finalDocs = Array.from(uniqueDocs.values()).filter((d: any) => {
-        try {
-          const localPath = path.join(process.cwd(), "public", d.url);
-          return fs.existsSync(localPath);
-        } catch (e) {
-          return false;
-        }
-      });
-
-      return {
-        ...trip,
-        id: newId,
-        sourceDocuments: finalDocs,
-        // Remove legacy single fields to suppress confusion
-        sourceDocument: undefined,
-        sourceFileName: undefined
-      };
-    });
-
-    // Persist to Disk (we already saved the file)
-    fs.writeFileSync(tripsPath, JSON.stringify(updatedTrips, null, 2));
-
-    revalidatePath("/");
-    return { success: true, trips: updatedTrips };
+    if (saveResult.success) {
+      return { success: true, tripId: saveResult.id };
+    } else {
+      return { error: saveResult.error || "Failed to save trip" };
+    }
 
   } catch (error) {
     console.error("Error parsing document:", error);
