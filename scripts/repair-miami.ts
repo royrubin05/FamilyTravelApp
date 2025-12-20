@@ -13,6 +13,7 @@ async function repairMiamiTrip() {
     }
 
     const trip = doc.data();
+    if (!trip) return;
     console.log("Original Trip Hotels:", trip.hotels?.length);
 
     // 1. Separate Hotels

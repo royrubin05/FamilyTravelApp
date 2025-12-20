@@ -7,11 +7,11 @@ import { FieldValue } from "firebase-admin/firestore";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public/images/destinations");
 
-export async function getCityImages() {
+export async function getCityImages(): Promise<Record<string, string>> {
     try {
         const doc = await db.collection("city_images").doc("mapping").get();
         if (doc.exists) {
-            return doc.data();
+            return doc.data() as Record<string, string>;
         }
         return {};
     } catch (error) {
