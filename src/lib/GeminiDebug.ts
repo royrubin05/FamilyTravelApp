@@ -38,49 +38,50 @@ Return ONLY a JSON object with the following schema:
 Rules:
 1. Extract ALL travelers found in the document.
 2. Format dates clearly.
-3. If data is missing, use empty arrays or null.
-4. Do NOT include markdown formatting (\`\`\`json). Just the raw JSON.
+3. CRITICAL: You MUST populate "destination" and "dates". If they are not explicitly written at the top, INFER them from the first flight/hotel arrival. Do NOT return null for these fields.
+4. If other data is missing, use empty arrays.
+5. Do NOT include markdown formatting (\`\`\`json). Just the raw JSON.
 `;
 
 export async function parseTripWithGemini(fileBuffer: Buffer, mimeType: string) {
-    try {
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
-            systemInstruction: PROMPT_SYSTEM_INSTRUCTION
-        });
+  try {
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+      systemInstruction: PROMPT_SYSTEM_INSTRUCTION
+    });
 
-        const prompt = "Extract trip details from this document.";
+    const prompt = "Extract trip details from this document.";
 
-        // Convert Buffer to Base64
-        const filePart = {
-            inlineData: {
-                data: fileBuffer.toString("base64"),
-                mimeType: mimeType
-            },
-        };
+    // Convert Buffer to Base64
+    const filePart = {
+      inlineData: {
+        data: fileBuffer.toString("base64"),
+        mimeType: mimeType
+      },
+    };
 
-        const result = await model.generateContent([prompt, filePart]);
-        const response = await result.response;
-        const text = response.text();
+    const result = await model.generateContent([prompt, filePart]);
+    const response = await result.response;
+    const text = response.text();
 
-        // Clean up markdown if present
-        const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
-        const tripData = JSON.parse(jsonStr);
+    // Clean up markdown if present
+    const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    const tripData = JSON.parse(jsonStr);
 
-        return {
-            success: true,
-            tripData,
-            debugPrompt: `System: ${PROMPT_SYSTEM_INSTRUCTION}\n\nUser: ${prompt}\n\n[Attached File: ${mimeType} (${fileBuffer.length} bytes)]`,
-            debugResponse: text
-        };
+    return {
+      success: true,
+      tripData,
+      debugPrompt: `System: ${PROMPT_SYSTEM_INSTRUCTION}\n\nUser: ${prompt}\n\n[Attached File: ${mimeType} (${fileBuffer.length} bytes)]`,
+      debugResponse: text
+    };
 
-    } catch (error) {
-        console.error("Gemini Local Parse Error:", error);
-        return {
-            success: false,
-            error: (error as Error).message,
-            debugPrompt: "Error during generation",
-            debugResponse: (error as Error).message
-        };
-    }
+  } catch (error) {
+    console.error("Gemini Local Parse Error:", error);
+    return {
+      success: false,
+      error: (error as Error).message,
+      debugPrompt: "Error during generation",
+      debugResponse: (error as Error).message
+    };
+  }
 }

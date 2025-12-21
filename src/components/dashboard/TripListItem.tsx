@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Calendar, Users, Plane, Bed } from "lucide-react";
 import { useTrips } from "@/context/TripContext";
 import { getDestinationImage, GENERIC_FALLBACK } from "@/lib/imageUtils";
+import { isTripCompleted } from "@/lib/dateUtils";
 
 // ... [existing code] ...
 
@@ -21,7 +22,7 @@ interface TripListItemProps {
     familyMembers?: any[];
 }
 
-export function TripListItem({ id, destination, dates, image, travelers, destinationImages, hasFlights, hasHotels, familyMembers = [] }: TripListItemProps) {
+export function TripListItem({ id, destination = "", dates = "", image, travelers, destinationImages, hasFlights, hasHotels, familyMembers = [] }: TripListItemProps) {
     // Helper to get display name
     const getTravelerName = (t: any) => {
         if (!t.id) return t.name;
@@ -43,13 +44,15 @@ export function TripListItem({ id, destination, dates, image, travelers, destina
     // For manual testing/demo purposes, let's allow hardcoded override by ID first (as before)
     // but also check for "In Process" keywords if provided, or defaults.
 
-    if (dates.toLowerCase().includes("spring 2025") || dates.toLowerCase().includes("dec 20")) {
-        status = "Upcoming";
-        statusColor = "bg-amber-500/20 text-amber-300";
-    } else if (id === "london") {
-        // London is Oct 12-27 (past/current depending on simulated time, let's make it Completed per new mock)
+    const isCompleted = isTripCompleted(dates);
+
+    if (isCompleted) {
         status = "Completed";
         statusColor = "bg-white/10 text-white/50";
+    } else if ((dates || "").toLowerCase().includes("spring") || (dates || "").toLowerCase().includes("dec")) {
+        // Keep season highlights as upcoming
+        status = "Upcoming";
+        statusColor = "bg-amber-500/20 text-amber-300";
     } else {
         // Fallback for new uploads - assume Upcoming unless we determine otherwise
         status = "Upcoming";
@@ -82,7 +85,7 @@ export function TripListItem({ id, destination, dates, image, travelers, destina
                             src={(() => {
                                 // 1. Check dynamic images map first (Override)
                                 if (destinationImages) {
-                                    const key = destination.toLowerCase().trim();
+                                    const key = (destination || "").toLowerCase().trim();
                                     if (destinationImages[key]) return destinationImages[key];
 
                                     // Partial map scan
@@ -96,16 +99,16 @@ export function TripListItem({ id, destination, dates, image, travelers, destina
                                 }
 
                                 // 3. Fallback to client-side static lookup
-                                return getDestinationImage(destination);
+                                return getDestinationImage(destination || "");
                             })()}
-                            alt={destination}
+                            alt={destination || "Trip"}
                             onError={(e) => {
                                 const target = e.currentTarget;
                                 // If the primary failed, fall back to GENERIC or try static
                                 // Since we already tried the best source in src={}, just go to generic fallback
                                 // unless we haven't tried getDestinationImage logic fully (e.g. if src was from trip.image)
 
-                                const staticFallback = getDestinationImage(destination);
+                                const staticFallback = getDestinationImage(destination || "");
                                 if (!target.src.includes(staticFallback) && target.src !== GENERIC_FALLBACK) {
                                     target.src = staticFallback;
                                     return;
@@ -116,7 +119,7 @@ export function TripListItem({ id, destination, dates, image, travelers, destina
                             className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                         />
                         <div className="absolute inset-0 flex items-center justify-center -z-10">
-                            <span className="text-xs font-serif text-white/30">{destination.substring(0, 2)}</span>
+                            <span className="text-xs font-serif text-white/30">{(destination || "").substring(0, 2)}</span>
                         </div>
                     </div>
 

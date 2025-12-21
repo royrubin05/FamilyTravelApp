@@ -1,5 +1,7 @@
 "use client";
 
+import { isTripCompleted } from "@/lib/dateUtils";
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TripListItem } from "@/components/dashboard/TripListItem";
@@ -76,14 +78,36 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
   // 1. Filter by Status Tab
   const statusFilteredTrips = trips.filter(t => {
     // Mock Logic: London is completed, everything else (including imports) is upcoming
-    const isCompleted = t.id === "london" || (t.destination && t.destination.includes("OLD"));
+    // Real Logic: Check date
+    const isCompleted = isTripCompleted(t.dates);
     return statusTab === "completed" ? isCompleted : !isCompleted;
   });
 
   // 2. Filter by Member
   const finalFilteredTrips = filter === "all"
     ? statusFilteredTrips
-    : statusFilteredTrips.filter(t => t.travelers.some((m: any) => m.id === filter));
+    : statusFilteredTrips.filter(t => {
+      // Find the selected member definition
+      const selectedMember = familyMembers.find((m: any) => m.id === filter);
+      if (!selectedMember) return false;
+
+      // Create a set of matchable names (Name + Nicknames)
+      const matchTerms = [
+        selectedMember.name,
+        ...(selectedMember.nicknames || []),
+        selectedMember.nickname // legacy support
+      ].filter(Boolean).map(term => term.toLowerCase());
+
+      // Check if ANY traveler in the trip matches ANY of the terms
+      return t.travelers.some((traveler: any) => {
+        // Traveler can be a string ("Roee Rubin") or object ({ name: "Roee", ... })
+        const tName = (typeof traveler === "string" ? traveler : traveler.name || "").toLowerCase();
+
+        // Fuzzy match: Does the trip traveler string *include* our search term? 
+        // OR does the search term include the traveler string? (e.g. "Roy" vs "Roy Rubin")
+        return matchTerms.some(term => tName.includes(term) || term.includes(tName));
+      });
+    });
 
   // 3. Pagination
   const totalPages = Math.ceil(finalFilteredTrips.length / ITEMS_PER_PAGE);

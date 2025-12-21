@@ -7,11 +7,11 @@ import { revalidatePath } from "next/cache";
 // Removed local dir constants as they are no longer needed
 
 
-export async function getSettings(): Promise<{ backgroundImage: string | null }> {
+export async function getSettings(): Promise<{ backgroundImage: string | null; familyMembers?: any[] }> {
     try {
         const doc = await db.collection("settings").doc("global").get();
         if (doc.exists) {
-            return doc.data() as { backgroundImage: string | null };
+            return doc.data() as { backgroundImage: string | null; familyMembers?: any[] };
         }
         return { backgroundImage: null };
     } catch (error) {
