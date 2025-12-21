@@ -1,9 +1,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Calendar, Users, Trash2, Plane, Bed } from "lucide-react";
+import { ArrowRight, Calendar, Users, Plane, Bed } from "lucide-react";
 import { useTrips } from "@/context/TripContext";
-import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { getDestinationImage, GENERIC_FALLBACK } from "@/lib/imageUtils";
 
 // ... [existing code] ...
@@ -19,11 +18,18 @@ interface TripListItemProps {
     destinationImages?: Record<string, string>;
     hasFlights?: boolean;
     hasHotels?: boolean;
+    familyMembers?: any[];
 }
 
-export function TripListItem({ id, destination, dates, image, travelers, destinationImages, hasFlights, hasHotels }: TripListItemProps) {
-    const { deleteTrip } = useTrips();
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+export function TripListItem({ id, destination, dates, image, travelers, destinationImages, hasFlights, hasHotels, familyMembers = [] }: TripListItemProps) {
+    // Helper to get display name
+    const getTravelerName = (t: any) => {
+        if (!t.id) return t.name;
+        const member = familyMembers.find((m: any) => m.id === t.id);
+        return member ? member.name : t.name;
+    };
+
+    // ... [existing code] ...
 
     // Dynamic Status Logic
     let status = "Upcoming";
@@ -59,16 +65,7 @@ export function TripListItem({ id, destination, dates, image, travelers, destina
         statusColor = "bg-green-500/20 text-green-300 pulse-animation";
     }
 
-    const handleDeleteClick = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDeleteModalOpen(true);
-    };
 
-    const handleConfirmDelete = () => {
-        deleteTrip(id);
-        setIsDeleteModalOpen(false);
-    };
 
     return (
         <>
@@ -142,9 +139,9 @@ export function TripListItem({ id, destination, dates, image, travelers, destina
                         {/* Travelers */}
                         <div className="hidden md:flex items-center gap-2 text-sm text-white/60 overflow-hidden">
                             <Users className="h-4 w-4 opacity-50 shrink-0" />
-                            <span className="truncate max-w-[200px]" title={travelers.map((t: any) => t.name).join(", ")}>
+                            <span className="truncate max-w-[200px]" title={travelers.map((t: any) => getTravelerName(t)).join(", ")}>
                                 {travelers && travelers.length > 0
-                                    ? travelers.map((t: any) => t.name).join(", ")
+                                    ? travelers.map((t: any) => getTravelerName(t)).join(", ")
                                     : "No Travelers"}
                             </span>
                         </div>
@@ -165,27 +162,10 @@ export function TripListItem({ id, destination, dates, image, travelers, destina
 
                     {/* Action Icons */}
                     <div className="flex items-center gap-6 pr-2">
-                        <button
-                            onClick={handleDeleteClick}
-                            className="p-2 rounded-full hover:bg-white/10 text-white/30 hover:text-red-400 transition-colors z-20"
-                            title="Delete Trip"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </button>
                         <ArrowRight className="h-5 w-5 text-white/30 group-hover:text-white group-hover:translate-x-1 transition-all" />
                     </div>
                 </motion.div>
             </Link>
-
-            <ConfirmationModal
-                isOpen={isDeleteModalOpen}
-                title="Delete Trip"
-                message={`Are you sure you want to remove the trip to ${destination}? This action cannot be undone.`}
-                confirmLabel="Delete"
-                onConfirm={handleConfirmDelete}
-                onCancel={() => setIsDeleteModalOpen(false)}
-                isDestructive={true}
-            />
         </>
     );
 }

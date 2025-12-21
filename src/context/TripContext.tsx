@@ -15,19 +15,7 @@ const TripContext = createContext<TripContextType | undefined>(undefined);
 export function TripProvider({ children }: { children: ReactNode }) {
     const [trips, setTrips] = useState<any[]>([]);
 
-    // Load fresh data on mount (replace LocalStorage)
-    useEffect(() => {
-        const loadTrips = async () => {
-            try {
-                const { getTrips } = await import("@/app/trip-actions");
-                const serverTrips = await getTrips();
-                setTrips(serverTrips);
-            } catch (error) {
-                console.error("Failed to load trips", error);
-            }
-        };
-        loadTrips();
-    }, []);
+
 
     const addTrip = (trip: any) => {
         setTrips((prev) => [trip, ...prev]);

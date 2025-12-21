@@ -40,7 +40,7 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 10;
 
   // Merge initial server images with any local overrides if we added that, 
   // but for now let's reuse initialImages. 
@@ -206,6 +206,7 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
                 destinationImages={currentImages}
                 hasFlights={trip.flights && trip.flights.length > 0}
                 hasHotels={trip.hotels && trip.hotels.length > 0}
+                familyMembers={familyMembers}
               />
             </motion.div>
           ))}

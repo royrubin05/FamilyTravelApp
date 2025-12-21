@@ -8,6 +8,8 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
     const initialImages = await getCityImages();
     const initialTrips = await getTrips();
+
+
     const initialSettings = await getSettings();
 
     return <DashboardClient initialImages={initialImages} initialTrips={initialTrips} initialSettings={initialSettings} />;

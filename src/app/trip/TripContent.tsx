@@ -3,26 +3,29 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SmartCard } from "@/components/journey/SmartCard";
-import { User, Home, Plane, Building, Ticket, Share2, Check, Copy, X, FolderOpen } from "lucide-react";
+import { User, Home, Plane, Building, Ticket, Share2, Check, Copy, X, FolderOpen, Trash2, Terminal } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTrips } from "@/context/TripContext";
 import { getDestinationImage, GENERIC_FALLBACK, getNormalizedKeys } from "@/lib/imageUtils";
 import { getCheckInUrl } from "@/lib/airlineUtils";
 import { getStorageUrl } from "@/lib/storageUtils";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { DebugPromptModal } from "@/components/ui/DebugPromptModal";
 
 interface TripContentProps {
     destinationImages?: Record<string, string>;
     initialTrip?: any;
+    familyMembers?: any[];
 }
 
-export default function TripContent({ destinationImages, initialTrip }: TripContentProps) {
+export default function TripContent({ destinationImages, initialTrip, familyMembers = [] }: TripContentProps) {
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
     const { trips } = useTrips();
 
     // Prioritize initial SSR trip, then Context lookup, then fallback
-    const trip = initialTrip || trips.find((t) => t.id === id) || trips[0];
+    const trip = initialTrip || trips.find((t: any) => t.id === id) || trips[0];
 
     // Derived state for sections
     const flights = trip.flights || [];
@@ -47,6 +50,25 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
     };
 
     const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
+    const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const router = useRouter();
+    const { deleteTrip } = useTrips(); // useTrips is already called below, careful of duplicates
+
+    const handleDelete = async () => {
+        if (trip.id) {
+            await deleteTrip(trip.id);
+            router.push("/");
+        }
+    };
+
+    // Helper to get display name
+    const getTravelerName = (t: any) => {
+        if (!t.id) return t.name;
+        const member = familyMembers.find((m: any) => m.id === t.id);
+        return member ? member.name : t.name;
+    };
 
     return (
         <div className="relative min-h-screen w-full bg-black text-white font-sans selection:bg-white/30 pb-20">
@@ -263,127 +285,174 @@ export default function TripContent({ destinationImages, initialTrip }: TripCont
                     )}
 
                     {/* Travelers/Family Mapping Section */}
-                    {trip.travelers?.length > 0 && (
-                        <section>
-                            <div className="flex items-center gap-3 mb-6 opacity-70">
-                                <User className="h-5 w-5" />
-                                <h3 className="text-sm font-bold uppercase tracking-widest">Travelers</h3>
-                            </div>
-                            <div className="flex flex-wrap gap-4">
-                                {trip.travelers.map((traveler: any, idx: number) => (
-                                    <div key={idx} className="flex items-center gap-3 bg-white/10 rounded-full pl-2 pr-4 py-2 border border-white/5">
-                                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold">
-                                            {traveler.name ? traveler.name[0] : "?"}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium leading-none">{traveler.name}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
+                    {
+                        trip.travelers?.length > 0 && (
+                            <section>
+                                <div className="flex items-center gap-3 mb-6 opacity-70">
+                                    <User className="h-5 w-5" />
+                                    <h3 className="text-sm font-bold uppercase tracking-widest">Travelers</h3>
+                                </div>
+                                <div className="flex flex-wrap gap-4">
+                                    {trip.travelers.map((traveler: any, idx: number) => {
+                                        const displayName = getTravelerName(traveler);
+                                        return (
+                                            <div key={idx} className="flex items-center gap-3 bg-white/10 rounded-full pl-2 pr-4 py-2 border border-white/5">
+                                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold">
+                                                    {displayName ? displayName[0] : "?"}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium leading-none">{displayName}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        )
+                    }
 
                     {/* Empty State */}
-                    {!hasDetails && trip.travelers.length === 0 && (
-                        <div className="text-center py-20 opacity-40 border-2 border-dashed border-white/10 rounded-xl">
-                            <p>No specific itinerary details found.</p>
-                        </div>
-                    )}
+                    {
+                        !hasDetails && trip.travelers.length === 0 && (
+                            <div className="text-center py-20 opacity-40 border-2 border-dashed border-white/10 rounded-xl">
+                                <p>No specific itinerary details found.</p>
+                            </div>
+                        )
+                    }
 
                     {/* Source Documents Section */}
-                    {(() => {
-                        const docs = [];
-                        if (trip.sourceDocuments && Array.isArray(trip.sourceDocuments)) {
-                            docs.push(...trip.sourceDocuments);
-                        } else if (trip.sourceDocument) {
-                            docs.push({ url: trip.sourceDocument, name: trip.sourceFileName || "Source Document" });
-                        }
+                    {
+                        (() => {
+                            const docs = [];
+                            if (trip.sourceDocuments && Array.isArray(trip.sourceDocuments)) {
+                                docs.push(...trip.sourceDocuments);
+                            } else if (trip.sourceDocument) {
+                                docs.push({ url: trip.sourceDocument, name: trip.sourceFileName || "Source Document" });
+                            }
 
-                        if (docs.length === 0) return null;
+                            if (docs.length === 0) return null;
 
-                        return (
-                            <>
-                                <div className="pt-12 flex flex-col items-center gap-4 pb-20">
-                                    {docs.length > 1 ? (
-                                        <button
-                                            onClick={() => setIsDocsModalOpen(true)}
-                                            className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl backdrop-blur-md text-sm font-medium transition-all w-full max-w-xs justify-center group"
-                                        >
-                                            <FolderOpen className="h-4 w-4 text-white/70 group-hover:text-amber-300 transition-colors" />
-                                            <span>Download {docs.length} Source Documents</span>
-                                        </button>
-                                    ) : (
-                                        <a
-                                            href={getStorageUrl(docs[0].url)}
-                                            download={docs[0].name}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl backdrop-blur-md text-sm font-medium transition-all w-full max-w-xs justify-center"
-                                        >
-                                            <Ticket className="h-4 w-4 shrink-0" />
-                                            <span className="truncate max-w-[250px]">{docs[0].name}</span>
-                                        </a>
-                                    )}
-                                </div>
-
-                                {/* Source Docs Modal */}
-                                <AnimatePresence>
-                                    {isDocsModalOpen && (
-                                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                                            <motion.div
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                onClick={() => setIsDocsModalOpen(false)}
-                                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                                            />
-                                            <motion.div
-                                                initial={{ scale: 0.95, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                exit={{ scale: 0.95, opacity: 0 }}
-                                                className="relative w-full max-w-md bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden"
+                            return (
+                                <>
+                                    <div className="pt-12 flex flex-col items-center gap-4 pb-8">
+                                        {docs.length > 1 ? (
+                                            <button
+                                                onClick={() => setIsDocsModalOpen(true)}
+                                                className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl backdrop-blur-md text-sm font-medium transition-all w-full max-w-xs justify-center group"
                                             >
-                                                <div className="flex justify-between items-center mb-6">
-                                                    <h3 className="font-serif text-xl">Source Documents</h3>
-                                                    <button onClick={() => setIsDocsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                                                        <X className="h-5 w-5 opacity-70" />
-                                                    </button>
-                                                </div>
-                                                <div className="space-y-3">
-                                                    {docs.map((doc: any, idx: number) => (
-                                                        <a
-                                                            key={idx}
-                                                            href={getStorageUrl(doc.url)}
-                                                            download={doc.name}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-xl transition-all group"
-                                                        >
-                                                            <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 group-hover:text-amber-300 transition-colors">
-                                                                <Ticket className="h-5 w-5" />
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="font-medium text-sm truncate">{doc.name}</p>
-                                                                <p className="text-xs text-white/40 truncate">PDF Document</p>
-                                                            </div>
-                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0">
-                                                                <Copy className="h-4 w-4 rotate-180" /> {/* Using Copy as 'Download' icon approximation or just generic arrow */}
-                                                            </div>
-                                                        </a>
-                                                    ))}
-                                                </div>
-                                            </motion.div>
-                                        </div>
-                                    )}
-                                </AnimatePresence>
-                            </>
-                        );
-                    })()}
+                                                <FolderOpen className="h-4 w-4 text-white/70 group-hover:text-amber-300 transition-colors" />
+                                                <span>Download {docs.length} Source Documents</span>
+                                            </button>
+                                        ) : (
+                                            <a
+                                                href={getStorageUrl(docs[0].url)}
+                                                download={docs[0].name}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl backdrop-blur-md text-sm font-medium transition-all w-full max-w-xs justify-center"
+                                            >
+                                                <Ticket className="h-4 w-4 shrink-0" />
+                                                <span className="truncate max-w-[250px]">{docs[0].name}</span>
+                                            </a>
+                                        )}
+                                    </div>
 
+                                    {/* Source Docs Modal */}
+                                    <AnimatePresence>
+                                        {isDocsModalOpen && (
+                                            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                                                <motion.div
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                    onClick={() => setIsDocsModalOpen(false)}
+                                                    className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                                                />
+                                                <motion.div
+                                                    initial={{ scale: 0.95, opacity: 0 }}
+                                                    animate={{ scale: 1, opacity: 1 }}
+                                                    exit={{ scale: 0.95, opacity: 0 }}
+                                                    className="relative w-full max-w-md bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden"
+                                                >
+                                                    <div className="flex justify-between items-center mb-6">
+                                                        <h3 className="font-serif text-xl">Source Documents</h3>
+                                                        <button onClick={() => setIsDocsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                                            <X className="h-5 w-5 opacity-70" />
+                                                        </button>
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        {docs.map((doc: any, idx: number) => (
+                                                            <a
+                                                                key={idx}
+                                                                href={getStorageUrl(doc.url)}
+                                                                download={doc.name}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-xl transition-all group"
+                                                            >
+                                                                <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 group-hover:text-amber-300 transition-colors">
+                                                                    <Ticket className="h-5 w-5" />
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="font-medium text-sm truncate">{doc.name}</p>
+                                                                    <p className="text-xs text-white/40 truncate">PDF Document</p>
+                                                                </div>
+                                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0">
+                                                                    <Copy className="h-4 w-4 rotate-180" /> {/* Using Copy as 'Download' icon approximation or just generic arrow */}
+                                                                </div>
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                </motion.div>
+                                            </div>
+                                        )}
+                                    </AnimatePresence>
+                                </>
+                            );
+                        })()
+                    }
+
+                </div >
+
+                {/* Bottom Actions */}
+                <div className="flex justify-center items-center gap-4 mt-4 mb-8">
+                    <button
+                        onClick={() => setIsDebugModalOpen(true)}
+                        className="text-white/30 hover:text-purple-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-full"
+                    >
+                        <Terminal className="h-4 w-4" />
+                        Debug Info
+                    </button>
+
+                    <div className="h-4 w-px bg-white/10" />
+
+                    <button
+                        onClick={() => setIsDeleteModalOpen(true)}
+                        className="text-white/30 hover:text-red-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-full"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        Delete Trip
+                    </button>
                 </div>
-            </div>
+            </div >
 
-        </div>
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                title="Delete Trip"
+                message={`Are you sure you want to remove the trip to ${trip.destination}? This action cannot be undone.`}
+                confirmLabel="Delete"
+                onConfirm={handleDelete}
+                onCancel={() => setIsDeleteModalOpen(false)}
+                isDestructive={true}
+            />
+
+            <DebugPromptModal
+                isOpen={isDebugModalOpen}
+                onClose={() => setIsDebugModalOpen(false)}
+                debugPrompt={trip.debugPrompt}
+                debugResponse={trip.debugResponse}
+            />
+
+        </div >
     );
 }

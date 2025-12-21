@@ -1,0 +1,177 @@
+{
+    "name": "Trip Upload Pipeline",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "webhook/trip-upload",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "={{ $json.body.fileUrl }}",
+                "authentication": "none",
+                "options": {}
+            },
+            "name": "Download File",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {},
+            "name": "ADD GEMINI NODE HERE",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "getAll",
+                "collection": "trips",
+                "limit": 50
+            },
+            "name": "Get Existing Trips",
+            "type": "n8n-nodes-base.firestore",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const newTrip = $('ADD GEMINI NODE HERE').first().json;\nconst existingTrips = $('Get Existing Trips').all().map(i => i.json);\n\n// Basic Logic: Assume new for now or implement matching\n// NOTE: Ensure Gemini Output is connected to this node's input or referenced correctly.\nif (!newTrip.destination) return { json: { error: 'Gemini extraction failed' } };\n\nnewTrip.id = newTrip.destination.toLowerCase().replace(/[^a-z]/g, '-') + '-' + newTrip.startDate;\n\nreturn { json: { trip: newTrip } };"
+            },
+            "name": "Merge Logic",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1050,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "upsert",
+                "collection": "trips",
+                "documentId": "={{ $json.trip.id }}",
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "destination",
+                            "fieldValue": "={{ $json.trip.destination }}"
+                        },
+                        {
+                            "fieldId": "startDateISO",
+                            "fieldValue": "={{ $json.trip.startDate }}"
+                        }
+                    ]
+                }
+            },
+            "name": "Save Trip",
+            "type": "n8n-nodes-base.firestore",
+            "typeVersion": 1,
+            "position": [
+                1250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "{\n \"success\": true,\n \"tripId\": \"{{ $json.trip.id }}\"\n}",
+                "options": {}
+            },
+            "name": "Respond to App",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                1450,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Download File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Download File": {
+            "main": [
+                [
+                    {
+                        "node": "ADD GEMINI NODE HERE",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "ADD GEMINI NODE HERE": {
+            "main": [
+                [
+                    {
+                        "node": "Get Existing Trips",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Existing Trips": {
+            "main": [
+                [
+                    {
+                        "node": "Merge Logic",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Merge Logic": {
+            "main": [
+                [
+                    {
+                        "node": "Save Trip",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Save Trip": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to App",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
