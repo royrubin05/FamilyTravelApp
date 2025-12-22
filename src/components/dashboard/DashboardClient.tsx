@@ -135,7 +135,7 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
       {/* Header */}
       <header className="flex justify-between items-center mb-8 max-w-4xl mx-auto">
         <div>
-          <h1 className="text-2xl font-serif tracking-wider text-white">Rubin Family Travel</h1>
+          <h1 className="text-2xl font-serif tracking-wider text-white">TravelRoots</h1>
           <p className="text-xs text-white/40 uppercase tracking-widest mt-1">Family Command Center</p>
         </div>
         <div className="flex items-center gap-4">

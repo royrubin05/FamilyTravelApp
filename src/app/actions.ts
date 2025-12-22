@@ -246,7 +246,7 @@ export async function normalizeLocationsAction() {
     let batchCount = 0;
 
     for (const trip of trips) {
-      const originalDest = trip.destination;
+      const originalDest = (trip as any).destination;
       if (!originalDest) continue;
 
       const trimmedDest = originalDest.trim();

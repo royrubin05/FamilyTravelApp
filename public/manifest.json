@@ -1,6 +1,6 @@
 {
-    "name": "Family Travel App",
-    "short_name": "TravelApp",
+    "name": "TravelRoots",
+    "short_name": "TravelRoots",
     "description": "Premium Family Travel Dashboard",
     "start_url": "/",
     "display": "standalone",

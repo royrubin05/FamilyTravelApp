@@ -18,13 +18,13 @@ const geistMono = Geist_Mono({
 // ... existing imports
 
 export const metadata: Metadata = {
-  title: "Family Travel App",
-  description: "Premium Family Travel Dashboard",
+  title: "TravelRoots",
+  description: "TravelRoots - Premium Family Travel Dashboard",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "FamilyTravel",
+    title: "TravelRoots",
   },
 };
 
