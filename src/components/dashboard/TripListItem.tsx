@@ -85,7 +85,7 @@ export function TripListItem({ id, destination = "", dates = "", image, traveler
 
                                 if (target.src !== GENERIC_FALLBACK) target.src = GENERIC_FALLBACK;
                             }}
-                            className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                            className="h-full w-full object-cover grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-500"
                         />
                         <div className="absolute inset-0 flex items-center justify-center -z-10">
                             <span className="text-xs font-serif text-white/30">{(destination || "").substring(0, 2)}</span>
