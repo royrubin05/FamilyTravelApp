@@ -120,30 +120,30 @@ export function TripListItem({ id, destination = "", dates = "", image, traveler
                             </span>
                         </div>
 
-                        {/* Formatted Date & Icons */}
-                        <div className="flex flex-col items-end justify-center gap-3 md:pl-4 border-l border-white/5 md:border-none min-w-[100px]">
+                        {/* Status / Date / Icons Wrapper - Adaptive Layout */}
+                        {/* Mobile: Row (Date + Icons), Desktop: Column (Date top, Icons bottom right) */}
+                        <div className="col-span-2 md:col-span-1 flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 md:pl-4 border-t border-white/5 pt-2 mt-1 md:border-none md:pt-0 md:mt-0">
                             {/* Month, Year */}
-                            <div className="text-right">
-                                <span className="block text-sm font-bold text-white tracking-wide">
+                            <div className="text-left md:text-right">
+                                <span className="block text-sm font-medium text-white/70 md:text-white group-hover:text-white transition-colors">
                                     {(() => {
                                         const ts = parseTripDate(dates);
-                                        if (ts === 0) return dates; // Fallback
-                                        return new Date(ts).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                                        if (ts === 0) return dates;
+                                        return new Date(ts).toLocaleDateString("en-US", { month: "short", year: "numeric" });
                                     })()}
                                 </span>
-                                {/* Sub-date if range exists, optional, or just hide */}
                             </div>
 
                             {/* Icons Row */}
                             <div className="flex items-center gap-2">
                                 {hasFlights && (
-                                    <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]" title="Flights">
-                                        <Plane className="h-4 w-4 text-blue-300" />
+                                    <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-blue-500/10 md:bg-blue-500/20 flex items-center justify-center border border-blue-500/20 md:border-blue-500/30" title="Flights">
+                                        <Plane className="h-3.5 w-3.5 md:h-4 md:w-4 text-blue-300" />
                                     </div>
                                 )}
                                 {hasHotels && (
-                                    <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)]" title="Hotels">
-                                        <Bed className="h-4 w-4 text-amber-300" />
+                                    <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-amber-500/10 md:bg-amber-500/20 flex items-center justify-center border border-amber-500/20 md:border-amber-500/30" title="Hotels">
+                                        <Bed className="h-3.5 w-3.5 md:h-4 md:w-4 text-amber-300" />
                                     </div>
                                 )}
                             </div>
