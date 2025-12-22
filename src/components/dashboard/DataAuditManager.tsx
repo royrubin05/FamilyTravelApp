@@ -86,7 +86,7 @@ export function DataAuditManager() {
         try {
             const result = await normalizeLocationsAction();
             if (result.success) {
-                setNormalizationReport(result.report);
+                setNormalizationReport(result.report || "Normalization successful with no report.");
                 runAudit(); // Refresh data
             } else {
                 setNormalizationReport("Normalization failed: " + (result.error || "Unknown error"));
