@@ -9,7 +9,7 @@ You are an intelligent travel assistant. Your task is to extract structured trav
 Return ONLY a JSON object with the following schema:
 {
   "destination": "City, Country",
-  "dates": "Mon, MMM DD - Mon, MMM DD (Year)",
+  "dates": "MMM DD, YYYY - MMM DD, YYYY",
   "image_keyword": "City Name",
   "travelers": [
     { "name": "Name", "role": "Adult/Child/Traveler", "age": "Adult" }
@@ -37,9 +37,10 @@ Return ONLY a JSON object with the following schema:
 
 Rules:
 1. Extract ALL travelers found in the document.
-2. Format dates clearly.
-3. CRITICAL: You MUST populate "destination" and "dates". If they are not explicitly written at the top, INFER them from the first flight/hotel arrival. Do NOT return null for these fields.
-4. If other data is missing, use empty arrays.
+2. Format dates as "MMM DD, YYYY - MMM DD, YYYY" (e.g. "Jan 04, 2026 - May 27, 2026"). Do NOT use parentheses for the year.
+3. CRITICAL: You MUST populate "destination". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.
+   - Clean the name: Remove airport codes (e.g. convert "City (CODE)" to "City").
+4. If "dates" are missing, INFER them from the first flight departure.
 5. Do NOT include markdown formatting (\`\`\`json). Just the raw JSON.
 `;
 

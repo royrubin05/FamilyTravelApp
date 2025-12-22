@@ -13,6 +13,7 @@ interface TripContextType {
 const TripContext = createContext<TripContextType | undefined>(undefined);
 
 export function TripProvider({ children }: { children: ReactNode }) {
+    console.log("[TripProvider] Mounting...");
     const [trips, setTrips] = useState<any[]>([]);
 
 

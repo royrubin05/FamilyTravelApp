@@ -36,8 +36,15 @@ export const parseTripDate = (dateStr: string): number => {
  */
 export const isTripCompleted = (dateStr: string): boolean => {
     if (!dateStr) return false;
-    const lower = dateStr.toLowerCase();
     const now = new Date().getTime();
+
+    // Special Case: Year Only "2025" -> Treat as End of Year
+    // Restored since we removed the AI auto-expansion rule.
+    if (dateStr.trim().match(/^\d{4}$/)) {
+        const year = parseInt(dateStr.trim());
+        const endOfYear = new Date(year, 11, 31, 23, 59, 59).getTime();
+        return endOfYear < now;
+    }
 
     // Check for ranges "Oct 12 - Oct 27" -> Parse the END part
     if (dateStr.includes("-")) {

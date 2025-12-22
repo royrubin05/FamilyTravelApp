@@ -20,6 +20,7 @@ interface DashboardClientProps {
 }
 
 export default function DashboardClient({ initialImages, initialTrips, initialSettings }: DashboardClientProps) {
+  console.log("[DashboardClient] Rendering...");
   const router = useRouter();
   const [filter, setFilter] = useState("all");
   const [statusTab, setStatusTab] = useState<"upcoming" | "completed">("upcoming");

@@ -70,3 +70,35 @@ export async function deleteTripAction(id: string) {
         return { success: false, error: "Failed to delete trip" };
     }
 }
+
+
+export async function removeTravelerFromTripAction(tripId: string, travelerToRemove: { id?: string, name: string }) {
+    try {
+        const tripRef = db.collection("trips").doc(tripId);
+        const tripDoc = await tripRef.get();
+
+        if (!tripDoc.exists) {
+            return { success: false, error: "Trip not found" };
+        }
+
+        const tripData = tripDoc.data();
+        const currentTravelers = tripData?.travelers || [];
+
+        // Filter out the traveler
+        const updatedTravelers = currentTravelers.filter((t: any) => {
+            if (travelerToRemove.id && t.id) {
+                return t.id !== travelerToRemove.id;
+            }
+            // Fallback to name match if IDs are missing or mismatched
+            return t.name !== travelerToRemove.name;
+        });
+
+        await tripRef.update({ travelers: updatedTravelers });
+        revalidatePath("/");
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error removing traveler:", error);
+        return { success: false, error: "Failed to remove traveler" };
+    }
+}

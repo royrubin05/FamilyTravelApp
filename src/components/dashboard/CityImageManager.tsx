@@ -19,13 +19,36 @@ export function CityImageManager({ isOpen, onClose, initialImages, onUpdate, emb
     const [images, setImages] = useState(initialImages);
     const [uploadingCity, setUploadingCity] = useState<string | null>(null);
 
-    // Collect all unique destinations from trips, preferring the normalized key
-    const tripCities = new Set(trips.map(t => (t.matched_city_key || t.destination || "").toLowerCase().trim()));
-    // Also include cities we have images for, even if not in current trips
-    Object.keys(images).forEach(k => tripCities.add(k));
-    tripCities.delete(""); // Remove empty
+    // Unified City Collection (Case-Insensitive Deduplication)
+    const uniqueCities = new Map<string, { displayName: string, originalKey: string }>();
 
-    const cities = Array.from(tripCities).sort();
+    // 1. Add from Trips (use destination string)
+    trips.forEach(t => {
+        const raw = t.matched_city_key || t.destination;
+        if (!raw) return;
+        const lower = raw.toLowerCase().trim();
+        // If we don't have it, or if the current stored display name is all lowercase, overwrite with this one (prefer formatted)
+        // Actually, just storing the first one is usually fine, but let's prefer Title Case if we see it.
+        if (!uniqueCities.has(lower)) {
+            uniqueCities.set(lower, { displayName: raw.trim(), originalKey: raw.trim() });
+        }
+    });
+
+    // 2. Add from Images (Keys)
+    Object.keys(images).forEach(k => {
+        const lower = k.toLowerCase().trim();
+        if (!uniqueCities.has(lower)) {
+            uniqueCities.set(lower, { displayName: k.trim(), originalKey: k.trim() });
+        } else {
+            // If the image key is "Nicely Formatted" and the trip was "ugly", update display name
+            const existing = uniqueCities.get(lower)!;
+            if (k !== lower && existing.displayName === lower) {
+                uniqueCities.set(lower, { displayName: k.trim(), originalKey: k.trim() });
+            }
+        }
+    });
+
+    const cities = Array.from(uniqueCities.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
 
     const handleUpload = async (city: string, file: File) => {
         setUploadingCity(city);
@@ -65,15 +88,27 @@ export function CityImageManager({ isOpen, onClose, initialImages, onUpdate, emb
 
     const content = (
         <div className={`space-y-4 text-white ${embedded ? 'h-full' : 'flex-1 overflow-y-auto p-6'}`}>
-            {cities.map(city => {
-                const hasImage = !!images[city];
+            {cities.map(({ displayName, originalKey }) => {
+                // Case-insensitive lookup for image
+                // We use the original key if it matches, otherwise we try to find the key in images that matches our lowercased version
+                let imageKey = originalKey;
+                if (!images[imageKey]) {
+                    // Fallback search
+                    const lowerKey = displayName.toLowerCase();
+                    const foundKey = Object.keys(images).find(k => k.toLowerCase() === lowerKey);
+                    if (foundKey) imageKey = foundKey;
+                }
+
+                const hasImage = !!images[imageKey];
+                // Use the key we found for uploading/deleting so it matches the state
+                const effectiveKey = imageKey || displayName;
 
                 return (
-                    <div key={city} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+                    <div key={displayName} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
                         <div className="h-16 w-24 bg-black rounded-lg overflow-hidden flex-shrink-0 relative group">
                             {hasImage ? (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={images[city]} alt={city} className="h-full w-full object-cover" />
+                                <img src={images[effectiveKey]} alt={displayName} className="h-full w-full object-cover" />
                             ) : (
                                 <div className="h-full w-full flex items-center justify-center bg-white/5">
                                     <ImageIcon className="h-6 w-6 text-white/20" />
@@ -82,7 +117,7 @@ export function CityImageManager({ isOpen, onClose, initialImages, onUpdate, emb
                         </div>
 
                         <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-white capitalize">{city}</h3>
+                            <h3 className="font-medium text-white capitalize">{displayName}</h3>
                             <p className="text-xs text-white/40">
                                 {hasImage ? "Custom Image Set" : "Using Default / Missing"}
                             </p>
@@ -91,7 +126,7 @@ export function CityImageManager({ isOpen, onClose, initialImages, onUpdate, emb
                         <div className="flex items-center gap-2">
                             {hasImage && (
                                 <button
-                                    onClick={() => handleDelete(city)}
+                                    onClick={() => handleDelete(effectiveKey)}
                                     disabled={!!uploadingCity}
                                     className="p-2 text-white/20 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                     title="Delete Image"
@@ -102,20 +137,20 @@ export function CityImageManager({ isOpen, onClose, initialImages, onUpdate, emb
 
                             <input
                                 type="file"
-                                id={`upload-${city}`}
+                                id={`upload-${effectiveKey}`}
                                 className="hidden"
                                 accept="image/*"
                                 onChange={(e) => {
-                                    if (e.target.files?.[0]) handleUpload(city, e.target.files[0]);
+                                    if (e.target.files?.[0]) handleUpload(effectiveKey, e.target.files[0]);
                                 }}
                                 disabled={!!uploadingCity}
                             />
                             <label
-                                htmlFor={`upload-${city}`}
+                                htmlFor={`upload-${effectiveKey}`}
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${hasImage ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'
                                     }`}
                             >
-                                {uploadingCity === city ? (
+                                {uploadingCity === effectiveKey ? (
                                     <Loader2 className="h-3 w-3 animate-spin" />
                                 ) : (
                                     <Upload className="h-3 w-3" />

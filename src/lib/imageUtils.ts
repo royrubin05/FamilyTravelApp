@@ -1,19 +1,23 @@
-export const DESTINATION_IMAGES: Record<string, string> = {
-    "london": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=1974&auto=format&fit=crop",
-    "paris": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1974&auto=format&fit=crop",
-    "aspen": "https://images.unsplash.com/photo-1551524559-8af4e66a3236?q=80&w=1974&auto=format&fit=crop",
-    "tel aviv": "/images/destinations/tel-aviv.png",
-    "miami": "/images/destinations/miami-1766120214757.webp",
+// Google Cloud Storage Base URL
+const GCS_BASE_URL = "https://storage.googleapis.com/travelapp05-travel-data/public/destinations";
 
-    "new york": "https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?q=80&w=2070&auto=format&fit=crop",
-    "tokyo": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1994&auto=format&fit=crop",
-    "rome": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=1996&auto=format&fit=crop",
-    "berlin": "https://images.unsplash.com/photo-1560969184-10fe8719e047?q=80&w=2070&auto=format&fit=crop",
-    "amsterdam": "https://images.unsplash.com/photo-1512470876302-687da745313d?q=80&w=2070&auto=format&fit=crop"
+export const DESTINATION_IMAGES: Record<string, string> = {
+    "london": `${GCS_BASE_URL}/london.jpg`,
+    "paris": `${GCS_BASE_URL}/paris.jpg`,
+    "aspen": `${GCS_BASE_URL}/aspen.jpg`,
+    "tel aviv": `${GCS_BASE_URL}/tel-aviv.png`, // Prioritizing the PNG version if present, or we can check
+    "miami": `${GCS_BASE_URL}/miami-1766120214757.webp`,
+    "desert hot springs": `${GCS_BASE_URL}/desert-hot-springs--ca-1766119256812.jpg`,
+
+    "new york": `${GCS_BASE_URL}/new-york.jpg`,
+    "tokyo": `${GCS_BASE_URL}/tokyo.jpg`,
+    "rome": `${GCS_BASE_URL}/rome.jpg`,
+    "berlin": `${GCS_BASE_URL}/berlin.jpg`,
+    "amsterdam": `${GCS_BASE_URL}/amsterdam.jpg`
 };
 
 // A high-quality generic travel image (airplane wing or clouds)
-export const GENERIC_FALLBACK = "https://images.unsplash.com/photo-1436491865332-7a61a109a33e?q=80&w=2074&auto=format&fit=crop";
+export const GENERIC_FALLBACK = `${GCS_BASE_URL}/generic-travel.jpg`;
 
 export function getDestinationImage(destination: string | undefined): string {
     if (!destination) return GENERIC_FALLBACK;

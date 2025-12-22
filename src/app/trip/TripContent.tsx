@@ -11,6 +11,7 @@ import { getDestinationImage, GENERIC_FALLBACK, getNormalizedKeys } from "@/lib/
 import { getCheckInUrl } from "@/lib/airlineUtils";
 import { getStorageUrl } from "@/lib/storageUtils";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { removeTravelerFromTripAction } from "@/app/trip-actions";
 import { DebugPromptModal } from "@/components/ui/DebugPromptModal";
 
 interface TripContentProps {
@@ -61,6 +62,18 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
             await deleteTrip(trip.id);
             router.push("/");
         }
+    };
+
+    const [travelerToRemove, setTravelerToRemove] = useState<{ id?: string, name: string } | null>(null);
+
+
+    const handleRemoveTraveler = async () => {
+        if (!trip.id || !travelerToRemove) return;
+
+        // Optimistic update or wait for server? Wait for server for safety.
+        await removeTravelerFromTripAction(trip.id, travelerToRemove);
+        setTravelerToRemove(null);
+        router.refresh();
     };
 
     // Helper to get display name
@@ -296,13 +309,25 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                     {trip.travelers.map((traveler: any, idx: number) => {
                                         const displayName = getTravelerName(traveler);
                                         return (
-                                            <div key={idx} className="flex items-center gap-3 bg-white/10 rounded-full pl-2 pr-4 py-2 border border-white/5">
+                                            <div key={idx} className="group relative flex items-center gap-3 bg-white/10 rounded-full pl-2 pr-4 py-2 border border-white/5 transition-colors hover:border-white/20 select-none">
                                                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold">
                                                     {displayName ? displayName[0] : "?"}
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-medium leading-none">{displayName}</p>
                                                 </div>
+
+                                                {/* Remove Button (Hover only) */}
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setTravelerToRemove({ id: traveler.id, name: traveler.name });
+                                                    }}
+                                                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+                                                    title="Remove Traveler"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
                                             </div>
                                         );
                                     })}
@@ -443,6 +468,16 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                 confirmLabel="Delete"
                 onConfirm={handleDelete}
                 onCancel={() => setIsDeleteModalOpen(false)}
+                isDestructive={true}
+            />
+
+            <ConfirmationModal
+                isOpen={!!travelerToRemove}
+                title="Remove Traveler"
+                message={`Are you sure you want to remove ${travelerToRemove?.name || "this traveler"} from the trip?`}
+                confirmLabel="Remove"
+                onConfirm={handleRemoveTraveler}
+                onCancel={() => setTravelerToRemove(null)} // Clear selection on cancel
                 isDestructive={true}
             />
 

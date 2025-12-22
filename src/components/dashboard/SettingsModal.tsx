@@ -1,8 +1,9 @@
 "use client";
 
-import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User, Edit2 } from "lucide-react";
+import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User, Edit2, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CityImageManager } from "./CityImageManager";
+import { DataAuditManager } from "./DataAuditManager";
 import { useState, useRef } from "react";
 import { uploadBackgroundImage, removeBackgroundImage } from "@/app/settings-actions";
 
@@ -16,7 +17,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, currentSettings, onUpdateSettings }: SettingsModalProps) {
-    const [activeSection, setActiveSection] = useState<"images" | "appearance" | "members">("images");
+    const [activeSection, setActiveSection] = useState<"images" | "appearance" | "members" | "audit">("images");
     const [isUploading, setIsUploading] = useState(false);
     const [newMemberName, setNewMemberName] = useState("");
     const [newMemberNickname, setNewMemberNickname] = useState("");
@@ -205,6 +206,19 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
                             <User className="h-4 w-4" />
                             Family Members
                         </button>
+
+
+                        <div className="h-px bg-white/10 my-2 mx-3" />
+                        <button
+                            onClick={() => setActiveSection("audit")}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "audit"
+                                ? "bg-amber-500/20 text-amber-500"
+                                : "text-white/50 hover:text-amber-500 hover:bg-amber-500/10"
+                                }`}
+                        >
+                            <AlertTriangle className="h-4 w-4" />
+                            Data Audit
+                        </button>
                     </div>
                 </div>
 
@@ -322,8 +336,8 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
                                                     onClick={handleSaveMember}
                                                     disabled={!newMemberName.trim()}
                                                     className={`flex-1 px-4 py-2 font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${editingMemberId
-                                                            ? "bg-amber-500 text-black hover:bg-amber-400"
-                                                            : "bg-white text-black hover:bg-neutral-200"
+                                                        ? "bg-amber-500 text-black hover:bg-amber-400"
+                                                        : "bg-white text-black hover:bg-neutral-200"
                                                         }`}
                                                 >
                                                     {editingMemberId ? "Update Member" : "Add Member"}
@@ -386,6 +400,12 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {activeSection === "audit" && (
+                            <div className="h-full">
+                                <DataAuditManager />
                             </div>
                         )}
                     </div>

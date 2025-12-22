@@ -49,10 +49,6 @@ export function TripListItem({ id, destination = "", dates = "", image, traveler
     if (isCompleted) {
         status = "Completed";
         statusColor = "bg-white/10 text-white/50";
-    } else if ((dates || "").toLowerCase().includes("spring") || (dates || "").toLowerCase().includes("dec")) {
-        // Keep season highlights as upcoming
-        status = "Upcoming";
-        statusColor = "bg-amber-500/20 text-amber-300";
     } else {
         // Fallback for new uploads - assume Upcoming unless we determine otherwise
         status = "Upcoming";
