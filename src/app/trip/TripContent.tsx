@@ -209,88 +209,91 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                 <Plane className="h-5 w-5" />
                                 <h3 className="text-sm font-bold uppercase tracking-widest">Flights</h3>
                             </div>
-                            <div className="grid gap-4">
-                                {uniqueFlights.map((flight: any, idx: number) => (
-                                    <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <p className="font-serif text-xl">{flight.airline}</p>
-                                                <p className="text-xs text-white/50 uppercase tracking-wider">{flight.flightNumber}</p>
-                                            </div>
-                                            <div className="flex flex-col gap-2 items-end">
-                                                {/* Render all confirmations */}
-                                                {flight.allConfirmations && flight.allConfirmations.length > 0 && flight.allConfirmations.map((conf: string, cIdx: number) => (
-                                                    <button
-                                                        key={cIdx}
-                                                        onClick={() => handleCopyConfirmation(conf)}
-                                                        className="group/code relative bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 px-4 py-2 rounded-lg backdrop-blur-md transition-all text-left w-full sm:w-auto min-w-[140px]"
-                                                        title="Copy Confirmation Code"
-                                                    >
-                                                        <div className="flex justify-between items-start">
-                                                            <div>
-                                                                <p className="text-[10px] text-green-400/60 uppercase tracking-widest leading-none mb-1">Confirmation {flight.allConfirmations.length > 1 ? `#${cIdx + 1}` : ''}</p>
-                                                                <p className="text-xl font-mono font-bold text-green-300 tracking-wider">
-                                                                    {conf}
-                                                                </p>
-                                                            </div>
-                                                            <div className="opacity-0 group-hover/code:opacity-100 transition-opacity ml-3 mt-1">
-                                                                {copiedConfirmation === conf ? (
-                                                                    <Check className="h-4 w-4 text-green-400" />
-                                                                ) : (
-                                                                    <Copy className="h-4 w-4 text-green-400/50" />
-                                                                )}
-                                                            </div>
+                            <div className="space-y-8">
+                                {flightGroups.map((group, gIdx) => (
+                                    <div key={gIdx}>
+                                        <div className="flex items-center gap-2 mb-4 bg-white/5 w-fit px-4 py-2 rounded-full border border-white/5">
+                                            {group.travelers.map((t, tIdx) => (
+                                                <div key={tIdx} className="flex items-center gap-2">
+                                                    <span className="text-sm font-bold text-white/90">{getTravelerName({ name: t })}</span>
+                                                    {tIdx < group.travelers.length - 1 && <span className="text-white/30">/</span>}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="grid gap-4">
+                                            {group.flights.map((flight: any, idx: number) => (
+                                                <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div>
+                                                            <p className="font-serif text-xl">{flight.airline}</p>
+                                                            <p className="text-xs text-white/50 uppercase tracking-wider">{flight.flightNumber}</p>
                                                         </div>
-                                                        {copiedConfirmation === conf && (
-                                                            <motion.div
-                                                                initial={{ opacity: 0, y: 5 }}
-                                                                animate={{ opacity: 1, y: 0 }}
-                                                                className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-green-400 text-xs px-2 py-1 rounded whitespace-nowrap"
-                                                            >
-                                                                Copied!
-                                                            </motion.div>
-                                                        )}
-                                                    </button>
-                                                ))}
+                                                        <div className="flex flex-col gap-2 items-end">
+                                                            {/* Render all confirmations */}
+                                                            {flight.allConfirmations && flight.allConfirmations.length > 0 && flight.allConfirmations.map((conf: string, cIdx: number) => (
+                                                                <button
+                                                                    key={cIdx}
+                                                                    onClick={() => handleCopyConfirmation(conf)}
+                                                                    className="group/code relative bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 px-4 py-2 rounded-lg backdrop-blur-md transition-all text-left w-full sm:w-auto min-w-[140px]"
+                                                                    title="Copy Confirmation Code"
+                                                                >
+                                                                    <div className="flex justify-between items-start">
+                                                                        <div>
+                                                                            <p className="text-[10px] text-green-400/60 uppercase tracking-widest leading-none mb-1">Confirmation {flight.allConfirmations.length > 1 ? `#${cIdx + 1}` : ''}</p>
+                                                                            <p className="text-xl font-mono font-bold text-green-300 tracking-wider">
+                                                                                {conf}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="opacity-0 group-hover/code:opacity-100 transition-opacity ml-3 mt-1">
+                                                                            {copiedConfirmation === conf ? (
+                                                                                <Check className="h-4 w-4 text-green-400" />
+                                                                            ) : (
+                                                                                <Copy className="h-4 w-4 text-green-400/50" />
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                    {copiedConfirmation === conf && (
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, y: 5 }}
+                                                                            animate={{ opacity: 1, y: 0 }}
+                                                                            className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-green-400 text-xs px-2 py-1 rounded whitespace-nowrap"
+                                                                        >
+                                                                            Copied!
+                                                                        </motion.div>
+                                                                    )}
+                                                                </button>
+                                                            ))}
 
-                                                {getCheckInUrl(flight.airline) && (
-                                                    <a
-                                                        href={getCheckInUrl(flight.airline) as string}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-[10px] font-bold uppercase tracking-widest text-blue-300 hover:text-blue-200 flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-full border border-blue-500/20 transition-all"
-                                                    >
-                                                        <span>Check In Online</span>
-                                                        <Share2 className="h-3 w-3 -rotate-45" />
-                                                    </a>
-                                                )}
-                                            </div>
+                                                            {getCheckInUrl(flight.airline) && (
+                                                                <a
+                                                                    href={getCheckInUrl(flight.airline) as string}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-[10px] font-bold uppercase tracking-widest text-blue-300 hover:text-blue-200 flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-full border border-blue-500/20 transition-all"
+                                                                >
+                                                                    <span>Check In Online</span>
+                                                                    <Share2 className="h-3 w-3 -rotate-45" />
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-sm mb-4">
+                                                        <div>
+                                                            <p className="text-white/40 text-xs uppercase mb-1">Departure</p>
+                                                            <p>{flight.departure}</p>
+                                                        </div>
+                                                        <div className="h-px bg-white/20 flex-1 mx-6 relative">
+                                                            <Plane className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-3 w-3 text-white/50 rotate-90" />
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-white/40 text-xs uppercase mb-1">Arrival</p>
+                                                            <p>{flight.arrival}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="flex justify-between items-center text-sm mb-4">
-                                            <div>
-                                                <p className="text-white/40 text-xs uppercase mb-1">Departure</p>
-                                                <p>{flight.departure}</p>
-                                            </div>
-                                            <div className="h-px bg-white/20 flex-1 mx-6 relative">
-                                                <Plane className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-3 w-3 text-white/50 rotate-90" />
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-white/40 text-xs uppercase mb-1">Arrival</p>
-                                                <p>{flight.arrival}</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Travelers on this flight */}
-                                        {flight.travelers && flight.travelers.length > 0 && (
-                                            <div className="pt-4 border-t border-white/5 flex flex-wrap gap-2">
-                                                {flight.travelers.map((tName: string, tIdx: number) => (
-                                                    <span key={tIdx} className="inline-flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-md text-[10px] uppercase tracking-wider font-medium text-white/80">
-                                                        <User className="h-3 w-3 opacity-70" />
-                                                        {tName}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
                                     </div>
                                 ))}
                             </div>
