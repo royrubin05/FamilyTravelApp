@@ -34,6 +34,36 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
     const activities = trip.activities || [];
     const hasDetails = flights.length > 0 || hotels.length > 0 || activities.length > 0;
 
+    // Helper to group flights
+    const uniqueFlights = flights.reduce((acc: any[], flight: any) => {
+        const key = `${flight.airline}-${flight.flightNumber}-${flight.departure}`;
+        const existing = acc.find(f => `${f.airline}-${f.flightNumber}-${f.departure}` === key);
+
+        if (existing) {
+            // Merge travelers
+            const newTravelers = [...(existing.travelers || []), ...(flight.travelers || [])];
+            existing.travelers = Array.from(new Set(newTravelers));
+
+            // Merge confirmations
+            if (flight.confirmation) {
+                if (!existing.allConfirmations) existing.allConfirmations = existing.confirmation ? [existing.confirmation] : [];
+                if (!existing.allConfirmations.includes(flight.confirmation)) {
+                    existing.allConfirmations.push(flight.confirmation);
+                }
+            }
+        } else {
+            // New entry
+            const newFlight = {
+                ...flight,
+                allConfirmations: flight.confirmation ? [flight.confirmation] : []
+            };
+            // Ensure travelers is an array
+            if (!newFlight.travelers) newFlight.travelers = [];
+            acc.push(newFlight);
+        }
+        return acc;
+    }, []);
+
     const [activeTab, setActiveTab] = useState<"overview" | "itinerary">("overview");
     const [isShared, setIsShared] = useState(false);
 
@@ -179,37 +209,40 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                 <Plane className="h-5 w-5" />
                                 <h3 className="text-sm font-bold uppercase tracking-widest">Flights</h3>
                             </div>
+                            </div>
                             <div className="grid gap-4">
-                                {flights.map((flight: any, idx: number) => (
+                                {uniqueFlights.map((flight: any, idx: number) => (
                                     <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
                                                 <p className="font-serif text-xl">{flight.airline}</p>
                                                 <p className="text-xs text-white/50 uppercase tracking-wider">{flight.flightNumber}</p>
                                             </div>
-                                            {flight.confirmation && (
-                                                <div className="flex flex-col gap-2 items-end">
+                                            <div className="flex flex-col gap-2 items-end">
+                                                {/* Render all confirmations */}
+                                                {flight.allConfirmations && flight.allConfirmations.length > 0 && flight.allConfirmations.map((conf: string, cIdx: number) => (
                                                     <button
-                                                        onClick={() => handleCopyConfirmation(flight.confirmation)}
+                                                        key={cIdx}
+                                                        onClick={() => handleCopyConfirmation(conf)}
                                                         className="group/code relative bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 px-4 py-2 rounded-lg backdrop-blur-md transition-all text-left w-full sm:w-auto min-w-[140px]"
                                                         title="Copy Confirmation Code"
                                                     >
                                                         <div className="flex justify-between items-start">
                                                             <div>
-                                                                <p className="text-[10px] text-green-400/60 uppercase tracking-widest leading-none mb-1">Confirmation</p>
+                                                                <p className="text-[10px] text-green-400/60 uppercase tracking-widest leading-none mb-1">Confirmation {flight.allConfirmations.length > 1 ? `#${cIdx + 1}` : ''}</p>
                                                                 <p className="text-xl font-mono font-bold text-green-300 tracking-wider">
-                                                                    {flight.confirmation}
+                                                                    {conf}
                                                                 </p>
                                                             </div>
                                                             <div className="opacity-0 group-hover/code:opacity-100 transition-opacity ml-3 mt-1">
-                                                                {copiedConfirmation === flight.confirmation ? (
+                                                                {copiedConfirmation === conf ? (
                                                                     <Check className="h-4 w-4 text-green-400" />
                                                                 ) : (
                                                                     <Copy className="h-4 w-4 text-green-400/50" />
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        {copiedConfirmation === flight.confirmation && (
+                                                        {copiedConfirmation === conf && (
                                                             <motion.div
                                                                 initial={{ opacity: 0, y: 5 }}
                                                                 animate={{ opacity: 1, y: 0 }}
@@ -219,20 +252,20 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                                             </motion.div>
                                                         )}
                                                     </button>
+                                                ))}
 
-                                                    {getCheckInUrl(flight.airline) && (
-                                                        <a
-                                                            href={getCheckInUrl(flight.airline) as string}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-[10px] font-bold uppercase tracking-widest text-blue-300 hover:text-blue-200 flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-full border border-blue-500/20 transition-all"
-                                                        >
-                                                            <span>Check In Online</span>
-                                                            <Share2 className="h-3 w-3 -rotate-45" />
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            )}
+                                                {getCheckInUrl(flight.airline) && (
+                                                    <a
+                                                        href={getCheckInUrl(flight.airline) as string}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-[10px] font-bold uppercase tracking-widest text-blue-300 hover:text-blue-200 flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-full border border-blue-500/20 transition-all"
+                                                    >
+                                                        <span>Check In Online</span>
+                                                        <Share2 className="h-3 w-3 -rotate-45" />
+                                                    </a>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="flex justify-between items-center text-sm mb-4">
                                             <div>
