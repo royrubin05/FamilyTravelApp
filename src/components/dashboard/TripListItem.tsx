@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ArrowRight, Calendar, Users, Plane, Bed } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, Calendar, Users, Plane, Bed, Check } from "lucide-react";
 import { useTrips } from "@/context/TripContext";
 import { getDestinationImage, GENERIC_FALLBACK } from "@/lib/imageUtils";
 import { isTripCompleted, parseTripDate } from "@/lib/dateUtils";
@@ -20,9 +20,25 @@ interface TripListItemProps {
     hasFlights?: boolean;
     hasHotels?: boolean;
     familyMembers?: any[];
+    isSelectionMode?: boolean;
+    isSelected?: boolean;
+    onToggleSelection?: (id: string) => void;
 }
 
-export function TripListItem({ id, destination = "", dates = "", image, travelers, destinationImages, hasFlights, hasHotels, familyMembers = [] }: TripListItemProps) {
+export function TripListItem({
+    id,
+    destination = "",
+    dates = "",
+    image,
+    travelers,
+    destinationImages,
+    hasFlights,
+    hasHotels,
+    familyMembers = [],
+    isSelectionMode = false,
+    isSelected = false,
+    onToggleSelection
+}: TripListItemProps) {
     // Helper to get display name
     const getTravelerName = (t: any) => {
         if (!t.id) return t.name;
@@ -39,14 +55,36 @@ export function TripListItem({ id, destination = "", dates = "", image, traveler
 
 
 
+    const handleCardClick = (e: React.MouseEvent) => {
+        if (isSelectionMode && onToggleSelection) {
+            e.preventDefault();
+            onToggleSelection(id);
+        }
+    };
+
     return (
         <>
-            <Link href={`/trip?id=${id}`} className="block w-full">
+            <Link href={`/trip?id=${id}`} onClick={handleCardClick} className={`block w-full ${isSelectionMode ? "cursor-pointer" : ""}`}>
                 <motion.div
                     whileHover={{ backgroundColor: "rgba(255,255,255,0.05)" }}
                     whileTap={{ scale: 0.99 }}
-                    className="flex items-stretch gap-3 md:gap-4 p-3 md:p-4 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm transition-colors group relative overflow-hidden"
+                    className={`flex items-stretch gap-3 md:gap-4 p-3 md:p-4 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm transition-colors group relative overflow-hidden ${isSelected ? "border-blue-500/50 bg-blue-500/10" : ""}`}
                 >
+                    {/* Selection Overlay */}
+                    <AnimatePresence>
+                        {isSelectionMode && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="absolute top-2 left-2 z-50 pointer-events-none"
+                            >
+                                <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? "bg-blue-500 border-blue-500" : "border-white/50 bg-black/40"}`}>
+                                    {isSelected && <Check className="h-4 w-4 text-white" />}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                     {/* Mobile: Compact Layout */}
                     <div className="relative h-16 w-16 md:h-20 md:w-20 shrink-0 overflow-hidden rounded-lg bg-white/10 flex items-center justify-center self-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}

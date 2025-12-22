@@ -7,16 +7,31 @@ import { revalidatePath } from "next/cache";
 // Removed local dir constants as they are no longer needed
 
 
+// Helper to sanitize Firestore data
+function sanitizeFirestoreData(data: any): any {
+    if (!data) return data;
+    if (Array.isArray(data)) return data.map(item => sanitizeFirestoreData(item));
+    if (typeof data === 'object') {
+        if (data.toDate && typeof data.toDate === 'function') return data.toDate().toISOString();
+        const sanitized: any = {};
+        for (const key in data) sanitized[key] = sanitizeFirestoreData(data[key]);
+        return sanitized;
+    }
+    return data;
+}
+
 export async function getSettings(): Promise<{ backgroundImage: string | null; familyMembers?: any[] }> {
     try {
         const doc = await db.collection("settings").doc("global").get();
         if (doc.exists) {
-            return doc.data() as { backgroundImage: string | null; familyMembers?: any[] };
+            const data = doc.data();
+            return sanitizeFirestoreData(data) as { backgroundImage: string | null; familyMembers?: any[] };
         }
-        return { backgroundImage: null };
+        // Return default structure if empty
+        return { backgroundImage: null, familyMembers: [] };
     } catch (error) {
         console.error("Error fetching settings:", error);
-        return { backgroundImage: null };
+        return { backgroundImage: null, familyMembers: [] };
     }
 }
 

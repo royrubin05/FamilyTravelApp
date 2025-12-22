@@ -1,66 +1,61 @@
 "use client";
 
-import { isTripCompleted } from "@/lib/dateUtils";
-
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { TripListItem } from "@/components/dashboard/TripListItem";
 import { UploadTripModal } from "@/components/dashboard/UploadTripModal";
-import { User, Plus, ChevronLeft, ChevronRight } from "lucide-react";
-import { useTrips } from "@/context/TripContext";
-
-import { useRouter } from "next/navigation";
 import { SettingsModal } from "./SettingsModal";
-import { Settings } from "lucide-react";
+import { TripGroupCard } from "@/components/dashboard/TripGroupCard";
+import { User, Plus, ChevronLeft, ChevronRight, Settings, Layers } from "lucide-react";
+import { useTrips } from "@/context/TripContext";
+import { isTripCompleted, parseTripDate } from "@/lib/dateUtils";
+import { saveTripGroup } from "@/app/trip-actions";
 
 interface DashboardClientProps {
   initialImages: Record<string, string>;
   initialTrips: any[];
+  initialGroups: any[];
   initialSettings: { backgroundImage: string | null };
 }
 
-export default function DashboardClient({ initialImages, initialTrips, initialSettings }: DashboardClientProps) {
+export default function DashboardClient({ initialImages, initialTrips, initialGroups, initialSettings }: DashboardClientProps) {
   console.log("[DashboardClient] Rendering...");
   const router = useRouter();
   const [filter, setFilter] = useState("all");
   const [statusTab, setStatusTab] = useState<"upcoming" | "completed">("upcoming");
-  const { trips, addTrip, setTrips } = useTrips(); // We need to expose setTrips from context first!
+
+  const { trips, groups, addTrip, setTrips, setGroups } = useTrips();
   const [currentSettings, setCurrentSettings] = useState(initialSettings);
+  const [currentImages, setCurrentImages] = useState(initialImages);
+
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Selection Mode State
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedTripIds, setSelectedTripIds] = useState<Set<string>>(new Set());
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Sync Server Data to Client Context on Mount
   useEffect(() => {
     if (initialTrips && initialTrips.length > 0) {
       console.log("Hydrating from server trips:", initialTrips.length);
-      // Force clear local storage to prefer server data on this load
-      // This fixes the issue where old "Roy" data persists in LocalStorage
       localStorage.removeItem("family_travel_trips");
-      // Rudimentary sync: if context is empty or we want to trust server authoritative
-      // For now, let's merge or set. 
-      // Since we want file-based persistence, server is truth.
       setTrips(initialTrips);
     }
-  }, [initialTrips, setTrips]);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
-
-  // Merge initial server images with any local overrides if we added that, 
-  // but for now let's reuse initialImages. 
-  // To verify live updates without refresh, we might need state, but revalidatePath on server might be enough if we refresh?
-  // Actually the Server Action revalidates, so the page should reload data? No, valid for server components.
-  // We might need to refresh the router.
-
-  // For now let's just hold it in state and allow the Manager to update it?
-  // The Manager takes `initialImages` but doesn't pass updated back up easily without callback.
-  // Actually Manager is Client, updates persist on Server.
-  // Revalidating path '/' redoes the server fetch.
-
-  const [currentImages, setCurrentImages] = useState(initialImages);
+    if (initialGroups) {
+      setGroups(initialGroups);
+    }
+  }, [initialTrips, initialGroups, setTrips, setGroups]);
 
   const handleImageUpdate = (city: string, url: string) => {
     setCurrentImages(prev => ({ ...prev, [city]: url }));
-    router.refresh(); // Ensure server components (TripPage) get fresh data
+    router.refresh();
   };
 
   const handleUpdateSettings = (newSettings: any) => {
@@ -68,58 +63,131 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
     router.refresh();
   };
 
-  // Use family members from settings, or fallback to an empty array
-  const familyMembers = (initialSettings as any).familyMembers || [];
+  const toggleTripSelection = (id: string) => {
+    const newSet = new Set(selectedTripIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedTripIds(newSet);
+  };
 
+  const handleCreateGroup = async () => {
+    if (selectedTripIds.size < 2) return;
+
+    const groupName = prompt("Enter a name for this trip group (e.g., 'East Coast Roadtrip'):");
+    if (!groupName) return;
+
+    setIsCreatingGroup(true);
+    const selectedIds = Array.from(selectedTripIds);
+
+    // Find earliest and latest dates
+    const selectedTrips = trips.filter(t => selectedIds.includes(t.id));
+    const sortedSelected = selectedTrips.sort((a, b) => parseTripDate(a.dates) - parseTripDate(b.dates));
+
+    const startDate = sortedSelected[0]?.dates || "Unknown"; // Improve date extraction logic if needed
+    const endDate = sortedSelected[sortedSelected.length - 1]?.dates || "Unknown";
+
+    const newGroup = {
+      title: groupName,
+      ids: selectedIds,
+      startDate: startDate, // Simple placeholder, ideally parse true dates
+      endDate: endDate,
+      image: selectedTrips[0]?.image || ""
+    };
+
+    const res = await saveTripGroup(newGroup);
+    if (res.success) {
+      router.refresh();
+      setIsSelectionMode(false);
+      setSelectedTripIds(new Set());
+    } else {
+      alert("Failed to create group");
+    }
+    setIsCreatingGroup(false);
+  };
+
+
+  const familyMembers = (initialSettings as any).familyMembers || [];
   const memberFilters = [
     { id: "all", label: "All Travelers" },
     ...familyMembers.map((m: any) => ({ id: m.id, label: m.name }))
   ];
 
-  // 1. Filter by Status Tab
-  const statusFilteredTrips = trips.filter(t => {
-    // Mock Logic: London is completed, everything else (including imports) is upcoming
-    // Real Logic: Check date
-    const isCompleted = isTripCompleted(t.dates);
-    return statusTab === "completed" ? isCompleted : !isCompleted;
+  // Logic: 
+  // 1. Identify trips that are already in a group *that we know of*.
+  const groupedTripIds = new Set(groups.flatMap(g => g.ids || []));
+
+  // 2. Filter Status (Upcoming/Completed)
+  // Logic: If a group has ANY upcoming trip, the group is upcoming.
+  // We need to apply status filter to items.
+
+  // Mixed List Construction
+  const ungroupedTrips = trips.filter(t => !groupedTripIds.has(t.id));
+
+  const allItems = [
+    ...groups.map(g => {
+      // Determine status of group
+      const startDate = g.startDate || "";
+      const endDate = g.endDate || startDate;
+      const isCompleted = isTripCompleted(endDate);
+      const ids = g.ids || [];
+      return { type: 'group', ...g, ids, isCompleted, dateForSort: startDate };
+    }),
+    ...ungroupedTrips.map(t => {
+      const dates = t.dates || "";
+      const isCompleted = isTripCompleted(dates);
+      return { type: 'trip', ...t, isCompleted, dateForSort: dates };
+    })
+  ];
+
+  // Apply Status Filter
+  const statusFilteredItems = allItems.filter(item => {
+    return statusTab === "completed" ? item.isCompleted : !item.isCompleted;
   });
 
-  // 2. Filter by Member
-  const finalFilteredTrips = filter === "all"
-    ? statusFilteredTrips
-    : statusFilteredTrips.filter(t => {
-      // Find the selected member definition
-      const selectedMember = familyMembers.find((m: any) => m.id === filter);
-      if (!selectedMember) return false;
+  // Apply Member Filter
+  const finalFilteredItems = filter === "all"
+    ? statusFilteredItems
+    : statusFilteredItems.filter(item => {
+      // If Group: Check if ANY trip in group matches member?
+      // For simplicity V1: Only filter individual trips. Groups are shown if "All".
+      // Or recursively check items? Context doesn't easily allow mapping group -> trips without lookup.
+      if (item.type === 'group') return true;
 
-      // Create a set of matchable names (Name + Nicknames)
-      const matchTerms = [
-        selectedMember.name,
-        ...(selectedMember.nicknames || []),
-        selectedMember.nickname // legacy support
-      ].filter(Boolean).map(term => term.toLowerCase());
+      // Standard Trip Filter
+      if (item.type === 'trip') {
+        const t = item as any; // Cast to access travelers safely
+        const selectedMember = familyMembers.find((m: any) => m.id === filter);
+        if (!selectedMember) return false;
 
-      // Check if ANY traveler in the trip matches ANY of the terms
-      return t.travelers.some((traveler: any) => {
-        // Traveler can be a string ("Roee Rubin") or object ({ name: "Roee", ... })
-        const tName = (typeof traveler === "string" ? traveler : traveler.name || "").toLowerCase();
+        const matchTerms = [
+          selectedMember.name,
+          ...(selectedMember.nicknames || []),
+          selectedMember.nickname
+        ].filter(Boolean).map(term => term.toLowerCase());
 
-        // Fuzzy match: Does the trip traveler string *include* our search term? 
-        // OR does the search term include the traveler string? (e.g. "Roy" vs "Roy Rubin")
-        return matchTerms.some(term => tName.includes(term) || term.includes(tName));
-      });
+        return t.travelers?.some((traveler: any) => {
+          const tName = (typeof traveler === "string" ? traveler : traveler.name || "").toLowerCase();
+          return matchTerms.some(term => tName.includes(term) || term.includes(tName));
+        });
+      }
+
+      return false;
     });
 
-  // 3. Pagination
-  const totalPages = Math.ceil(finalFilteredTrips.length / ITEMS_PER_PAGE);
-  const paginatedTrips = finalFilteredTrips.slice(
+  // Sort
+  const sortedItems = finalFilteredItems.sort((a, b) => parseTripDate(a.dateForSort) - parseTripDate(b.dateForSort));
+
+  // Pagination
+  const totalPages = Math.ceil(sortedItems.length / ITEMS_PER_PAGE);
+  const paginatedItems = sortedItems.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
-  const handleUploadComplete = (newTrip: any) => {
-    // addTrip(newTrip); // REMOVED: Rely on server sync (revalidatePath -> initialTrips -> useEffect)
-    // Adding locally causes duplicate keys because useEffect *also* adds it from server props.
+  const handleUploadComplete = () => {
     router.refresh();
     setStatusTab("upcoming");
   };
@@ -139,6 +207,31 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
           <p className="text-xs text-white/40 uppercase tracking-widest mt-1">Family Command Center</p>
         </div>
         <div className="flex items-center gap-4">
+          {!isSelectionMode && (
+            <button
+              onClick={() => {
+                setIsSelectionMode(true);
+                setSelectedTripIds(new Set());
+              }}
+              className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+            >
+              <Layers className="h-4 w-4" />
+              <span className="hidden sm:inline">Create Trip Group</span>
+              <span className="sm:hidden">Group</span>
+            </button>
+          )}
+          {isSelectionMode && (
+            <button
+              onClick={() => {
+                setIsSelectionMode(false);
+                setSelectedTripIds(new Set());
+              }}
+              className="px-3 py-2 bg-white text-black hover:bg-neutral-200 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+
           <button
             onClick={() => setIsSettingsOpen(true)}
             className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
@@ -146,8 +239,6 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
           >
             <Settings className="h-5 w-5" />
           </button>
-
-
 
           <button
             onClick={() => setIsUploadModalOpen(true)}
@@ -212,34 +303,86 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
         </div>
       </div>
 
-      {/* List View */}
-      <div className="max-w-4xl mx-auto space-y-3 min-h-[300px]">
-        <AnimatePresence mode="popLayout">
-          {paginatedTrips.map((trip) => (
-            <motion.div
-              key={trip.id}
-              layout
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
+      {/* Floating Action Bar for Group Creation */}
+      <AnimatePresence>
+        {isSelectionMode && selectedTripIds.size >= 2 && (
+          <motion.div
+            initial={{ y: 100 }}
+            animate={{ y: 0 }}
+            exit={{ y: 100 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50"
+          >
+            <button
+              onClick={handleCreateGroup}
+              disabled={isCreatingGroup}
+              className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-bold shadow-xl flex items-center gap-2 hover:scale-105 transition-transform"
             >
-              <TripListItem
-                id={trip.id}
-                destination={trip.destination}
-                dates={trip.dates}
-                image={trip.image}
-                travelers={trip.travelers || []}
-                destinationImages={currentImages}
-                hasFlights={trip.flights && trip.flights.length > 0}
-                hasHotels={trip.hotels && trip.hotels.length > 0}
-                familyMembers={familyMembers}
-              />
-            </motion.div>
-          ))}
+              {isCreatingGroup ? (
+                <span>Creating...</span>
+              ) : (
+                <>
+                  <Layers className="h-5 w-5" />
+                  <span>Create Group ({selectedTripIds.size})</span>
+                </>
+              )}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* List View */}
+      <div className="max-w-4xl mx-auto space-y-3 min-h-[300px] mb-20">
+        <AnimatePresence mode="popLayout">
+          {paginatedItems.map((item: any) => {
+            if (item.type === 'group') {
+              return (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <TripGroupCard
+                    group={item}
+                    tripCount={item.ids.length}
+                    onClick={() => router.push(`/group/${item.id}`)}
+                  />
+                </motion.div>
+              );
+            }
+
+            // Standard Trip
+            return (
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+              >
+                <TripListItem
+                  id={item.id}
+                  destination={item.destination}
+                  dates={item.dates}
+                  image={item.image}
+                  travelers={item.travelers || []}
+                  destinationImages={currentImages}
+                  hasFlights={item.flights && item.flights.length > 0}
+                  hasHotels={item.hotels && item.hotels.length > 0}
+                  familyMembers={familyMembers}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={selectedTripIds.has(item.id)}
+                  onToggleSelection={toggleTripSelection}
+                />
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
 
-        {finalFilteredTrips.length === 0 && (
+        {finalFilteredItems.length === 0 && (
           <div className="text-center py-20 opacity-40">
             <p>No trips found in {statusTab}.</p>
           </div>
@@ -248,7 +391,7 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="max-w-4xl mx-auto mt-8 flex justify-between items-center border-t border-white/10 pt-4">
+        <div className="max-w-4xl mx-auto mt-8 flex justify-between items-center border-t border-white/10 pt-4 pb-12">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}

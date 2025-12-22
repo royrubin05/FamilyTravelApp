@@ -100,7 +100,7 @@ export async function parseTripDocument(formData: FormData) {
     // 3. Normalize Location (Auto-Fix)
     const { getTrips } = await import("@/app/trip-actions");
     const existingTrips = await getTrips();
-    const existingDestinations = Array.from(new Set(existingTrips.map((t: any) => t.destination).filter(Boolean)));
+    const existingDestinations = Array.from(new Set(existingTrips.map((t: any) => t.destination).filter(Boolean))) as string[];
 
     // Only verify if we have existing data to match against
     if (existingDestinations.length > 0) {

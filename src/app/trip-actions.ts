@@ -17,7 +17,7 @@ export async function getTrips() {
         // Sort by Date Ascending
         const sorted = trips.sort((a: any, b: any) => parseTripDate(a.dates) - parseTripDate(b.dates));
 
-        return sorted;
+        return sanitizeFirestoreData(sorted);
     } catch (error) {
         console.error("Error fetching trips:", error);
         return [];
@@ -100,5 +100,75 @@ export async function removeTravelerFromTripAction(tripId: string, travelerToRem
     } catch (error) {
         console.error("Error removing traveler:", error);
         return { success: false, error: "Failed to remove traveler" };
+    }
+}
+
+// --- Trip Group Actions ---
+
+// Helper to sanitize Firestore data (convert timestamps to strings, etc)
+function sanitizeFirestoreData(data: any): any {
+    if (!data) return data;
+
+    // Handle arrays
+    if (Array.isArray(data)) {
+        return data.map(item => sanitizeFirestoreData(item));
+    }
+
+    // Handle objects
+    if (typeof data === 'object') {
+        // Check for Firestore Timestamp (duck typing)
+        if (data.toDate && typeof data.toDate === 'function') {
+            return data.toDate().toISOString();
+        }
+
+        const sanitized: any = {};
+        for (const key in data) {
+            sanitized[key] = sanitizeFirestoreData(data[key]);
+        }
+        return sanitized;
+    }
+
+    return data;
+}
+
+export async function getTripGroups() {
+    try {
+        const snapshot = await db.collection("trip_groups").get();
+        if (snapshot.empty) return [];
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return sanitizeFirestoreData(data);
+    } catch (error) {
+        console.error("Error fetching trip groups:", error);
+        return [];
+    }
+}
+
+export async function saveTripGroup(group: any) {
+    try {
+        // Ensure ID
+        const groupId = group.id || `group-${Date.now()}`;
+
+        await db.collection("trip_groups").doc(groupId).set({
+            ...group,
+            id: groupId,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        revalidatePath("/");
+        return { success: true, id: groupId };
+    } catch (error) {
+        console.error("Error saving trip group:", error);
+        return { success: false, error: "Failed to save trip group" };
+    }
+}
+
+export async function deleteTripGroupAction(id: string) {
+    try {
+        await db.collection("trip_groups").doc(id).delete();
+        revalidatePath("/");
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting trip group:", error);
+        return { success: false, error: "Failed to delete trip group" };
     }
 }
