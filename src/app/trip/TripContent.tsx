@@ -18,9 +18,10 @@ interface TripContentProps {
     destinationImages?: Record<string, string>;
     initialTrip?: any;
     familyMembers?: any[];
+    isAuthenticated?: boolean;
 }
 
-export default function TripContent({ destinationImages, initialTrip, familyMembers = [] }: TripContentProps) {
+export default function TripContent({ destinationImages, initialTrip, familyMembers = [], isAuthenticated = false }: TripContentProps) {
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
     const { trips } = useTrips();
@@ -516,26 +517,28 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
 
                 </div >
 
-                {/* Bottom Actions */}
-                <div className="flex justify-center items-center gap-4 mt-4 mb-8">
-                    <button
-                        onClick={() => setIsDebugModalOpen(true)}
-                        className="text-white/30 hover:text-purple-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-full"
-                    >
-                        <Terminal className="h-4 w-4" />
-                        Debug Info
-                    </button>
+                {/* Bottom Actions - Auth Protected */}
+                {isAuthenticated && (
+                    <div className="flex justify-center items-center gap-4 mt-4 mb-8">
+                        <button
+                            onClick={() => setIsDebugModalOpen(true)}
+                            className="text-white/30 hover:text-purple-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-full"
+                        >
+                            <Terminal className="h-4 w-4" />
+                            Debug Info
+                        </button>
 
-                    <div className="h-4 w-px bg-white/10" />
+                        <div className="h-4 w-px bg-white/10" />
 
-                    <button
-                        onClick={() => setIsDeleteModalOpen(true)}
-                        className="text-white/30 hover:text-red-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-full"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                        Delete Trip
-                    </button>
-                </div>
+                        <button
+                            onClick={() => setIsDeleteModalOpen(true)}
+                            className="text-white/30 hover:text-red-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-full"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Delete Trip
+                        </button>
+                    </div>
+                )}
             </div >
 
             <ConfirmationModal

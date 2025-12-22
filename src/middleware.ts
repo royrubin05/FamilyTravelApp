@@ -10,7 +10,8 @@ export function middleware(request: NextRequest) {
         request.nextUrl.pathname.startsWith("/_next") ||
         request.nextUrl.pathname.startsWith("/static") ||
         request.nextUrl.pathname.includes(".") || // files like favicon.ico, manifest.json
-        request.nextUrl.pathname.startsWith("/api/og"); // Social preview images if any
+        request.nextUrl.pathname.startsWith("/api/og") || // Social preview images if any
+        request.nextUrl.pathname.startsWith("/trip"); // Public trip view
 
     if (isPublicPath) {
         return NextResponse.next();

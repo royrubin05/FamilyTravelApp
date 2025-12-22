@@ -10,10 +10,18 @@ interface PageProps {
     searchParams: { id?: string };
 }
 
+import { cookies } from 'next/headers';
+
+// ...
+
 export default async function TripPage({ searchParams }: PageProps) {
     const images = await getCityImages();
     const trips = await getTrips();
-    const settings = (await getSettings()) as any; // Cast for now as getSettings return type might need update or ignore
+    const settings = (await getSettings()) as any;
+
+    // Check auth status
+    const cookieStore = await cookies();
+    const isAuthenticated = !!cookieStore.get("auth_session");
 
     // Await searchParams for Next.js 15+ compatibility
     const resolvedParams = await searchParams;
@@ -27,6 +35,7 @@ export default async function TripPage({ searchParams }: PageProps) {
                 destinationImages={images}
                 initialTrip={initialTrip}
                 familyMembers={settings?.familyMembers || []}
+                isAuthenticated={isAuthenticated}
             />
         </Suspense>
     );
