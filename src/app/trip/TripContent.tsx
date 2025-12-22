@@ -209,7 +209,6 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                 <Plane className="h-5 w-5" />
                                 <h3 className="text-sm font-bold uppercase tracking-widest">Flights</h3>
                             </div>
-                            </div>
                             <div className="grid gap-4">
                                 {uniqueFlights.map((flight: any, idx: number) => (
                                     <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
