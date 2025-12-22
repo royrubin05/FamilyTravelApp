@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TripListItem } from "@/components/dashboard/TripListItem";
 import { UploadTripModal } from "@/components/dashboard/UploadTripModal";
-import { User, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { User, Plus, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { useTrips } from "@/context/TripContext";
 
 import { useRouter } from "next/navigation";
@@ -145,6 +145,18 @@ export default function DashboardClient({ initialImages, initialTrips, initialSe
             title="Settings"
           >
             <Settings className="h-5 w-5" />
+          </button>
+
+          <button
+            onClick={async () => {
+              const { logoutAction } = await import("@/app/actions");
+              await logoutAction();
+              window.location.href = "/login";
+            }}
+            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            title="Sign Out"
+          >
+            <LogOut className="h-5 w-5" />
           </button>
 
           <button

@@ -23,6 +23,11 @@ export async function loginAction(email: string, pass: string) {
   return { success: false, error: "Invalid credentials" };
 }
 
+export async function logoutAction() {
+  (await cookies()).delete("auth_session");
+  return { success: true };
+}
+
 export async function parseTripDocument(formData: FormData) {
   try {
     const file = formData.get("file") as File;
