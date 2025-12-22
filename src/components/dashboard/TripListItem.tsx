@@ -45,44 +45,30 @@ export function TripListItem({ id, destination = "", dates = "", image, traveler
                 <motion.div
                     whileHover={{ backgroundColor: "rgba(255,255,255,0.05)" }}
                     whileTap={{ scale: 0.99 }}
-                    className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm transition-colors group"
+                    className="flex items-stretch gap-3 md:gap-4 p-3 md:p-4 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm transition-colors group relative overflow-hidden"
                 >
-                    {/* Small Thumbnail */}
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-white/10 flex items-center justify-center">
+                    {/* Mobile: Compact Layout */}
+                    <div className="relative h-16 w-16 md:h-20 md:w-20 shrink-0 overflow-hidden rounded-lg bg-white/10 flex items-center justify-center self-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={(() => {
-                                // 1. Check dynamic images map first (Override)
                                 if (destinationImages) {
                                     const key = (destination || "").toLowerCase().trim();
                                     if (destinationImages[key]) return destinationImages[key];
-
-                                    // Partial map scan
                                     const found = Object.keys(destinationImages).find(k => key.includes(k));
                                     if (found) return destinationImages[found];
                                 }
-
-                                // 2. Use trip image if valid
-                                if (image && !image.includes("placehold.co")) {
-                                    return image;
-                                }
-
-                                // 3. Fallback to client-side static lookup
+                                if (image && !image.includes("placehold.co")) return image;
                                 return getDestinationImage(destination || "");
                             })()}
                             alt={destination || "Trip"}
                             onError={(e) => {
                                 const target = e.currentTarget;
-                                // If the primary failed, fall back to GENERIC or try static
-                                // Since we already tried the best source in src={}, just go to generic fallback
-                                // unless we haven't tried getDestinationImage logic fully (e.g. if src was from trip.image)
-
                                 const staticFallback = getDestinationImage(destination || "");
                                 if (!target.src.includes(staticFallback) && target.src !== GENERIC_FALLBACK) {
                                     target.src = staticFallback;
                                     return;
                                 }
-
                                 if (target.src !== GENERIC_FALLBACK) target.src = GENERIC_FALLBACK;
                             }}
                             className="h-full w-full object-cover grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-500"
@@ -92,67 +78,47 @@ export function TripListItem({ id, destination = "", dates = "", image, traveler
                         </div>
                     </div>
 
-                    {/* Data Columns */}
-                    <div className="flex-1 min-w-0 grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
-
-                        {/* Destination */}
-                        <div className="col-span-2 md:col-span-1">
-                            <h3 className="text-lg font-bold font-serif tracking-wide text-white group-hover:text-amber-100 transition-colors">
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <div className="flex justify-between items-start gap-2 mb-1">
+                            <h3 className="text-base md:text-xl font-bold font-serif tracking-wide text-white group-hover:text-amber-100 transition-colors truncate pr-2">
                                 {destination}
                             </h3>
-                        </div>
-
-                        {/* Dates - Hidden on mobile, simplified on Desktop since we have the main date on right now */}
-                        {/* Actually user said 'add a date ... instead', implying main visibility.
-                             I will keep the raw range here for detail if needed, or remove if redundant.
-                             Let's remove the raw date column to clean up, as the "Month, Year" is the primary date now.
-                             Or replace it with Travelers count only?
-                             Let's keep Travelers.
-                          */}
-
-                        {/* Travelers */}
-                        <div className="hidden md:flex items-center gap-2 text-sm text-white/60 overflow-hidden">
-                            <Users className="h-4 w-4 opacity-50 shrink-0" />
-                            <span className="truncate max-w-[200px]" title={travelers.map((t: any) => getTravelerName(t)).join(", ")}>
-                                {travelers && travelers.length > 0
-                                    ? travelers.map((t: any) => getTravelerName(t)).join(", ")
-                                    : "No Travelers"}
+                            <span className="text-xs md:text-sm font-bold text-white/80 whitespace-nowrap bg-white/10 px-2 py-0.5 rounded-full md:bg-transparent md:px-0 md:py-0">
+                                {(() => {
+                                    const ts = parseTripDate(dates);
+                                    if (ts === 0) return dates;
+                                    return new Date(ts).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+                                })()}
                             </span>
                         </div>
 
-                        {/* Status / Date / Icons Wrapper - Adaptive Layout */}
-                        {/* Mobile: Row (Date + Icons), Desktop: Column (Date top, Icons bottom right) */}
-                        <div className="col-span-2 md:col-span-1 flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 md:pl-4 border-t border-white/5 pt-2 mt-1 md:border-none md:pt-0 md:mt-0">
-                            {/* Month, Year */}
-                            <div className="text-left md:text-right">
-                                <span className="block text-sm font-medium text-white/70 md:text-white group-hover:text-white transition-colors">
-                                    {(() => {
-                                        const ts = parseTripDate(dates);
-                                        if (ts === 0) return dates;
-                                        return new Date(ts).toLocaleDateString("en-US", { month: "short", year: "numeric" });
-                                    })()}
+                        <div className="flex justify-between items-end gap-2">
+                            <div className="flex items-center gap-1.5 text-xs text-white/60 truncate min-w-0">
+                                <Users className="h-3 w-3 opacity-50 shrink-0" />
+                                <span className="truncate" title={travelers.map((t: any) => getTravelerName(t)).join(", ")}>
+                                    {travelers && travelers.length > 0
+                                        ? travelers.map((t: any) => getTravelerName(t)).join(", ")
+                                        : "No Travelers"}
                                 </span>
                             </div>
 
-                            {/* Icons Row */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 shrink-0 pl-2">
                                 {hasFlights && (
-                                    <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-blue-500/10 md:bg-blue-500/20 flex items-center justify-center border border-blue-500/20 md:border-blue-500/30" title="Flights">
-                                        <Plane className="h-3.5 w-3.5 md:h-4 md:w-4 text-blue-300" />
+                                    <div className="h-6 w-6 md:h-8 md:w-8 rounded-full bg-blue-500/20 md:bg-blue-500/10 hover:bg-blue-500/30 flex items-center justify-center border border-blue-500/30 md:border-blue-500/20 transition-colors shadow-[0_0_10px_rgba(59,130,246,0.1)]" title="Flights">
+                                        <Plane className="h-3 w-3 md:h-4 md:w-4 text-blue-300 md:text-blue-300/80 group-hover:text-blue-200" />
                                     </div>
                                 )}
                                 {hasHotels && (
-                                    <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-amber-500/10 md:bg-amber-500/20 flex items-center justify-center border border-amber-500/20 md:border-amber-500/30" title="Hotels">
-                                        <Bed className="h-3.5 w-3.5 md:h-4 md:w-4 text-amber-300" />
+                                    <div className="h-6 w-6 md:h-8 md:w-8 rounded-full bg-amber-500/20 md:bg-amber-500/10 hover:bg-amber-500/30 flex items-center justify-center border border-amber-500/30 md:border-amber-500/20 transition-colors shadow-[0_0_10px_rgba(245,158,11,0.1)]" title="Hotels">
+                                        <Bed className="h-3 w-3 md:h-4 md:w-4 text-amber-300 md:text-amber-300/80 group-hover:text-amber-200" />
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Action Icons */}
-                    <div className="flex items-center gap-6 pr-2">
-                        <ArrowRight className="h-5 w-5 text-white/30 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                    <div className="hidden md:flex items-center justify-center pl-2 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-1/2 -translate-y-1/2">
+                        <ArrowRight className="h-5 w-5 text-white" />
                     </div>
                 </motion.div>
             </Link>

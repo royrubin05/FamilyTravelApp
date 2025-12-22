@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User, Edit2, AlertTriangle } from "lucide-react";
+import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User, Edit2, AlertTriangle, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CityImageManager } from "./CityImageManager";
 import { DataAuditManager } from "./DataAuditManager";
@@ -218,6 +218,21 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
                         >
                             <AlertTriangle className="h-4 w-4" />
                             Data Audit
+                        </button>
+
+                        <div className="flex-1" /> {/* Spacer */}
+
+                        <div className="h-px bg-white/10 my-2 mx-3" />
+                        <button
+                            onClick={async () => {
+                                const { logoutAction } = await import("@/app/actions");
+                                await logoutAction();
+                                window.location.href = "/login";
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-colors group"
+                        >
+                            <LogOut className="h-4 w-4 group-hover:text-red-400" />
+                            Sign Out
                         </button>
                     </div>
                 </div>
