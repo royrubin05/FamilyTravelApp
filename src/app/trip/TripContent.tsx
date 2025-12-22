@@ -65,7 +65,7 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
 
     // Advanced Grouping: Group Travelers by Itinerary
     const flightGroups = (() => {
-        const allTravelers = Array.from(new Set(flights.flatMap((f: any) => f.travelers || [])));
+        const allTravelers = Array.from(new Set(flights.flatMap((f: any) => f.travelers || []))) as string[];
         const signatures = new Map<string, string>(); // traveler -> signature
 
         // 1. Calculate signature for each traveler
