@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Calendar, Users, Plane, Bed } from "lucide-react";
 import { useTrips } from "@/context/TripContext";
 import { getDestinationImage, GENERIC_FALLBACK } from "@/lib/imageUtils";
-import { isTripCompleted } from "@/lib/dateUtils";
+import { isTripCompleted, parseTripDate } from "@/lib/dateUtils";
 
 // ... [existing code] ...
 
@@ -32,37 +32,10 @@ export function TripListItem({ id, destination = "", dates = "", image, traveler
 
     // ... [existing code] ...
 
-    // Dynamic Status Logic
-    let status = "Upcoming";
-    let statusColor = "bg-white/10 text-white/50";
-
-    const now = new Date();
-    // Rudimentary parsing for "Oct 12 - Oct 27" styled dates or full dates
-    // Ideally we'd store structured dates. For now, we check simplistic logic or keywords.
-    // However, if we assume the dates string contains a year or is current year:
-
-    // For manual testing/demo purposes, let's allow hardcoded override by ID first (as before)
-    // but also check for "In Process" keywords if provided, or defaults.
-
     const isCompleted = isTripCompleted(dates);
+    // Removed Status Logic as per request
 
-    if (isCompleted) {
-        status = "Completed";
-        statusColor = "bg-white/10 text-white/50";
-    } else {
-        // Fallback for new uploads - assume Upcoming unless we determine otherwise
-        status = "Upcoming";
-        statusColor = "bg-blue-500/20 text-blue-300";
-    }
 
-    // "In-Process" Simulation (e.g., if today matches)
-    // To demo "In-Process", let's say if the destination is "InFlight" or user manually sets it.
-    // For this prototype, I'll toggle based on ID for demonstration if needed, 
-    // or we can add a simple check:
-    if (id === "demo-active") {
-        status = "In-Process";
-        statusColor = "bg-green-500/20 text-green-300 pulse-animation";
-    }
 
 
 
@@ -129,11 +102,13 @@ export function TripListItem({ id, destination = "", dates = "", image, traveler
                             </h3>
                         </div>
 
-                        {/* Dates */}
-                        <div className="hidden md:flex items-center gap-2 text-sm text-white/60">
-                            <Calendar className="h-4 w-4 opacity-50" />
-                            <span>{dates}</span>
-                        </div>
+                        {/* Dates - Hidden on mobile, simplified on Desktop since we have the main date on right now */}
+                        {/* Actually user said 'add a date ... instead', implying main visibility.
+                             I will keep the raw range here for detail if needed, or remove if redundant.
+                             Let's remove the raw date column to clean up, as the "Month, Year" is the primary date now.
+                             Or replace it with Travelers count only?
+                             Let's keep Travelers.
+                          */}
 
                         {/* Travelers */}
                         <div className="hidden md:flex items-center gap-2 text-sm text-white/60 overflow-hidden">
@@ -145,18 +120,34 @@ export function TripListItem({ id, destination = "", dates = "", image, traveler
                             </span>
                         </div>
 
-                        {/* Status Badge */}
-                        <div className="flex justify-end md:justify-start">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider ${statusColor}`}>
-                                {status}
-                            </span>
-                        </div>
-                    </div>
+                        {/* Formatted Date & Icons */}
+                        <div className="flex flex-col items-end justify-center gap-3 md:pl-4 border-l border-white/5 md:border-none min-w-[100px]">
+                            {/* Month, Year */}
+                            <div className="text-right">
+                                <span className="block text-sm font-bold text-white tracking-wide">
+                                    {(() => {
+                                        const ts = parseTripDate(dates);
+                                        if (ts === 0) return dates; // Fallback
+                                        return new Date(ts).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                                    })()}
+                                </span>
+                                {/* Sub-date if range exists, optional, or just hide */}
+                            </div>
 
-                    {/* Aggregation Icons */}
-                    <div className="flex flex-col gap-2 items-end justify-center mr-4 opacity-50">
-                        {hasFlights && <Plane className="h-4 w-4 text-white" />}
-                        {hasHotels && <Bed className="h-4 w-4 text-white" />}
+                            {/* Icons Row */}
+                            <div className="flex items-center gap-2">
+                                {hasFlights && (
+                                    <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]" title="Flights">
+                                        <Plane className="h-4 w-4 text-blue-300" />
+                                    </div>
+                                )}
+                                {hasHotels && (
+                                    <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)]" title="Hotels">
+                                        <Bed className="h-4 w-4 text-amber-300" />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Action Icons */}
