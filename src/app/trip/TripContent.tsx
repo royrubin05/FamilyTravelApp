@@ -251,13 +251,16 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                             <div className="space-y-8">
                                 {flightGroups.map((group, gIdx) => (
                                     <div key={gIdx}>
-                                        <div className="flex items-center gap-2 mb-4 bg-white/5 w-fit px-4 py-2 rounded-full border border-white/5">
-                                            {group.travelers.map((t, tIdx) => (
-                                                <div key={tIdx} className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold text-white/90">{getTravelerName({ name: t })}</span>
-                                                    {tIdx < group.travelers.length - 1 && <span className="text-white/30">/</span>}
-                                                </div>
-                                            ))}
+                                        <div className="flex items-center gap-2 mb-4 bg-white/10 w-fit px-4 py-2 rounded-full border border-white/10 backdrop-blur-md">
+                                            <User className="h-4 w-4 text-white/50" />
+                                            <div className="flex items-center gap-2">
+                                                {group.travelers.map((t, tIdx) => (
+                                                    <div key={tIdx} className="flex items-center gap-1">
+                                                        <span className="text-base font-bold text-white tracking-wide">{getTravelerName({ name: t })}</span>
+                                                        {tIdx < group.travelers.length - 1 && <span className="text-white/30 mx-1">/</span>}
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
 
                                         <div className="grid gap-4">
