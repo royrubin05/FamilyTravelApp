@@ -34,35 +34,74 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
     const activities = trip.activities || [];
     const hasDetails = flights.length > 0 || hotels.length > 0 || activities.length > 0;
 
-    // Helper to group flights
-    const uniqueFlights = flights.reduce((acc: any[], flight: any) => {
-        const key = `${flight.airline}-${flight.flightNumber}-${flight.departure}`;
-        const existing = acc.find(f => `${f.airline}-${f.flightNumber}-${f.departure}` === key);
+    // Helper to merge duplicate flights (same plane, different confirmation/traveler record)
+    const mergeFlights = (flightList: any[]) => {
+        return flightList.reduce((acc: any[], flight: any) => {
+            const key = `${flight.airline}-${flight.flightNumber}-${flight.departure}`;
+            const existing = acc.find((f: any) => `${f.airline}-${f.flightNumber}-${f.departure}` === key);
 
-        if (existing) {
-            // Merge travelers
-            const newTravelers = [...(existing.travelers || []), ...(flight.travelers || [])];
-            existing.travelers = Array.from(new Set(newTravelers));
-
-            // Merge confirmations
-            if (flight.confirmation) {
-                if (!existing.allConfirmations) existing.allConfirmations = existing.confirmation ? [existing.confirmation] : [];
-                if (!existing.allConfirmations.includes(flight.confirmation)) {
-                    existing.allConfirmations.push(flight.confirmation);
+            if (existing) {
+                // Merge confirmations
+                if (flight.confirmation) {
+                    if (!existing.allConfirmations) existing.allConfirmations = existing.confirmation ? [existing.confirmation] : [];
+                    if (!existing.allConfirmations.includes(flight.confirmation)) {
+                        existing.allConfirmations.push(flight.confirmation);
+                    }
                 }
+                // Merge travelers check (though we group by traveler, so this might be redundant but safe)
+                if (flight.travelers) {
+                    const newTravelers = [...(existing.travelers || []), ...flight.travelers];
+                    existing.travelers = Array.from(new Set(newTravelers));
+                }
+            } else {
+                acc.push({
+                    ...flight,
+                    allConfirmations: flight.confirmation ? [flight.confirmation] : []
+                });
             }
-        } else {
-            // New entry
-            const newFlight = {
-                ...flight,
-                allConfirmations: flight.confirmation ? [flight.confirmation] : []
-            };
-            // Ensure travelers is an array
-            if (!newFlight.travelers) newFlight.travelers = [];
-            acc.push(newFlight);
+            return acc;
+        }, []).sort((a: any, b: any) => new Date(a.departure).getTime() - new Date(b.departure).getTime());
+    };
+
+    // Advanced Grouping: Group Travelers by Itinerary
+    const flightGroups = (() => {
+        const allTravelers = Array.from(new Set(flights.flatMap((f: any) => f.travelers || [])));
+        const signatures = new Map<string, string>(); // traveler -> signature
+
+        // 1. Calculate signature for each traveler
+        allTravelers.forEach(t => {
+            const myFlights = flights.filter((f: any) => f.travelers?.includes(t));
+            myFlights.sort((a: any, b: any) => new Date(a.departure).getTime() - new Date(b.departure).getTime());
+            const sig = myFlights.map((f: any) => `${f.airline}-${f.flightNumber}-${f.departure}`).join('|');
+            signatures.set(t, sig);
+        });
+
+        // 2. Group travelers by signature
+        const groupsMap = new Map<string, string[]>();
+        signatures.forEach((sig, traveler) => {
+            if (!groupsMap.has(sig)) groupsMap.set(sig, []);
+            groupsMap.get(sig)?.push(traveler);
+        });
+
+        // 3. Build group objects
+        const results = Array.from(groupsMap.entries()).map(([sig, groupTravelers]) => {
+            // Get flights relevant to this group (filtered by signature mostly, but re-fetching to be safe)
+            // We can just grab flights for the first traveler in the group
+            const representative = groupTravelers[0];
+            const rawFlights = flights.filter((f: any) => f.travelers?.includes(representative));
+            const mergedFlights = mergeFlights(rawFlights);
+
+            return { travelers: groupTravelers, flights: mergedFlights };
+        });
+
+        // 4. Handle orphans (flights with NO travelers)
+        const orphanFlights = flights.filter((f: any) => !f.travelers || f.travelers.length === 0);
+        if (orphanFlights.length > 0) {
+            results.push({ travelers: ["Other Items"], flights: mergeFlights(orphanFlights) });
         }
-        return acc;
-    }, []);
+
+        return results;
+    })();
 
     const [activeTab, setActiveTab] = useState<"overview" | "itinerary">("overview");
     const [isShared, setIsShared] = useState(false);
