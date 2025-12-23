@@ -150,15 +150,26 @@ export function getTripIcon(trip: any): string {
     if (topology === "Multi-City" || topology === "Open Jaw") return "/icons/multi-city.jpg";
 
     // 2. Fallback Inference
-    const hasFlights = trip.flights && trip.flights.length > 0;
+    const flights = trip.flights || [];
     const hasHotels = trip.hotels && trip.hotels.length > 0;
 
-    if (!hasFlights && hasHotels) return "/icons/hotel.jpg";
-    if (hasFlights) {
-        // Simple inference if AI failed
-        if (trip.flights.length === 1) return "/icons/one-way.jpg";
-        if (trip.flights.length >= 2) return "/icons/round-trip.jpg"; // Heuristic
+    if (flights.length === 0) {
+        return hasHotels ? "/icons/hotel.jpg" : "/icons/generic.jpg";
     }
 
-    return "/icons/generic.jpg";
+    if (flights.length === 1) return "/icons/one-way.jpg";
+
+    // Check for Round Trip (Origin == Final Destination)
+    const firstFlight = flights[0];
+    const lastFlight = flights[flights.length - 1];
+
+    const origin = firstFlight.departureAirport || extractCode(firstFlight.departure);
+    const destination = lastFlight.arrivalAirport || extractCode(lastFlight.arrival);
+
+    if (origin && destination && origin === destination) {
+        return "/icons/round-trip.jpg";
+    }
+
+    // If multiple flights but not round trip, assume Multi-City / Complex
+    return "/icons/multi-city.jpg";
 }
