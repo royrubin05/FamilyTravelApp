@@ -12,13 +12,20 @@ import { ManualTripModal } from "@/components/dashboard/ManualTripModal";
 import { SettingsModal } from "@/components/dashboard/SettingsModal";
 import { getSettings } from "@/app/settings-actions";
 
+interface MenuItem {
+    label: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
+}
+
 interface GlobalHeaderProps {
     children?: React.ReactNode;
     className?: string;
-    hideGlobalActions?: boolean; // Option to hide global actions if needed (e.g. login page)
+    hideGlobalActions?: boolean;
+    additionalMenuItems?: MenuItem[];
 }
 
-export function GlobalHeader({ children, className = "", hideGlobalActions = false }: GlobalHeaderProps) {
+export function GlobalHeader({ children, className = "", hideGlobalActions = false, additionalMenuItems = [] }: GlobalHeaderProps) {
     const router = useRouter();
 
     // Modal States
@@ -26,7 +33,6 @@ export function GlobalHeader({ children, className = "", hideGlobalActions = fal
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [isCreatingGroup, setIsCreatingGroup] = useState(false);
 
     // Data State
     const [settings, setSettings] = useState<any>(null);
@@ -58,17 +64,17 @@ export function GlobalHeader({ children, className = "", hideGlobalActions = fal
 
     return (
         <>
-            <header className={`flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center mb-10 max-w-5xl mx-auto relative z-40 px-4 md:px-0 ${className}`}>
-                {/* Logo - Resized Larger */}
+            <header className={`flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center mb-4 pt-4 max-w-4xl mx-auto relative z-40 ${className}`}>
+                {/* Logo - Stable large size without negative margins */}
                 <Link href="/" className="hover:opacity-80 transition-opacity">
-                    <div className="relative h-16 w-64 md:h-20 md:w-72">
+                    <div className="relative h-28 w-[400px] md:h-40 md:w-[550px]">
                         <Image
                             src="/images/travelroots-logo.png"
                             alt="TravelRoots"
                             fill
-                            className="object-contain object-left"
+                            className="object-contain object-left mix-blend-screen"
                             priority
-                            sizes="(max-width: 768px) 100vw, 300px"
+                            sizes="(max-width: 768px) 100vw, 550px"
                         />
                     </div>
                 </Link>
@@ -80,11 +86,11 @@ export function GlobalHeader({ children, className = "", hideGlobalActions = fal
                     {/* Global Actions */}
                     {!hideGlobalActions && (
                         <>
-                            <div className="h-8 w-px bg-white/10 mx-2 hidden md:block" />
+                            <div className="h-6 w-px bg-white/10 mx-2 hidden md:block" />
 
                             <button
                                 onClick={() => setIsSettingsOpen(true)}
-                                className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5"
+                                className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5"
                                 title="Settings"
                             >
                                 <Settings className="h-5 w-5" />
@@ -105,27 +111,32 @@ export function GlobalHeader({ children, className = "", hideGlobalActions = fal
                                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.95 }}
-                                            className="absolute right-0 top-full mt-2 w-56 bg-white text-black rounded-xl shadow-2xl overflow-hidden z-50 py-1 border border-neutral-200"
+                                            className="absolute right-0 top-full mt-2 w-64 bg-white text-black rounded-xl shadow-2xl overflow-hidden z-50 py-1 border border-neutral-200"
                                         >
                                             <button
                                                 onClick={() => { setIsUploadModalOpen(true); setIsActionsOpen(false); }}
-                                                className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2"
+                                                className="w-full text-left px-4 py-4 text-sm font-medium hover:bg-neutral-100 flex items-center gap-3"
                                             >
                                                 Import PDF / EML
                                             </button>
                                             <button
                                                 onClick={() => { setIsManualModalOpen(true); setIsActionsOpen(false); }}
-                                                className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2 border-t border-neutral-100"
+                                                className="w-full text-left px-4 py-4 text-sm font-medium hover:bg-neutral-100 flex items-center gap-3 border-t border-neutral-100"
                                             >
                                                 Add Trip Manually
                                             </button>
-                                            <Link
-                                                href="/"
-                                                onClick={() => setIsActionsOpen(false)}
-                                                className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2 border-t border-neutral-100 text-neutral-500"
-                                            >
-                                                Create Trip Group (Select on Dashboard)
-                                            </Link>
+
+                                            {/* Additional Menu Items (e.g., Create Group) */}
+                                            {additionalMenuItems.map((item, index) => (
+                                                <button
+                                                    key={index}
+                                                    onClick={() => { item.onClick(); setIsActionsOpen(false); }}
+                                                    className="w-full text-left px-4 py-4 text-sm font-medium hover:bg-neutral-100 flex items-center gap-3 border-t border-neutral-100 text-neutral-800"
+                                                >
+                                                    {item.icon}
+                                                    {item.label}
+                                                </button>
+                                            ))}
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

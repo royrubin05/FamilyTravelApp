@@ -266,7 +266,7 @@ export default function GroupContent({ group, trips, allTrips = [], initialImage
     };
 
     return (
-        <div className="relative min-h-screen w-full bg-black text-white font-sans selection:bg-white/30 pb-20">
+        <div className="relative min-h-screen w-full bg-black text-white font-sans selection:bg-white/30 p-4 md:p-8 pb-20">
 
             {/* Background Image Layer */}
             <div className="fixed inset-0 z-0">
@@ -293,26 +293,18 @@ export default function GroupContent({ group, trips, allTrips = [], initialImage
             </div>
 
             {/* Top Navigation */}
-            <GlobalHeader className="p-6">
+            <GlobalHeader>
                 <button
                     onClick={handleShare}
-                    className="flex items-center gap-2 px-3 py-2 bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-md border border-white/10 transition-all text-white/80 hover:text-white"
+                    className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5"
                     title="Share Trip Group"
                 >
                     {isShared ? (
-                        <>
-                            <Check className="h-4 w-4 text-green-400" />
-                            <span className="text-xs font-bold text-green-400 uppercase tracking-widest">Copied!</span>
-                        </>
+                        <Check className="h-5 w-5 text-green-400" />
                     ) : (
-                        <Share2 className="h-4 w-4" />
+                        <Share2 className="h-5 w-5" />
                     )}
                 </button>
-                <div className="bg-black/20 rounded-full px-4 py-1 backdrop-blur-md border border-white/10">
-                    <span className="text-xs uppercase tracking-widest font-bold">
-                        {getGroupDateRange()}
-                    </span>
-                </div>
             </GlobalHeader>
 
             {/* Main Content */}
@@ -323,13 +315,13 @@ export default function GroupContent({ group, trips, allTrips = [], initialImage
                         <Layers className="h-4 w-4" />
                         <span className="text-xs font-bold uppercase tracking-widest">Trip Group</span>
                     </div>
-                    <h1 className="text-[10vw] md:text-[6vw] font-serif leading-none tracking-tighter mix-blend-overlay">
+                    <h1 className="text-[10vw] md:text-[6vw] font-bold leading-none tracking-tighter mix-blend-overlay">
                         {group.title}
                     </h1>
                 </motion.div>
 
                 {/* Timeline / Itinerary Feed */}
-                <div className="max-w-3xl mx-auto space-y-0">
+                <div className="max-w-4xl mx-auto space-y-0">
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}

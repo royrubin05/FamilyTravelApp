@@ -237,25 +237,27 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
     >
 
       {/* Header */}
-      <GlobalHeader>
-        {isSelectionMode ? (
+      <GlobalHeader
+        additionalMenuItems={[
+          {
+            label: "Create Trip Group",
+            icon: <Layers className="h-4 w-4 text-neutral-500" />,
+            onClick: () => {
+              setIsSelectionMode(true);
+              setSelectedTripIds(new Set());
+            }
+          }
+        ]}
+      >
+        {isSelectionMode && (
           <button
             onClick={() => {
               setIsSelectionMode(false);
               setSelectedTripIds(new Set());
             }}
-            className="px-3 py-2 bg-white text-black hover:bg-neutral-200 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+            className="px-4 py-2 bg-white text-black hover:bg-neutral-200 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-lg"
           >
             Cancel Selection
-          </button>
-        ) : (
-          <button
-            onClick={() => setIsSelectionMode(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
-            title="Select Trips to Group"
-          >
-            <CheckSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">Select Mode</span>
           </button>
         )}
       </GlobalHeader>
