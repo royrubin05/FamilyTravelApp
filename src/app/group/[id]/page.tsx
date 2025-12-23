@@ -39,7 +39,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
         const cookieStore = await cookies();
         const isAuthenticated = !!cookieStore.get("auth_session");
 
-        return <GroupContent group={group} trips={subTrips} initialImages={initialImages} isAuthenticated={isAuthenticated} />;
+        return <GroupContent group={group} trips={subTrips} allTrips={allTrips} initialImages={initialImages} isAuthenticated={isAuthenticated} />;
     } catch (error) {
         console.error("Error rendering GroupPage:", error);
         return <div className="p-10 text-white">

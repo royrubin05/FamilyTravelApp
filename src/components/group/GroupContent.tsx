@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Home, Share2, Check, LayoutDashboard, Layers, Plane, Component, ChevronLeft } from "lucide-react";
+import EditGroupModal from "./EditGroupModal";
 import { TripListItem } from "@/components/dashboard/TripListItem";
 import { motion } from "framer-motion";
 import { deleteTripGroupAction } from "@/app/trip-actions";
@@ -11,13 +12,15 @@ import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 interface GroupContentProps {
     group: any;
     trips: any[]; // The sub-trips belonging to this group
+    allTrips?: any[]; // All available trips for editing
     initialImages: Record<string, string>;
     isAuthenticated?: boolean;
 }
 
-export default function GroupContent({ group, trips, initialImages, isAuthenticated = false }: GroupContentProps) {
+export default function GroupContent({ group, trips, allTrips = [], initialImages, isAuthenticated = false }: GroupContentProps) {
     const [isShared, setIsShared] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     if (!group) return <div>Group not found</div>;
 
@@ -203,10 +206,17 @@ export default function GroupContent({ group, trips, initialImages, isAuthentica
                 {isAuthenticated && (
                     <div className="flex justify-center items-center gap-4 mt-8 mb-8 border-t border-white/10 pt-8 max-w-lg mx-auto">
                         <button
-                            onClick={() => setIsDeleteModalOpen(true)}
-                            className="text-red-400/80 hover:text-red-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 hover:bg-red-500/10 rounded-full border border-transparent hover:border-red-500/20"
+                            onClick={() => setIsEditModalOpen(true)}
+                            className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-6 py-3 rounded-full border border-white/10"
                         >
-                            Ungroup Trips
+                            <span className="hidden sm:inline">Edit Group</span>
+                            <span className="sm:hidden">Edit</span>
+                        </button>
+                        <button
+                            onClick={() => setIsDeleteModalOpen(true)}
+                            className="text-red-400/80 hover:text-red-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-6 py-3 hover:bg-red-500/10 rounded-full border border-transparent hover:border-red-500/20"
+                        >
+                            Ungroup
                         </button>
                     </div>
                 )}
@@ -220,6 +230,13 @@ export default function GroupContent({ group, trips, initialImages, isAuthentica
                 onConfirm={handleDeleteGroup}
                 onCancel={() => setIsDeleteModalOpen(false)}
                 isDestructive={true}
+            />
+
+            <EditGroupModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                group={group}
+                allTrips={allTrips}
             />
         </div>
     );
