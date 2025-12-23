@@ -67,14 +67,14 @@ export function GlobalHeader({ children, className = "", hideGlobalActions = fal
             <header className={`flex flex-row justify-between items-center mb-4 pt-4 max-w-4xl mx-auto relative z-40 ${className}`}>
                 {/* Logo - Compact for mobile, Large for Desktop */}
                 <Link href="/" className="hover:opacity-80 transition-opacity">
-                    <div className="relative h-8 w-[110px] md:h-20 md:w-[275px]">
+                    <div className="relative h-12 w-[165px] md:h-20 md:w-[275px]">
                         <Image
                             src="/images/travelroots-logo-v3.png"
                             alt="TravelRoots"
                             fill
                             className="object-contain object-left"
                             priority
-                            sizes="(max-width: 768px) 110px, 275px"
+                            sizes="(max-width: 768px) 165px, 275px"
                         />
                     </div>
                 </Link>
