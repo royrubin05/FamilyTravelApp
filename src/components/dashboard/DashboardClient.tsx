@@ -167,10 +167,18 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
       const dateForSort = groupTrips[0]?.dates || g.startDate || "";
       const isCompleted = isTripCompleted(dateForSort); // simplified
 
+      // Hotfix: Ensure duplicate/wrong IDs (e.g. March trip in IAC group) doesn't break logic if accidentally grouped.
+      // Ideally we fix the data, but filtering visually is a safety net.
+      // Logic: If group title is "IAC Conference in Miami", strictly exclude the March trip.
+      let finalIds = ids;
+      if (g.title?.includes("IAC") && g.title?.includes("Miami")) {
+        finalIds = finalIds.filter((id: string) => !id.includes("03-29") && !id.includes("march"));
+      }
+
       return {
         type: 'group',
         ...g,
-        ids,
+        ids: finalIds,
         isCompleted,
         dateForSort,
         displayStartDate: computedStartDate,

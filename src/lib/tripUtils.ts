@@ -168,8 +168,19 @@ export function getTripIcon(trip: any): string {
     const firstFlight = flights[0];
     const lastFlight = flights[flights.length - 1];
 
-    const origin = firstFlight.departureAirport || extractCode(firstFlight.departure);
-    const destination = lastFlight.arrivalAirport || extractCode(lastFlight.arrival);
+    // Helper to get airport code or city name, normalized
+    const getLoc = (f: any, type: 'dep' | 'arr') => {
+        const port = type === 'dep' ? f.departureAirport : f.arrivalAirport;
+        const raw = type === 'dep' ? f.departure : f.arrival;
+        if (port) return port.trim().toUpperCase();
+        const code = extractCode(raw);
+        if (code) return code;
+        // Fallback to raw string comparison (risky but better than nothing if no codes)
+        return raw ? raw.split("(")[0].trim().toLowerCase() : "";
+    };
+
+    const origin = getLoc(firstFlight, 'dep');
+    const destination = getLoc(lastFlight, 'arr');
 
     if (origin && destination && origin === destination) {
         return "/icons/round-trip.jpg";
