@@ -42,6 +42,7 @@ export default async function TripPage({ searchParams }: PageProps) {
                 familyMembers={settings?.familyMembers || []}
                 isAuthenticated={isAuthenticated}
                 linkedGroup={linkedGroup}
+                backgroundImage={settings?.backgroundImage}
             />
         </Suspense>
     );

@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+
 export const PROMPT_SYSTEM_INSTRUCTION = `
 You are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).
 
@@ -33,13 +34,13 @@ Return ONLY a JSON object with the following schema:
     }
   ],
   "activities": [],
-  "trip_title_dashboard": "Origin <-> Destination",
-  "trip_title_page": "City Name",
+  "trip_title_dashboard": "Human Title (Headline)",
+  "trip_title_page": "Human Title (Headline)",
   "ai_summary": {
     "topology": "Round Trip | One Way | Open Jaw | Multi-City",
-    "human_title": "Trip to City",
-    "verbose_description": "Natural language summary.",
-    "layover_text": "Layover description."
+    "human_title": "String",
+    "verbose_description": "String",
+    "layover_text": "String"
   }
 }
 
@@ -50,17 +51,33 @@ Rules:
    - Clean the name: Remove airport codes (e.g. convert "City (CODE)" to "City").
 4. If "dates" are missing, INFER them from the first flight departure.
 5. Do NOT include markdown formatting (\`\`\`json). Just the raw JSON.
-6. Generate Titles (AI Summary):
-   - "trip_title_dashboard": Visual Route (e.g. "LAX <-> LHR" or "A to B (connecting in X)").
-   - "trip_title_page": Main City Name (e.g. "London").
-   - "ai_summary":
-     - Use natural language rules:
-     - Use City Names Only (convert codes).
-     - human_title: "Trip to [City]" / "Flight to [City]".
-     - verbose_description: Complete, grammatical sentence: "Departing [Origin] on [Date] for [Dest], connecting in [Stop]."
-     - layover_text: "Layover in [Stop]" (instead of "1 stop via...").
-     - IF NO FLIGHTS: "dashboard_title" = City Name. "human_title" = "Trip to [City]".
+6. Generate Titles (AI Summary) using these NATURAL LANGUAGE RULES:
+   
+   A. **Use City Names Only:**
+      - Always convert airport codes to their primary City Name (e.g., "LAX" becomes "Los Angeles").
+      - If the city is obscure, include the country.
+
+   B. **\`human_title\` (The Headline):**
+      - **Round Trip:** "Trip to [Destination City]"
+          *   (Ignore connections/layovers. A stop in Frankfurt en route to Tel Aviv is a Round Trip to Tel Aviv.)
+      - **One Way:** "Flight to [Destination City]"
+      - **Open Jaw:** "Trip to [Dest 1], returning from [Origin 2]"
+      - **Multi-City:** "Multi-city journey to [List main cities]"
+          *   (Strictly for trips with multiple distinct STAYS > 24h. Do not count layovers.)
+      - **No Flights:** "Trip to [Destination]"
+
+   C. **\`verbose_description\` (The Details):**
+      - Write a complete, grammatically correct sentence summarizing the flow.
+      - Mention the dates and connection cities naturally.
+      - **Structure:** "Departing [Origin] on [Date] for [Dest], connecting in [Stop City]."
+
+   D. **\`layover_text\`:**
+      - Instead of "1 stop via EWR", use: "Layover in [City Name]".
+
+   E. Mappings:
+      - Map "human_title" to both "trip_title_dashboard" and "trip_title_page".
 `;
+
 
 export async function parseTripWithGemini(fileBuffer: Buffer, mimeType: string) {
   try {

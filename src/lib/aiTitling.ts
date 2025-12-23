@@ -1,12 +1,8 @@
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import * as dotenv from "dotenv";
-
-dotenv.config({ path: ".env.local" });
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-async function generateTitles(trip: any): Promise<any> {
+export async function generateTripTitles(trip: any) {
     const flights = trip.flights || [];
     const destination = trip.destination;
 
@@ -22,10 +18,13 @@ async function generateTitles(trip: any): Promise<any> {
         - If the city is obscure, include the country.
 
     2.  **\`human_title\` (The Headline):**
-        - **Round Trip:** "Trip to [Destination City]"
+        - **Round Trip:** "Trip to [Destination City]" 
+           *   (Note: A trip with connections/layovers is STILL a Round Trip if the ultimate destination is the same. Do NOT classify as Multi-City just because there is a stopover.)
         - **One Way:** "Flight to [Destination City]"
         - **Open Jaw:** "Trip to [Dest 1], returning from [Origin 2]"
         - **Multi-City:** "Multi-city journey to [List main cities]"
+            *   (Note: ONLY use Multi-City if the traveler spends significant time (>24h) in multiple distinct cities acting as destinations. A 2-hour stop in Frankfurt on the way to Tel Aviv is merely a connection, NOT a multi-city trip.)
+        - **No Flights:** "Trip to [Destination]"
 
     3.  **\`verbose_description\` (The Details):**
         - Write a complete, grammatically correct sentence summarizing the flow.
@@ -58,7 +57,7 @@ async function generateTitles(trip: any): Promise<any> {
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", generationConfig: { responseMimeType: "application/json" } });
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        console.log(`[AI Params] ${text}`);
+        // console.log(`[AI Params] ${text}`);
 
         let data = JSON.parse(text);
 
@@ -71,7 +70,7 @@ async function generateTitles(trip: any): Promise<any> {
         const sanitize = (val: any) => (val === undefined || val === null) ? "" : val;
 
         return {
-            dashboard: sanitize(data.human_title) || trip.destination, // Mapped to human_title as requested main title
+            dashboard: sanitize(data.human_title) || trip.destination,
             page: sanitize(data.human_title) || trip.destination,
             ai_summary: {
                 topology: sanitize(data.topology),
@@ -95,48 +94,3 @@ async function generateTitles(trip: any): Promise<any> {
         };
     }
 }
-
-import * as admin from "firebase-admin";
-
-async function run() {
-    console.log("Fetching trips...");
-
-    if (!admin.apps.length) {
-        admin.initializeApp({
-            credential: admin.credential.applicationDefault(),
-            projectId: 'travelapp05'
-        });
-    }
-
-    const db = admin.firestore();
-    const snapshot = await db.collection("trips").get();
-
-    console.log(`Found ${snapshot.size} trips.`);
-
-    let updatedCount = 0;
-
-    for (const doc of snapshot.docs) {
-        const trip = { id: doc.id, ...doc.data() } as any;
-
-        // Force update now to apply new schema
-        console.log(`Generating AI Summary for ${trip.id} (${trip.destination})...`);
-
-        const result = await generateTitles(trip);
-
-        try {
-            await db.collection("trips").doc(trip.id).update({
-                trip_title_dashboard: result.dashboard,
-                trip_title_page: result.page,
-                ai_summary: result.ai_summary
-            });
-            console.log(`Updated: ${result.dashboard}`);
-            updatedCount++;
-        } catch (err) {
-            console.error(`Failed to update ${trip.id}:`, err);
-        }
-    }
-
-    console.log(`Done. Updated ${updatedCount} trips.`);
-}
-
-run();

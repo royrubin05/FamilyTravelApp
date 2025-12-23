@@ -36,6 +36,7 @@ interface GroupContentProps {
     allTrips?: any[]; // All available trips for editing
     initialImages: Record<string, string>;
     isAuthenticated?: boolean;
+    backgroundImage?: string | null;
 }
 
 // Separate component for the sortable trip item to encapsulate hooks
@@ -187,7 +188,7 @@ function SortableTripItem({ trip, index, isLast, isAuthenticated, formatDate }: 
     );
 }
 
-export default function GroupContent({ group, trips, allTrips = [], initialImages, isAuthenticated = false }: GroupContentProps) {
+export default function GroupContent({ group, trips, allTrips = [], initialImages, isAuthenticated = false, backgroundImage }: GroupContentProps) {
     const [isShared, setIsShared] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -268,16 +269,25 @@ export default function GroupContent({ group, trips, allTrips = [], initialImage
 
             {/* Background Image Layer */}
             <div className="fixed inset-0 z-0">
-                {group.image && (
-                    <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src={group.image}
-                            alt={group.title}
-                            className="w-full h-full object-cover opacity-50"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
-                    </>
+                {backgroundImage ? (
+                    <div
+                        className="absolute inset-0 bg-cover bg-center bg-fixed transition-all duration-700"
+                        style={{
+                            backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${backgroundImage})`
+                        }}
+                    />
+                ) : (
+                    group.image && (
+                        <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={group.image}
+                                alt={group.title}
+                                className="w-full h-full object-cover opacity-50"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+                        </>
+                    )
                 )}
             </div>
 

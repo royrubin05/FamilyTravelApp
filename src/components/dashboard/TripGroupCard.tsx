@@ -25,7 +25,7 @@ export function TripGroupCard({ group, tripCount, onClick }: TripGroupCardProps)
                         <img
                             src={group.image}
                             alt={group.title}
-                            className="h-full w-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-1000"
+                            className="h-full w-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-1000"
                         />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />

@@ -95,17 +95,18 @@ export function TripListItem({
                                 const target = e.currentTarget;
                                 if (target.src !== GENERIC_FALLBACK) target.src = GENERIC_FALLBACK;
                             }}
-                            className="h-full w-full object-cover grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-500"
+                            className="h-full w-full object-cover grayscale-0 transition-all duration-500"
                         />
                         {/* Removed text overlay for cleaner icon look */}
                     </div>
 
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                         <div className="flex justify-between items-start gap-2 mb-1">
-                            <h3 className="text-base md:text-xl font-bold font-serif tracking-wide text-white group-hover:text-amber-100 transition-colors truncate pr-2">
+                            {/* Title extended, date preserved but Title given priority */}
+                            <h3 className="text-base md:text-xl font-bold font-serif tracking-wide text-white group-hover:text-amber-100 transition-colors truncate pr-1">
                                 {destination}
                             </h3>
-                            <span className="text-xs md:text-sm font-bold text-white/80 whitespace-nowrap bg-white/10 px-2 py-0.5 rounded-full md:bg-transparent md:px-0 md:py-0">
+                            <span className="text-xs md:text-sm font-bold text-white/80 whitespace-nowrap bg-white/10 px-2 py-0.5 rounded-full md:bg-transparent md:px-0 md:py-0 shrink-0">
                                 {(() => {
                                     const ts = parseTripDate(dates);
                                     if (ts === 0) return dates;
@@ -115,7 +116,7 @@ export function TripListItem({
                         </div>
 
                         <div className="flex justify-between items-end gap-2">
-                            <div className="flex items-center gap-1.5 text-xs text-white/60 truncate min-w-0">
+                            <div className="flex items-center gap-1.5 text-xs text-white/60 truncate min-w-0 flex-1">
                                 <Users className="h-3 w-3 opacity-50 shrink-0" />
                                 <span className="truncate" title={travelers.map((t: any) => getTravelerName(t)).join(", ")}>
                                     {travelers && travelers.length > 0
@@ -124,18 +125,7 @@ export function TripListItem({
                                 </span>
                             </div>
 
-                            <div className="flex items-center gap-1.5 shrink-0 pl-2">
-                                {hasFlights && (
-                                    <div className="h-6 w-6 md:h-8 md:w-8 rounded-full bg-blue-500/20 md:bg-blue-500/10 hover:bg-blue-500/30 flex items-center justify-center border border-blue-500/30 md:border-blue-500/20 transition-colors shadow-[0_0_10px_rgba(59,130,246,0.1)]" title="Flights">
-                                        <Plane className="h-3 w-3 md:h-4 md:w-4 text-blue-300 md:text-blue-300/80 group-hover:text-blue-200" />
-                                    </div>
-                                )}
-                                {hasHotels && (
-                                    <div className="h-6 w-6 md:h-8 md:w-8 rounded-full bg-amber-500/20 md:bg-amber-500/10 hover:bg-amber-500/30 flex items-center justify-center border border-amber-500/30 md:border-amber-500/20 transition-colors shadow-[0_0_10px_rgba(245,158,11,0.1)]" title="Hotels">
-                                        <Bed className="h-3 w-3 md:h-4 md:w-4 text-amber-300 md:text-amber-300/80 group-hover:text-amber-200" />
-                                    </div>
-                                )}
-                            </div>
+                            {/* Icons removed as per user request to provide more room for text */}
                         </div>
                     </div>
 

@@ -3,6 +3,7 @@ import GroupContent from "@/components/group/GroupContent";
 import { TripGroup } from "@/types/trip";
 import { getTrips, getTripGroups } from "@/app/trip-actions";
 import { parseTripDate } from "@/lib/dateUtils";
+import { getSettings } from "@/app/settings-actions";
 import { cookies } from "next/headers";
 
 interface GroupPageProps {
@@ -34,12 +35,13 @@ export default async function GroupPage({ params }: GroupPageProps) {
             });
 
         const initialImages = await getCityImages();
+        const settings = await getSettings();
 
         // Check auth status
         const cookieStore = await cookies();
         const isAuthenticated = !!cookieStore.get("auth_session");
 
-        return <GroupContent group={group} trips={subTrips} allTrips={allTrips} initialImages={initialImages} isAuthenticated={isAuthenticated} />;
+        return <GroupContent group={group} trips={subTrips} allTrips={allTrips} initialImages={initialImages} isAuthenticated={isAuthenticated} backgroundImage={settings?.backgroundImage} />;
     } catch (error) {
         console.error("Error rendering GroupPage:", error);
         return <div className="p-10 text-white">

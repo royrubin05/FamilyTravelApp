@@ -21,9 +21,10 @@ interface TripContentProps {
     familyMembers?: any[];
     isAuthenticated?: boolean;
     linkedGroup?: any;
+    backgroundImage?: string | null;
 }
 
-export default function TripContent({ destinationImages, initialTrip, familyMembers = [], isAuthenticated = false, linkedGroup }: TripContentProps) {
+export default function TripContent({ destinationImages, initialTrip, familyMembers = [], isAuthenticated = false, linkedGroup, backgroundImage }: TripContentProps) {
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
     const { trips } = useTrips();
@@ -123,49 +124,60 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
 
             {/* Background Image Layer */}
             <div className="fixed inset-0 z-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {trip && (
-                    <img
-                        src={(() => {
-                            // 1. Check dynamic images map first
-                            if (destinationImages) {
-                                const keys = getNormalizedKeys(trip.destination);
-                                for (const key of keys) {
-                                    if (destinationImages[key]) return destinationImages[key];
-                                }
-                            }
-
-                            // 2. Use trip image if valid
-                            if (trip.image && !trip.image.includes("placehold.co")) {
-                                return trip.image;
-                            }
-
-                            // 3. Fallback
-                            return getDestinationImage(trip.destination);
-                        })()}
-                        alt={trip.destination}
-                        onError={(e) => {
-                            const target = e.currentTarget;
-                            let fallbackUrl = getDestinationImage(trip.destination);
-
-                            // Check dynamic map first
-                            if (destinationImages) {
-                                const keys = getNormalizedKeys(trip.destination);
-                                for (const key of keys) {
-                                    if (destinationImages[key]) fallbackUrl = destinationImages[key];
-                                }
-                            }
-
-                            if (target.src.includes(fallbackUrl) || target.src === GENERIC_FALLBACK) {
-                                if (target.src !== GENERIC_FALLBACK) target.src = GENERIC_FALLBACK;
-                                return;
-                            }
-                            target.src = fallbackUrl;
+                {backgroundImage ? (
+                    <div
+                        className="absolute inset-0 bg-cover bg-center bg-fixed transition-all duration-700"
+                        style={{
+                            backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${backgroundImage})`
                         }}
-                        className="h-full w-full object-cover opacity-50"
                     />
+                ) : (
+                    <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {trip && (
+                            <img
+                                src={(() => {
+                                    // 1. Check dynamic images map first
+                                    if (destinationImages) {
+                                        const keys = getNormalizedKeys(trip.destination);
+                                        for (const key of keys) {
+                                            if (destinationImages[key]) return destinationImages[key];
+                                        }
+                                    }
+
+                                    // 2. Use trip image if valid
+                                    if (trip.image && !trip.image.includes("placehold.co")) {
+                                        return trip.image;
+                                    }
+
+                                    // 3. Fallback
+                                    return getDestinationImage(trip.destination);
+                                })()}
+                                alt={trip.destination}
+                                onError={(e) => {
+                                    const target = e.currentTarget;
+                                    let fallbackUrl = getDestinationImage(trip.destination);
+
+                                    // Check dynamic map first
+                                    if (destinationImages) {
+                                        const keys = getNormalizedKeys(trip.destination);
+                                        for (const key of keys) {
+                                            if (destinationImages[key]) fallbackUrl = destinationImages[key];
+                                        }
+                                    }
+
+                                    if (target.src.includes(fallbackUrl) || target.src === GENERIC_FALLBACK) {
+                                        if (target.src !== GENERIC_FALLBACK) target.src = GENERIC_FALLBACK;
+                                        return;
+                                    }
+                                    target.src = fallbackUrl;
+                                }}
+                                className="h-full w-full object-cover opacity-50"
+                            />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+                    </>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
             </div>
 
             {/* Top Navigation */}
@@ -220,9 +232,19 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
 
                 {/* Header */}
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mb-12 text-center relative">
-                    <h1 className="text-[12vw] md:text-[8vw] font-serif leading-none tracking-tighter mix-blend-overlay">
-                        {trip.trip_title_page || trip.destination}
+                    <h1 className="text-[8vw] md:text-[6vw] font-serif leading-none tracking-tighter mix-blend-overlay px-4">
+                        {trip.ai_summary?.human_title || trip.trip_title_page || trip.destination}
                     </h1>
+                    {trip.ai_summary?.verbose_description && (
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-lg md:text-xl text-white/70 mt-4 max-w-2xl mx-auto font-light leading-relaxed px-6"
+                        >
+                            {trip.ai_summary.verbose_description}
+                        </motion.p>
+                    )}
                 </motion.div>
 
                 {/* Content Sections */}

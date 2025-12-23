@@ -126,7 +126,9 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
   // Mixed List Construction
   const ungroupedTrips = trips.filter(t => !groupedTripIds.has(t.id));
 
-  const allItems = [
+  type DashboardItem = { type: 'group' } & any | { type: 'trip' } & any;
+
+  const allItems: DashboardItem[] = [
     ...groups.map(g => {
       // items validation
       const ids = g.ids || [];
@@ -141,33 +143,13 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
         const first = sortedGroupTrips[0];
         const last = sortedGroupTrips[sortedGroupTrips.length - 1];
 
-        // Extract just the relevant parts if possible, or use the full date string
-        // Since t.dates is usually "Jan 12 - Jan 18, 2026", we want "Jan 12, 2026" from the first and "Jan 18, 2026" from the last.
-        // For now, let's use the startDateISO if available, or just use the full string and let the UI handle it?
-        // The UI displays "Start — End".
-        // If first.dates is "Jan 12 - Jan 18", we want "Jan 12".
-        // Helper to extract clean start/end from our "Date - Date" format?
-        // Let's rely on our dateUtils if possible, or just pass the full objects and let the card decide?
-        // Passing pre-calculated strings is safer for the card.
-
-        computedStartDate = first.dates.split(" - ")[0]; // Heuristic: "Jan 12"
-        // Append year if missing? The date string usually has it at the end. 
-        // If "Jan 12" doesn't have year, we might want to keep it simple.
-
-        // Better: use the full date string of the first trip as the "Start Date" reference, 
-        // and full date string of the last trip.
-        // But the user complained about "Jan 12 - Jan 18 - Jan 14 - Jan 18".
-
-        // Let's try to pass the raw date strings of the first and last trip.
         computedStartDate = first.dates.split(" - ")[0];
         const lastParts = last.dates.split(" - ");
-        computedEndDate = lastParts[lastParts.length - 1]; // "Jan 18, 2026"
+        computedEndDate = lastParts[lastParts.length - 1];
       }
 
       const dateForSort = groupTrips[0]?.dates || g.startDate || "";
-      const isCompleted = isTripCompleted(dateForSort); // simplified
-
-
+      const isCompleted = isTripCompleted(dateForSort);
 
       return {
         type: 'group',
@@ -182,7 +164,17 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
     ...ungroupedTrips.map(t => {
       const dates = t.dates || "";
       const isCompleted = isTripCompleted(dates);
-      return { type: 'trip', ...t, isCompleted, dateForSort: dates };
+      // User Request: Use human_title as the main title
+      const tAny = t as any;
+      const displayTitle = tAny.ai_summary?.human_title || tAny.trip_title_dashboard || t.destination;
+
+      return {
+        type: 'trip',
+        ...t,
+        destination: displayTitle,
+        isCompleted,
+        dateForSort: dates
+      };
     })
   ];
 
