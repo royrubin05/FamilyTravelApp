@@ -167,18 +167,13 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
       const dateForSort = groupTrips[0]?.dates || g.startDate || "";
       const isCompleted = isTripCompleted(dateForSort); // simplified
 
-      // Hotfix: Ensure duplicate/wrong IDs (e.g. March trip in IAC group) doesn't break logic if accidentally grouped.
-      // Ideally we fix the data, but filtering visually is a safety net.
-      // Logic: If group title is "IAC Conference in Miami", strictly exclude the March trip.
-      let finalIds = ids;
-      if (g.title?.includes("IAC") && g.title?.includes("Miami")) {
-        finalIds = finalIds.filter((id: string) => !id.includes("03-29") && !id.includes("march"));
-      }
+      const dateForSort = groupTrips[0]?.dates || g.startDate || "";
+      const isCompleted = isTripCompleted(dateForSort); // simplified
 
       return {
         type: 'group',
         ...g,
-        ids: finalIds,
+        ids,
         isCompleted,
         dateForSort,
         displayStartDate: computedStartDate,
@@ -204,7 +199,28 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
       // If Group: Check if ANY trip in group matches member?
       // For simplicity V1: Only filter individual trips. Groups are shown if "All".
       // Or recursively check items? Context doesn't easily allow mapping group -> trips without lookup.
-      if (item.type === 'group') return true;
+      if (item.type === 'group') {
+        const ids = (item as any).ids || [];
+        const groupTrips = trips.filter(t => ids.includes(t.id));
+        if (filter === 'all') return true;
+
+        const selectedMember = familyMembers.find((m: any) => m.id === filter);
+        if (!selectedMember) return false;
+
+        const matchTerms = [
+          selectedMember.name,
+          ...(selectedMember.nicknames || []),
+          selectedMember.nickname
+        ].filter(Boolean).map(term => term.toLowerCase());
+
+        // Check if ANY trip in the group has this traveler
+        return groupTrips.some(t => {
+          return t.travelers?.some((traveler: any) => {
+            const tName = (typeof traveler === "string" ? traveler : traveler.name || "").toLowerCase();
+            return matchTerms.some(term => tName.includes(term) || term.includes(tName));
+          });
+        });
+      }
 
       // Standard Trip Filter
       if (item.type === 'trip') {
