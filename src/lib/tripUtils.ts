@@ -151,10 +151,15 @@ export function getTripIcon(trip: any): string {
 
     // 2. Fallback Inference
     const flights = trip.flights || [];
-    const hasHotels = trip.hotels && trip.hotels.length > 0;
+    const hotels = trip.hotels || [];
+
+    // Logic:
+    // No flights, but has hotels -> Hotel Trip
+    // No flights, no hotels -> Generic
+    // Flights exist -> Check topology (One Way vs Round Trip vs Multi)
 
     if (flights.length === 0) {
-        return hasHotels ? "/icons/hotel.jpg" : "/icons/generic.jpg";
+        return hotels.length > 0 ? "/icons/hotel.jpg" : "/icons/generic.jpg";
     }
 
     if (flights.length === 1) return "/icons/one-way.jpg";

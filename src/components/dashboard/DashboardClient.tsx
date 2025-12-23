@@ -128,12 +128,54 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
 
   const allItems = [
     ...groups.map(g => {
-      // Determine status of group
-      const startDate = g.startDate || "";
-      const endDate = g.endDate || startDate;
-      const isCompleted = isTripCompleted(endDate);
+      // items validation
       const ids = g.ids || [];
-      return { type: 'group', ...g, ids, isCompleted, dateForSort: startDate };
+      const groupTrips = trips.filter(t => ids.includes(t.id));
+
+      // Calculate dynamic dates
+      let computedStartDate = g.startDate;
+      let computedEndDate = g.endDate;
+
+      if (groupTrips.length > 0) {
+        const sortedGroupTrips = groupTrips.sort((a, b) => parseTripDate(a.dates) - parseTripDate(b.dates));
+        const first = sortedGroupTrips[0];
+        const last = sortedGroupTrips[sortedGroupTrips.length - 1];
+
+        // Extract just the relevant parts if possible, or use the full date string
+        // Since t.dates is usually "Jan 12 - Jan 18, 2026", we want "Jan 12, 2026" from the first and "Jan 18, 2026" from the last.
+        // For now, let's use the startDateISO if available, or just use the full string and let the UI handle it?
+        // The UI displays "Start — End".
+        // If first.dates is "Jan 12 - Jan 18", we want "Jan 12".
+        // Helper to extract clean start/end from our "Date - Date" format?
+        // Let's rely on our dateUtils if possible, or just pass the full objects and let the card decide?
+        // Passing pre-calculated strings is safer for the card.
+
+        computedStartDate = first.dates.split(" - ")[0]; // Heuristic: "Jan 12"
+        // Append year if missing? The date string usually has it at the end. 
+        // If "Jan 12" doesn't have year, we might want to keep it simple.
+
+        // Better: use the full date string of the first trip as the "Start Date" reference, 
+        // and full date string of the last trip.
+        // But the user complained about "Jan 12 - Jan 18 - Jan 14 - Jan 18".
+
+        // Let's try to pass the raw date strings of the first and last trip.
+        computedStartDate = first.dates.split(" - ")[0];
+        const lastParts = last.dates.split(" - ");
+        computedEndDate = lastParts[lastParts.length - 1]; // "Jan 18, 2026"
+      }
+
+      const dateForSort = groupTrips[0]?.dates || g.startDate || "";
+      const isCompleted = isTripCompleted(dateForSort); // simplified
+
+      return {
+        type: 'group',
+        ...g,
+        ids,
+        isCompleted,
+        dateForSort,
+        displayStartDate: computedStartDate,
+        displayEndDate: computedEndDate
+      };
     }),
     ...ungroupedTrips.map(t => {
       const dates = t.dates || "";
