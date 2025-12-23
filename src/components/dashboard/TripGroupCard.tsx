@@ -37,24 +37,23 @@ export function TripGroupCard({ group, tripCount, onClick }: TripGroupCardProps)
                         <div>
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 backdrop-blur-md mb-3">
                                 <Layers className="h-3 w-3 text-blue-400" />
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-blue-300">
-                                    Trip Group • {tripCount} Trips
-                                </span>
-                            </div>
-                            <h3 className="text-3xl font-serif font-medium text-white mb-1 shadow-black drop-shadow-lg">
-                                {group.title}
-                            </h3>
-                            <p className="text-sm font-medium text-white/70 tracking-wide uppercase">
-                                {group.displayStartDate || group.startDate} — {group.displayEndDate || group.endDate}
-                            </p>
+                                Trip Group • {tripCount} Items
+                            </span>
                         </div>
+                        <h3 className="text-3xl font-serif font-medium text-white mb-1 shadow-black drop-shadow-lg">
+                            {group.title}
+                        </h3>
+                        <p className="text-sm font-medium text-white/70 tracking-wide uppercase">
+                            {group.displayStartDate || group.startDate} — {group.displayEndDate || group.endDate}
+                        </p>
+                    </div>
 
-                        <div className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center group-hover:bg-white/20 transition-colors border border-white/10">
-                            <ChevronRight className="h-5 w-5 text-white/80" />
-                        </div>
+                    <div className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center group-hover:bg-white/20 transition-colors border border-white/10">
+                        <ChevronRight className="h-5 w-5 text-white/80" />
                     </div>
                 </div>
             </div>
         </div>
+        </div >
     );
 }
