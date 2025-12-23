@@ -59,6 +59,14 @@ echo "🚀 [1/4] Enabling Google Cloud APIs..."
 gcloud services enable run.googleapis.com artifactregistry.googleapis.com storage-component.googleapis.com cloudbuild.googleapis.com
 echo "✅ APIs Enabled"
 
+# Step 2.5: Bump Version
+echo ""
+echo "🆙 [2.5/4] Bumping App Version..."
+# Bump version without creating a git tag/commit yet (commit happens later manually or we just use it for the build)
+npm version patch --no-git-tag-version
+NEW_VERSION=$(node -p "require('./package.json').version")
+echo "✅ Version bumped to v${NEW_VERSION}"
+
 # ... (Step 2 is unchanged) ...
 
 # Step 3: Build & Push Docker Image

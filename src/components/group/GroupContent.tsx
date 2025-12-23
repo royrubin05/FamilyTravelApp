@@ -296,7 +296,7 @@ export default function GroupContent({ group, trips, allTrips = [], initialImage
             <GlobalHeader>
                 <button
                     onClick={handleShare}
-                    className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5"
+                    className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5 flex items-center justify-center"
                     title="Share Trip Group"
                 >
                     {isShared ? (

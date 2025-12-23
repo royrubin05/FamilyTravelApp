@@ -79,18 +79,18 @@ export function GlobalHeader({ children, className = "", hideGlobalActions = fal
                     </div>
                 </Link>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     {/* Page-Specific Actions (passed as children) */}
                     {children}
 
                     {/* Global Actions */}
                     {!hideGlobalActions && (
                         <>
-                            <div className="h-6 w-px bg-white/10 mx-2 hidden md:block" />
+                            <div className="h-6 w-px bg-white/10 hidden md:block" />
 
                             <button
                                 onClick={() => setIsSettingsOpen(true)}
-                                className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5"
+                                className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5 flex items-center justify-center"
                                 title="Settings"
                             >
                                 <Settings className="h-5 w-5" />
