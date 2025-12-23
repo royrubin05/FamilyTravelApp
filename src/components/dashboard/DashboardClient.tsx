@@ -167,8 +167,7 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
       const dateForSort = groupTrips[0]?.dates || g.startDate || "";
       const isCompleted = isTripCompleted(dateForSort); // simplified
 
-      const dateForSort = groupTrips[0]?.dates || g.startDate || "";
-      const isCompleted = isTripCompleted(dateForSort); // simplified
+
 
       return {
         type: 'group',
