@@ -32,10 +32,17 @@ export async function GET(request: Request) {
                 await db.collection("trips").doc(trip.id).update({
                     trip_title_dashboard: result.dashboard,
                     trip_title_page: result.page,
+                    dates: result.dates,
                     ai_summary: result.ai_summary
                 });
                 updatedCount++;
-                return { id: trip.id, status: "updated", title: result.dashboard };
+                return {
+                    id: trip.id,
+                    status: "updated",
+                    title: result.dashboard,
+                    dates: result.dates,
+                    ai_summary: result.ai_summary
+                };
             } catch (err: any) {
                 console.error(`Error processing ${trip.id}:`, err);
                 errors.push({ id: trip.id, error: err.message });

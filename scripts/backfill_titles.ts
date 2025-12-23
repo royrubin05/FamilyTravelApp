@@ -8,10 +8,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 async function generateTitles(trip: any): Promise<any> {
     const flights = trip.flights || [];
+    const hotels = trip.hotels || [];
     const destination = trip.destination;
+    const currentDates = trip.dates;
 
     const prompt = `
     You are a helpful travel assistant. Your goal is to summarize flight itineraries into natural, human-readable language suitable for a notification or a voice assistant.
+    
+    You also need to VERIFY and FIX the Trip Dates based on the flights and hotels provided.
 
     Please analyze the itinerary and output a JSON object using the following Natural Language Rules:
 
@@ -38,20 +42,30 @@ async function generateTitles(trip: any): Promise<any> {
     5. **No Flights**:
        - "human_title": "Trip to [Destination]"
        - "verbose_description": "Trip to [Destination] from [Dates]"
+       
+    6. **Date Verification**:
+       - Scan all Flights and Hotels to find the Earliest Start Date and Latest End Date.
+       - Format: "MMM DD, YYYY - MMM DD, YYYY" (e.g. "Jan 08, 2026 - Jan 09, 2026").
+       - If 'Current Dates' is valid and matches the data, keep it. If 'Current Dates' is "Unknown" or missing, generate it.
 
     ### OUTPUT FORMAT (JSON):
     {
       "topology": "Round Trip" | "One Way" | "Open Jaw" | "Multi-City",
       "human_title": "String",
       "verbose_description": "String",
-      "layover_text": "String"
+      "layover_text": "String",
+      "dates": "String"
     }
 
     ### INPUT FLIGHTS:
     ${JSON.stringify(flights, null, 2)}
     
+    ### INPUT HOTELS:
+    ${JSON.stringify(hotels, null, 2)}
+    
     ### CONTEXT:
     Destination: "${destination}"
+    Current Dates: "${currentDates}"
     `;
 
     try {
@@ -73,6 +87,7 @@ async function generateTitles(trip: any): Promise<any> {
         return {
             dashboard: sanitize(data.human_title) || trip.destination, // Mapped to human_title as requested main title
             page: sanitize(data.human_title) || trip.destination,
+            dates: sanitize(data.dates) || trip.dates,
             ai_summary: {
                 topology: sanitize(data.topology),
                 human_title: sanitize(data.human_title),
@@ -86,6 +101,7 @@ async function generateTitles(trip: any): Promise<any> {
         return {
             dashboard: trip.destination || "Unknown Route",
             page: trip.destination || "Unknown Destination",
+            dates: trip.dates || "Unknown Dates",
             ai_summary: {
                 topology: "",
                 human_title: trip.destination ? `Trip to ${trip.destination}` : "Trip Setup",
@@ -96,7 +112,7 @@ async function generateTitles(trip: any): Promise<any> {
     }
 }
 
-import * as admin from "firebase-admin";
+import admin from "firebase-admin";
 
 async function run() {
     console.log("Fetching trips...");
@@ -119,7 +135,7 @@ async function run() {
         const trip = { id: doc.id, ...doc.data() } as any;
 
         // Force update now to apply new schema
-        console.log(`Generating AI Summary for ${trip.id} (${trip.destination})...`);
+        console.log(`Generating AI Summary (+ Dates) for ${trip.id} (${trip.destination})...`);
 
         const result = await generateTitles(trip);
 
@@ -127,9 +143,10 @@ async function run() {
             await db.collection("trips").doc(trip.id).update({
                 trip_title_dashboard: result.dashboard,
                 trip_title_page: result.page,
+                dates: result.dates,
                 ai_summary: result.ai_summary
             });
-            console.log(`Updated: ${result.dashboard}`);
+            console.log(`Updated: ${result.dashboard} [${result.dates}]`);
             updatedCount++;
         } catch (err) {
             console.error(`Failed to update ${trip.id}:`, err);

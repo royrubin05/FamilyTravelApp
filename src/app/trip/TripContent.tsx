@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SmartCard } from "@/components/journey/SmartCard";
 import { User, Home, Plane, Building, Ticket, Share2, Check, Copy, X, FolderOpen, Trash2, Terminal, Activity, Layers, ChevronRight, ChevronLeft } from "lucide-react";
+import { GlobalHeader } from "@/components/ui/GlobalHeader";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTrips } from "@/context/TripContext";
@@ -181,30 +182,25 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
             </div>
 
             {/* Top Navigation */}
-            <div className="relative z-50 p-6 flex justify-between items-center">
-                <Link href="/" className="opacity-80 hover:opacity-100 transition-opacity p-2 -ml-2 bg-black/20 rounded-full backdrop-blur-md">
-                    <Home className="h-6 w-6" />
-                </Link>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleShare}
-                        className="flex items-center gap-2 px-3 py-2 bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-md border border-white/10 transition-all text-white/80 hover:text-white"
-                        title="Share Trip"
-                    >
-                        {isShared ? (
-                            <>
-                                <Check className="h-4 w-4 text-green-400" />
-                                <span className="text-xs font-bold text-green-400 uppercase tracking-widest">Copied!</span>
-                            </>
-                        ) : (
-                            <Share2 className="h-4 w-4" />
-                        )}
-                    </button>
-                    <div className="bg-black/20 rounded-full px-4 py-1 backdrop-blur-md border border-white/10">
-                        <span className="text-xs uppercase tracking-widest font-bold">{trip.dates}</span>
-                    </div>
+            <GlobalHeader className="p-6">
+                <button
+                    onClick={handleShare}
+                    className="flex items-center gap-2 px-3 py-2 bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-md border border-white/10 transition-all text-white/80 hover:text-white"
+                    title="Share Trip"
+                >
+                    {isShared ? (
+                        <>
+                            <Check className="h-4 w-4 text-green-400" />
+                            <span className="text-xs font-bold text-green-400 uppercase tracking-widest">Copied!</span>
+                        </>
+                    ) : (
+                        <Share2 className="h-4 w-4" />
+                    )}
+                </button>
+                <div className="bg-black/20 rounded-full px-4 py-1 backdrop-blur-md border border-white/10">
+                    <span className="text-xs uppercase tracking-widest font-bold">{trip.dates}</span>
                 </div>
-            </div>
+            </GlobalHeader>
 
             {/* Main Content */}
             <div className="relative z-10 px-6 pt-10">

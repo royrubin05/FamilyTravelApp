@@ -49,7 +49,7 @@ Rules:
 2. Format dates as "MMM DD, YYYY - MMM DD, YYYY" (e.g. "Jan 04, 2026 - May 27, 2026"). Do NOT use parentheses for the year.
 3. CRITICAL: You MUST populate "destination". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.
    - Clean the name: Remove airport codes (e.g. convert "City (CODE)" to "City").
-4. If "dates" are missing, INFER them from the first flight departure.
+4. If "dates" are missing, INFER them from the first flight departure, hotel check-in, or first activity date. Format MUST be "MMM DD, YYYY - MMM DD, YYYY".
 5. Do NOT include markdown formatting (\`\`\`json). Just the raw JSON.
 6. Generate Titles (AI Summary) using these NATURAL LANGUAGE RULES:
    

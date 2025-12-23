@@ -9,6 +9,7 @@ import { ManualTripModal } from "@/components/dashboard/ManualTripModal";
 import { SettingsModal } from "./SettingsModal";
 import { TripGroupCard } from "@/components/dashboard/TripGroupCard";
 import { User, Plus, ChevronLeft, ChevronRight, Settings, Layers } from "lucide-react";
+import { GlobalHeader } from "@/components/ui/GlobalHeader";
 import { useTrips } from "@/context/TripContext";
 import { isTripCompleted, parseTripDate } from "@/lib/dateUtils";
 import { saveTripGroup } from "@/app/trip-actions";
@@ -263,81 +264,73 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
     >
 
       {/* Header */}
-      <header className="flex justify-between items-center mb-8 max-w-4xl mx-auto relative z-40">
-        <div>
-          <h1 className="text-2xl font-serif tracking-wider text-white">TravelRoots</h1>
-          <p className="text-xs text-white/40 uppercase tracking-widest mt-1">Family Command Center</p>
-        </div>
-        <div className="flex items-center gap-4">
-
-          {isSelectionMode ? (
+      <GlobalHeader>
+        {isSelectionMode ? (
+          <button
+            onClick={() => {
+              setIsSelectionMode(false);
+              setSelectedTripIds(new Set());
+            }}
+            className="px-3 py-2 bg-white text-black hover:bg-neutral-200 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+          >
+            Cancel Selection
+          </button>
+        ) : (
+          <>
             <button
-              onClick={() => {
-                setIsSelectionMode(false);
-                setSelectedTripIds(new Set());
-              }}
-              className="px-3 py-2 bg-white text-black hover:bg-neutral-200 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+              title="Settings"
             >
-              Cancel Selection
+              <Settings className="h-5 w-5" />
             </button>
-          ) : (
-            <>
+
+            {/* Consolidated Trip Actions Dropdown */}
+            <div className="relative">
               <button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
-                title="Settings"
+                onClick={(e) => { e.stopPropagation(); setIsActionsOpen(!isActionsOpen); }}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-200 transition-colors"
               >
-                <Settings className="h-5 w-5" />
+                <Plus className="h-4 w-4" />
+                <span className="hidden md:inline">Trip Actions</span>
               </button>
 
-              {/* Consolidated Trip Actions Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setIsActionsOpen(!isActionsOpen); }}
-                  className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-200 transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden md:inline">Trip Actions</span>
-                </button>
-
-                <AnimatePresence>
-                  {isActionsOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="absolute right-0 top-full mt-2 w-48 bg-white text-black rounded-xl shadow-2xl overflow-hidden z-50 py-1"
+              <AnimatePresence>
+                {isActionsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 w-48 bg-white text-black rounded-xl shadow-2xl overflow-hidden z-50 py-1"
+                  >
+                    <button
+                      onClick={() => setIsUploadModalOpen(true)}
+                      className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2"
                     >
-                      <button
-                        onClick={() => setIsUploadModalOpen(true)}
-                        className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2"
-                      >
-                        Import PDF / EML
-                      </button>
-                      <button
-                        onClick={() => setIsManualModalOpen(true)}
-                        className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2 border-t border-neutral-100"
-                      >
-                        Add Manually
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsSelectionMode(true);
-                          setSelectedTripIds(new Set());
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2 border-t border-neutral-100"
-                      >
-                        Create Trip Group
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </>
-          )}
-
-        </div>
-      </header>
+                      Import PDF / EML
+                    </button>
+                    <button
+                      onClick={() => setIsManualModalOpen(true)}
+                      className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2 border-t border-neutral-100"
+                    >
+                      Add Manually
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsSelectionMode(true);
+                        setSelectedTripIds(new Set());
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2 border-t border-neutral-100"
+                    >
+                      Create Trip Group
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </>
+        )}
+      </GlobalHeader>
 
       <SettingsModal
         isOpen={isSettingsOpen}
