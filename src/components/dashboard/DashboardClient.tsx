@@ -4,11 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { TripListItem } from "@/components/dashboard/TripListItem";
-import { UploadTripModal } from "@/components/dashboard/UploadTripModal";
-import { ManualTripModal } from "@/components/dashboard/ManualTripModal";
-import { SettingsModal } from "./SettingsModal";
 import { TripGroupCard } from "@/components/dashboard/TripGroupCard";
-import { User, Plus, ChevronLeft, ChevronRight, Settings, Layers } from "lucide-react";
+import { ChevronLeft, ChevronRight, Layers, CheckSquare } from "lucide-react";
 import { GlobalHeader } from "@/components/ui/GlobalHeader";
 import { useTrips } from "@/context/TripContext";
 import { isTripCompleted, parseTripDate } from "@/lib/dateUtils";
@@ -32,11 +29,8 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
   const [statusTab, setStatusTab] = useState<"upcoming" | "completed" | "map">("upcoming");
 
   const { trips, groups, addTrip, setTrips, setGroups } = useTrips();
-  const [currentSettings, setCurrentSettings] = useState(initialSettings);
-  // Removed currentImages logic as city images are deprecated
-
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // Settings handled by GlobalHeader, but we use initialSettings for filtering/background
+  const settings = initialSettings;
 
   // Selection Mode State
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -58,11 +52,6 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
       setGroups(initialGroups);
     }
   }, [initialTrips, initialGroups, setTrips, setGroups]);
-
-  const handleUpdateSettings = (newSettings: any) => {
-    setCurrentSettings(newSettings);
-    router.refresh();
-  };
 
   const toggleTripSelection = (id: string) => {
     const newSet = new Set(selectedTripIds);
@@ -93,7 +82,7 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
     const newGroup = {
       title: groupName,
       ids: selectedIds,
-      startDate: startDate, // Simple placeholder, ideally parse true dates
+      startDate: startDate,
       endDate: endDate,
       image: selectedTrips[0]?.image || ""
     };
@@ -108,7 +97,6 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
     }
     setIsCreatingGroup(false);
   };
-
 
   const familyMembers = (initialSettings as any).familyMembers || [];
   const memberFilters = [
@@ -188,9 +176,6 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
   const finalFilteredItems = filter === "all"
     ? statusFilteredItems
     : statusFilteredItems.filter(item => {
-      // If Group: Check if ANY trip in group matches member?
-      // For simplicity V1: Only filter individual trips. Groups are shown if "All".
-      // Or recursively check items? Context doesn't easily allow mapping group -> trips without lookup.
       if (item.type === 'group') {
         const ids = (item as any).ids || [];
         const groupTrips = trips.filter(t => ids.includes(t.id));
@@ -205,7 +190,6 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
           selectedMember.nickname
         ].filter(Boolean).map(term => term.toLowerCase());
 
-        // Check if ANY trip in the group has this traveler
         return groupTrips.some(t => {
           return t.travelers?.some((traveler: any) => {
             const tName = (typeof traveler === "string" ? traveler : traveler.name || "").toLowerCase();
@@ -214,7 +198,6 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
         });
       }
 
-      // Standard Trip Filter
       if (item.type === 'trip') {
         const t = item as any; // Cast to access travelers safely
         const selectedMember = familyMembers.find((m: any) => m.id === filter);
@@ -245,22 +228,12 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
     currentPage * ITEMS_PER_PAGE
   );
 
-  const handleUploadComplete = () => {
-    router.refresh();
-    setStatusTab("upcoming");
-  };
-
-  /* Trip Actions Dropdown */
-  const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
-
   return (
     <div
       className="min-h-screen bg-neutral-950 text-white p-4 md:p-8 font-sans transition-all duration-700 bg-cover bg-center bg-fixed"
       style={{
-        backgroundImage: currentSettings?.backgroundImage ? `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${currentSettings.backgroundImage})` : undefined
+        backgroundImage: settings?.backgroundImage ? `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${settings.backgroundImage})` : undefined
       }}
-      onClick={() => setIsActionsOpen(false)} // Close dropdown on outside click
     >
 
       {/* Header */}
@@ -276,68 +249,16 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
             Cancel Selection
           </button>
         ) : (
-          <>
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
-              title="Settings"
-            >
-              <Settings className="h-5 w-5" />
-            </button>
-
-            {/* Consolidated Trip Actions Dropdown */}
-            <div className="relative">
-              <button
-                onClick={(e) => { e.stopPropagation(); setIsActionsOpen(!isActionsOpen); }}
-                className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-200 transition-colors"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden md:inline">Trip Actions</span>
-              </button>
-
-              <AnimatePresence>
-                {isActionsOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="absolute right-0 top-full mt-2 w-48 bg-white text-black rounded-xl shadow-2xl overflow-hidden z-50 py-1"
-                  >
-                    <button
-                      onClick={() => setIsUploadModalOpen(true)}
-                      className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2"
-                    >
-                      Import PDF / EML
-                    </button>
-                    <button
-                      onClick={() => setIsManualModalOpen(true)}
-                      className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2 border-t border-neutral-100"
-                    >
-                      Add Manually
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsSelectionMode(true);
-                        setSelectedTripIds(new Set());
-                      }}
-                      className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2 border-t border-neutral-100"
-                    >
-                      Create Trip Group
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </>
+          <button
+            onClick={() => setIsSelectionMode(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+            title="Select Trips to Group"
+          >
+            <CheckSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">Select Mode</span>
+          </button>
         )}
       </GlobalHeader>
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        currentSettings={currentSettings}
-        onUpdateSettings={handleUpdateSettings}
-      />
 
       {/* Status Tabs */}
       <div className="max-w-4xl mx-auto mb-6 border-b border-white/10">
@@ -362,16 +283,6 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
               <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
             )}
           </button>
-          {/* <button
-            onClick={() => { setStatusTab("map"); }}
-            className={`pb-4 text-sm font-bold uppercase tracking-widest transition-colors relative ${statusTab === "map" ? "text-white" : "text-white/40 hover:text-white/70"
-              }`}
-          >
-            World Map
-            {statusTab === "map" && (
-              <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
-            )}
-          </button> */}
         </div>
       </div>
 
@@ -452,8 +363,6 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
                 );
               }
 
-
-
               // Standard Trip
               return (
                 <motion.div
@@ -515,21 +424,6 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
           </button>
         </div>
       )}
-
-      {/* Upload Modal */}
-      <UploadTripModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        onUploadComplete={handleUploadComplete}
-      />
-
-      {/* Manual Trip Modal */}
-      <ManualTripModal
-        isOpen={isManualModalOpen}
-        onClose={() => setIsManualModalOpen(false)}
-        onComplete={handleUploadComplete}
-        familyMembers={familyMembers}
-      />
 
     </div>
   );
