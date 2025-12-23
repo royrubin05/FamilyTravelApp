@@ -5,12 +5,17 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { TripListItem } from "@/components/dashboard/TripListItem";
 import { UploadTripModal } from "@/components/dashboard/UploadTripModal";
+import { ManualTripModal } from "@/components/dashboard/ManualTripModal";
 import { SettingsModal } from "./SettingsModal";
 import { TripGroupCard } from "@/components/dashboard/TripGroupCard";
 import { User, Plus, ChevronLeft, ChevronRight, Settings, Layers } from "lucide-react";
 import { useTrips } from "@/context/TripContext";
 import { isTripCompleted, parseTripDate } from "@/lib/dateUtils";
 import { saveTripGroup } from "@/app/trip-actions";
+import { getTripRouteTitle, getTripIcon } from "@/lib/tripUtils";
+import dynamic from "next/dynamic";
+
+const TripMap = dynamic(() => import("./TripMap"), { ssr: false });
 
 interface DashboardClientProps {
   initialImages: Record<string, string>;
@@ -23,11 +28,11 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
   console.log("[DashboardClient] Rendering...");
   const router = useRouter();
   const [filter, setFilter] = useState("all");
-  const [statusTab, setStatusTab] = useState<"upcoming" | "completed">("upcoming");
+  const [statusTab, setStatusTab] = useState<"upcoming" | "completed" | "map">("upcoming");
 
   const { trips, groups, addTrip, setTrips, setGroups } = useTrips();
   const [currentSettings, setCurrentSettings] = useState(initialSettings);
-  const [currentImages, setCurrentImages] = useState(initialImages);
+  // Removed currentImages logic as city images are deprecated
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -52,11 +57,6 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
       setGroups(initialGroups);
     }
   }, [initialTrips, initialGroups, setTrips, setGroups]);
-
-  const handleImageUpdate = (city: string, url: string) => {
-    setCurrentImages(prev => ({ ...prev, [city]: url }));
-    router.refresh();
-  };
 
   const handleUpdateSettings = (newSettings: any) => {
     setCurrentSettings(newSettings);
@@ -192,35 +192,28 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
     setStatusTab("upcoming");
   };
 
+  /* Trip Actions Dropdown */
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+
   return (
     <div
       className="min-h-screen bg-neutral-950 text-white p-4 md:p-8 font-sans transition-all duration-700 bg-cover bg-center bg-fixed"
       style={{
         backgroundImage: currentSettings?.backgroundImage ? `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${currentSettings.backgroundImage})` : undefined
       }}
+      onClick={() => setIsActionsOpen(false)} // Close dropdown on outside click
     >
 
       {/* Header */}
-      <header className="flex justify-between items-center mb-8 max-w-4xl mx-auto">
+      <header className="flex justify-between items-center mb-8 max-w-4xl mx-auto relative z-40">
         <div>
           <h1 className="text-2xl font-serif tracking-wider text-white">TravelRoots</h1>
           <p className="text-xs text-white/40 uppercase tracking-widest mt-1">Family Command Center</p>
         </div>
         <div className="flex items-center gap-4">
-          {!isSelectionMode && (
-            <button
-              onClick={() => {
-                setIsSelectionMode(true);
-                setSelectedTripIds(new Set());
-              }}
-              className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
-            >
-              <Layers className="h-4 w-4" />
-              <span className="hidden sm:inline">Create Trip Group</span>
-              <span className="sm:hidden">Group</span>
-            </button>
-          )}
-          {isSelectionMode && (
+
+          {isSelectionMode ? (
             <button
               onClick={() => {
                 setIsSelectionMode(false);
@@ -228,33 +221,70 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
               }}
               className="px-3 py-2 bg-white text-black hover:bg-neutral-200 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
             >
-              Cancel
+              Cancel Selection
             </button>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                title="Settings"
+              >
+                <Settings className="h-5 w-5" />
+              </button>
+
+              {/* Consolidated Trip Actions Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setIsActionsOpen(!isActionsOpen); }}
+                  className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-200 transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden md:inline">Trip Actions</span>
+                </button>
+
+                <AnimatePresence>
+                  {isActionsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="absolute right-0 top-full mt-2 w-48 bg-white text-black rounded-xl shadow-2xl overflow-hidden z-50 py-1"
+                    >
+                      <button
+                        onClick={() => setIsUploadModalOpen(true)}
+                        className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2"
+                      >
+                        Import PDF / EML
+                      </button>
+                      <button
+                        onClick={() => setIsManualModalOpen(true)}
+                        className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2 border-t border-neutral-100"
+                      >
+                        Add Manually
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsSelectionMode(true);
+                          setSelectedTripIds(new Set());
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-neutral-100 flex items-center gap-2 border-t border-neutral-100"
+                      >
+                        Create Trip Group
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </>
           )}
 
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
-            title="Settings"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
-
-          <button
-            onClick={() => setIsUploadModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neutral-200 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden md:inline">Import Trip</span>
-          </button>
         </div>
       </header>
 
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        currentImages={currentImages}
-        onUpdateImage={handleImageUpdate}
         currentSettings={currentSettings}
         onUpdateSettings={handleUpdateSettings}
       />
@@ -282,6 +312,16 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
               <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
             )}
           </button>
+          {/* <button
+            onClick={() => { setStatusTab("map"); }}
+            className={`pb-4 text-sm font-bold uppercase tracking-widest transition-colors relative ${statusTab === "map" ? "text-white" : "text-white/40 hover:text-white/70"
+              }`}
+          >
+            World Map
+            {statusTab === "map" && (
+              <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
+            )}
+          </button> */}
         </div>
       </div>
 
@@ -330,11 +370,41 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
         )}
       </AnimatePresence>
 
-      {/* List View */}
-      <div className="max-w-4xl mx-auto space-y-3 min-h-[300px] mb-20">
-        <AnimatePresence mode="popLayout">
-          {paginatedItems.map((item: any) => {
-            if (item.type === 'group') {
+      {/* Map View */}
+      {statusTab === "map" ? (
+        <div className="max-w-4xl mx-auto mb-20 animate-in fade-in duration-500">
+          <TripMap
+            trips={finalFilteredItems}
+            onTripClick={(id) => router.push(`/trip/${id}`)}
+          />
+        </div>
+      ) : (
+        /* List View */
+        <div className="max-w-4xl mx-auto space-y-3 min-h-[300px] mb-20">
+          <AnimatePresence mode="popLayout">
+            {paginatedItems.map((item: any) => {
+              if (item.type === 'group') {
+                return (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <TripGroupCard
+                      group={item}
+                      tripCount={item.ids.length}
+                      onClick={() => router.push(`/group/${item.id}`)}
+                    />
+                  </motion.div>
+                );
+              }
+
+
+
+              // Standard Trip
               return (
                 <motion.div
                   key={item.id}
@@ -344,50 +414,32 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <TripGroupCard
-                    group={item}
-                    tripCount={item.ids.length}
-                    onClick={() => router.push(`/group/${item.id}`)}
+                  <TripListItem
+                    id={item.id}
+                    // Use AI Title -> Algo Title -> Destination
+                    destination={item.trip_title_dashboard || getTripRouteTitle(item)}
+                    dates={item.dates}
+                    image={getTripIcon(item)}
+                    travelers={item.travelers || []}
+                    hasFlights={item.flights && item.flights.length > 0}
+                    hasHotels={item.hotels && item.hotels.length > 0}
+                    familyMembers={familyMembers}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedTripIds.has(item.id)}
+                    onToggleSelection={toggleTripSelection}
                   />
                 </motion.div>
               );
-            }
+            })}
+          </AnimatePresence>
 
-            // Standard Trip
-            return (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-              >
-                <TripListItem
-                  id={item.id}
-                  destination={item.destination}
-                  dates={item.dates}
-                  image={item.image}
-                  travelers={item.travelers || []}
-                  destinationImages={currentImages}
-                  hasFlights={item.flights && item.flights.length > 0}
-                  hasHotels={item.hotels && item.hotels.length > 0}
-                  familyMembers={familyMembers}
-                  isSelectionMode={isSelectionMode}
-                  isSelected={selectedTripIds.has(item.id)}
-                  onToggleSelection={toggleTripSelection}
-                />
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-
-        {finalFilteredItems.length === 0 && (
-          <div className="text-center py-20 opacity-40">
-            <p>No trips found in {statusTab}.</p>
-          </div>
-        )}
-      </div>
+          {finalFilteredItems.length === 0 && (
+            <div className="text-center py-20 opacity-40">
+              <p>No trips found in {statusTab}.</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
@@ -419,6 +471,14 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onUploadComplete={handleUploadComplete}
+      />
+
+      {/* Manual Trip Modal */}
+      <ManualTripModal
+        isOpen={isManualModalOpen}
+        onClose={() => setIsManualModalOpen(false)}
+        onComplete={handleUploadComplete}
+        familyMembers={familyMembers}
       />
 
     </div>

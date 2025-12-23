@@ -89,31 +89,15 @@ export function TripListItem({
                     <div className="relative h-16 w-16 md:h-20 md:w-20 shrink-0 overflow-hidden rounded-lg bg-white/10 flex items-center justify-center self-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                            src={(() => {
-                                if (destinationImages) {
-                                    const key = (destination || "").toLowerCase().trim();
-                                    if (destinationImages[key]) return destinationImages[key];
-                                    const found = Object.keys(destinationImages).find(k => key.includes(k));
-                                    if (found) return destinationImages[found];
-                                }
-                                if (image && !image.includes("placehold.co")) return image;
-                                return getDestinationImage(destination || "");
-                            })()}
+                            src={image || GENERIC_FALLBACK}
                             alt={destination || "Trip"}
                             onError={(e) => {
                                 const target = e.currentTarget;
-                                const staticFallback = getDestinationImage(destination || "");
-                                if (!target.src.includes(staticFallback) && target.src !== GENERIC_FALLBACK) {
-                                    target.src = staticFallback;
-                                    return;
-                                }
                                 if (target.src !== GENERIC_FALLBACK) target.src = GENERIC_FALLBACK;
                             }}
                             className="h-full w-full object-cover grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-500"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center -z-10">
-                            <span className="text-xs font-serif text-white/30">{(destination || "").substring(0, 2)}</span>
-                        </div>
+                        {/* Removed text overlay for cleaner icon look */}
                     </div>
 
                     <div className="flex-1 min-w-0 flex flex-col justify-center">

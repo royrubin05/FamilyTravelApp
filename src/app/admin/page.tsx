@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Upload, FileText, User, Check, ChevronLeft } from "lucide-react";
+import { Upload, FileText, User, Check, ChevronLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { normalizeAllTravelersAction } from "@/app/actions";
 
 const FAMILY_MEMBERS = [
     { id: "dad", name: "Dad" },
@@ -11,6 +15,29 @@ const FAMILY_MEMBERS = [
 ];
 
 export default function AdminPage() {
+    const [isNormalizing, setIsNormalizing] = useState(false);
+    const [normalizationReport, setNormalizationReport] = useState<string | null>(null);
+
+    const handleNormalize = async () => {
+        if (!confirm("This will scan ALL trips and use AI to match/rename travelers based on your Settings. Proceed?")) return;
+
+        setIsNormalizing(true);
+        setNormalizationReport("Processing... This may take a moment.");
+
+        try {
+            const result = await normalizeAllTravelersAction();
+            if (result.success) {
+                setNormalizationReport(result.report || "Done.");
+            } else {
+                setNormalizationReport("Error: " + result.error);
+            }
+        } catch (e) {
+            setNormalizationReport("Error: " + (e as Error).message);
+        } finally {
+            setIsNormalizing(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-zinc-50/50 p-6 md:p-12">
             <div className="max-w-5xl mx-auto space-y-8">
@@ -43,6 +70,29 @@ export default function AdminPage() {
 
                     {/* Sidebar / Status */}
                     <div className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Data Tools</CardTitle>
+                                <CardDescription>Maintenance tasks</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <Button
+                                    onClick={handleNormalize}
+                                    disabled={isNormalizing}
+                                    variant="outline"
+                                    className="w-full justify-start"
+                                >
+                                    <RefreshCw className={`h - 4 w - 4 mr - 2 ${isNormalizing ? "animate-spin" : ""} `} />
+                                    {isNormalizing ? "Scanning..." : "Normalize Travelers"}
+                                </Button>
+                                {normalizationReport && (
+                                    <div className="mt-4 p-3 bg-zinc-100 rounded text-xs whitespace-pre-wrap max-h-40 overflow-auto">
+                                        {normalizationReport}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
                         <Card>
                             <CardHeader>
                                 <CardTitle>Family Status</CardTitle>

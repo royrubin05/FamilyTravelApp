@@ -27,10 +27,10 @@ export default async function GroupPage({ params }: GroupPageProps) {
         const subTrips = allTrips
             .filter((t: any) => groupIds.includes(t.id))
             .sort((a: any, b: any) => {
-                // Safe date parsing
-                const dateA = a.dates ? parseTripDate(a.dates) : 0;
-                const dateB = b.dates ? parseTripDate(b.dates) : 0;
-                return dateA - dateB;
+                // Sort by the order defined in the group's 'ids' array
+                const indexA = groupIds.indexOf(a.id);
+                const indexB = groupIds.indexOf(b.id);
+                return indexA - indexB;
             });
 
         const initialImages = await getCityImages();

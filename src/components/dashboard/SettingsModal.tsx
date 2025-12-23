@@ -2,7 +2,6 @@
 
 import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User, Edit2, AlertTriangle, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CityImageManager } from "./CityImageManager";
 import { DataAuditManager } from "./DataAuditManager";
 import { useState, useRef } from "react";
 import { uploadBackgroundImage, removeBackgroundImage } from "@/app/settings-actions";
@@ -10,14 +9,12 @@ import { uploadBackgroundImage, removeBackgroundImage } from "@/app/settings-act
 interface SettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
-    currentImages: Record<string, string>;
     currentSettings: { backgroundImage: string | null };
     onUpdateSettings: (newSettings: any) => void;
-    onUpdateImage: (city: string, url: string) => void;
 }
 
-export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, currentSettings, onUpdateSettings }: SettingsModalProps) {
-    const [activeSection, setActiveSection] = useState<"images" | "appearance" | "members" | "audit">("images");
+export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettings }: SettingsModalProps) {
+    const [activeSection, setActiveSection] = useState<"appearance" | "members" | "audit">("appearance");
     const [isUploading, setIsUploading] = useState(false);
     const [newMemberName, setNewMemberName] = useState("");
     const [newMemberNickname, setNewMemberNickname] = useState("");
@@ -177,16 +174,6 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
 
                     <div className="space-y-1">
                         <button
-                            onClick={() => setActiveSection("images")}
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "images"
-                                ? "bg-white/10 text-white"
-                                : "text-white/50 hover:text-white hover:bg-white/5"
-                                }`}
-                        >
-                            <ImageIcon className="h-4 w-4" />
-                            City Images
-                        </button>
-                        <button
                             onClick={() => setActiveSection("appearance")}
                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "appearance"
                                 ? "bg-white/10 text-white"
@@ -206,7 +193,6 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
                             <User className="h-4 w-4" />
                             Family Members
                         </button>
-
 
                         <div className="h-px bg-white/10 my-2 mx-3" />
                         <button
@@ -247,15 +233,6 @@ export function SettingsModal({ isOpen, onClose, currentImages, onUpdateImage, c
                     </button>
 
                     <div className="flex-1 overflow-y-auto">
-                        {activeSection === "images" && (
-                            <CityImageManager
-                                isOpen={true}
-                                onClose={() => { }} // Controlled by parent modal
-                                initialImages={currentImages}
-                                onUpdate={onUpdateImage}
-                                embedded={true}
-                            />
-                        )}
 
                         {activeSection === "appearance" && (
                             <div className="p-8 max-w-2xl">

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Check } from "lucide-react";
 import { saveTripGroup } from "@/app/trip-actions";
+import { getTripRouteTitle } from "@/lib/tripUtils";
 
 interface EditGroupModalProps {
     isOpen: boolean;
@@ -82,13 +83,22 @@ export default function EditGroupModal({ isOpen, onClose, group, allTrips }: Edi
                                 key={trip.id}
                                 onClick={() => toggleTrip(trip.id)}
                                 className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${isSelected
-                                        ? "bg-blue-500/10 border-blue-500/50"
-                                        : "bg-white/5 border-white/5 hover:border-white/20"
+                                    ? "bg-blue-500/10 border-blue-500/50"
+                                    : "bg-white/5 border-white/5 hover:border-white/20"
                                     }`}
                             >
                                 <div>
-                                    <div className="font-bold text-white">{trip.destination}</div>
+                                    <div className="font-bold text-white">{trip.trip_title_dashboard || getTripRouteTitle(trip)}</div>
                                     <div className="text-xs text-white/50">{trip.dates}</div>
+                                    {trip.travelers?.length > 0 && (
+                                        <div className="text-[10px] text-white/40 mt-1 flex flex-wrap gap-1">
+                                            {trip.travelers.map((t: any, i: number) => (
+                                                <span key={i} className="bg-white/10 px-1.5 py-0.5 rounded-sm">
+                                                    {(typeof t === 'string' ? t : t.name)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                                 {isSelected && (
                                     <div className="h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center">

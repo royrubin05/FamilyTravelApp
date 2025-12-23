@@ -62,7 +62,28 @@ export async function saveTrip(newTrip: any) {
 
 export async function deleteTripAction(id: string) {
     try {
+        // 1. Remove from any Trip Groups
+        const groupsSnapshot = await db.collection("trip_groups").where("ids", "array-contains", id).get();
+
+        if (!groupsSnapshot.empty) {
+            const batch = db.batch();
+            groupsSnapshot.forEach(doc => {
+                const groupRef = db.collection("trip_groups").doc(doc.id);
+                // We manually filter to be safe, or use FieldValue.arrayRemove if we imported it.
+                // Since we don't have FieldValue imported from admin easily here without checking imports,
+                // let's just read-modify-write or assume we can filter. 
+                // Actually, let's use the current data since we have the snapshot.
+                const groupData = doc.data();
+                const newIds = (groupData.ids || []).filter((tripId: string) => tripId !== id);
+                batch.update(groupRef, { ids: newIds, updatedAt: new Date().toISOString() });
+            });
+            await batch.commit();
+            console.log(`[Server] Removed trip ${id} from ${groupsSnapshot.size} groups.`);
+        }
+
+        // 2. Delete the Trip
         await db.collection("trips").doc(id).delete();
+
         revalidatePath("/");
         return { success: true };
     } catch (error) {
@@ -162,6 +183,21 @@ export async function saveTripGroup(group: any) {
     }
 }
 
+export async function reorderTripGroup(groupId: string, newOrderedIds: string[]) {
+    try {
+        await db.collection("trip_groups").doc(groupId).update({
+            ids: newOrderedIds,
+            updatedAt: new Date().toISOString()
+        });
+        revalidatePath("/");
+        revalidatePath(`/group/${groupId}`);
+        return { success: true };
+    } catch (error) {
+        console.error("Error reordering group:", error);
+        return { success: false, error: "Failed to reorder group" };
+    }
+}
+
 export async function deleteTripGroupAction(id: string) {
     try {
         await db.collection("trip_groups").doc(id).delete();
@@ -170,5 +206,61 @@ export async function deleteTripGroupAction(id: string) {
     } catch (error) {
         console.error("Error deleting trip group:", error);
         return { success: false, error: "Failed to delete trip group" };
+    }
+}
+
+export async function createManualTrip(data: {
+    destination: string;
+    dates: string;
+    activityName?: string;
+    travelers?: string[]; // Array of names
+}) {
+    try {
+        // 1. Normalize Destination (Reuse the AI normalization if possible, or just basic trim)
+        // For manual entry, we trust the user but basic cleanup is good.
+        const cleanDest = data.destination.trim();
+
+        // 2. Generate ID
+        // Try to extract year from dates string, else current year.
+        let year = new Date().getFullYear();
+        const yearMatch = data.dates.match(/\d{4}/);
+        if (yearMatch) {
+            year = parseInt(yearMatch[0]);
+        }
+
+        const idSlug = cleanDest.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+        const id = `${idSlug}-${year}`;
+
+        // 3. Construct Trip Object
+        const newTrip = {
+            id,
+            destination: cleanDest,
+            dates: data.dates,
+            // Map activity name to activities array if matched
+            activities: data.activityName ? [{
+                title: data.activityName,
+                description: "Manual Entry"
+            }] : [],
+            // Map traveler names to objects
+            travelers: (data.travelers || []).map(name => ({
+                name,
+                role: "Adult", // Default
+                age: "Adult"   // Default
+            })),
+            uploadedAt: new Date().toISOString(),
+            sourceFileName: "Manual Entry",
+            isManual: true
+        };
+
+        // 4. Save (Merge)
+        console.log(`[Server] Saving Manual Trip: ${id}`);
+        await db.collection("trips").doc(id).set(newTrip, { merge: true });
+
+        revalidatePath("/");
+        return { success: true, id };
+
+    } catch (error) {
+        console.error("Error creating manual trip:", error);
+        return { success: false, error: "Failed to create trip." };
     }
 }

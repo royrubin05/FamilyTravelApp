@@ -60,6 +60,10 @@ export async function parseTripDocument(formData: FormData) {
     const { tripData, debugPrompt, debugResponse } = geminiResult;
     console.log("[DEBUG] Gemini Raw Response:", JSON.stringify(tripData, null, 2));
 
+    if (!tripData.coordinates || typeof tripData.coordinates.lat !== 'number') {
+      console.warn("[Server] Warning: Missing or invalid coordinates from Gemini.");
+    }
+
     // [Smart Inference] REMOVED: Now handled by AI Prompt (Rules 3 & 4)
     // The AI is now instructed to infer destination/dates from flights/hotels directly.
 
@@ -111,12 +115,53 @@ export async function parseTripDocument(formData: FormData) {
       }
     }
 
+    // 3.5 Normalize Travelers (AI Matching)
+    const { getSettings } = await import("@/app/settings-actions");
+    const settings = await getSettings();
+    if (settings.familyMembers && settings.familyMembers.length > 0) {
+      console.log("[Server] Normalizing travelers with AI...");
+
+      // Top Level
+      if (tripData.travelers && tripData.travelers.length > 0) {
+        tripData.travelers = await normalizeTravelers(tripData.travelers, settings.familyMembers);
+      }
+
+      // Flights
+      if (tripData.flights && tripData.flights.length > 0) {
+        for (let i = 0; i < tripData.flights.length; i++) {
+          if (tripData.flights[i].travelers?.length > 0) {
+            tripData.flights[i].travelers = await normalizeTravelers(tripData.flights[i].travelers, settings.familyMembers);
+          }
+        }
+      }
+
+      // Hotels (if they have travelers)
+      if (tripData.hotels && tripData.hotels.length > 0) {
+        for (let i = 0; i < tripData.hotels.length; i++) {
+          if (tripData.hotels[i].travelers?.length > 0) {
+            tripData.hotels[i].travelers = await normalizeTravelers(tripData.hotels[i].travelers, settings.familyMembers);
+          }
+        }
+      }
+    }
+
     // 4. Save to Firestore
     const { saveTrip } = await import("@/app/trip-actions");
 
     // Construct trip object
-    // Ensure we have an ID
-    const tripId = `${tripData.destination.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-${new Date().getFullYear()}`;
+
+    // Fix ID Generation: Use Trip Year + Random Suffix to prevent overwrites
+    // Extract year from dates string if possible, else current year.
+    let tripYear = new Date().getFullYear();
+    const yearMatch = tripData.dates ? tripData.dates.match(/(\d{4})/) : null;
+    if (yearMatch) {
+      tripYear = parseInt(yearMatch[1]);
+    }
+
+    const safeDest = tripData.destination.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+    const uniqueSuffix = Date.now().toString().slice(-6); // Last 6 digits of timestamp for uniqueness
+
+    const tripId = `${safeDest}-${tripYear}-${uniqueSuffix}`;
 
     const newTrip = {
       id: tripId,
@@ -141,6 +186,136 @@ export async function parseTripDocument(formData: FormData) {
   } catch (error) {
     console.error("Error in parseTripDocument:", error);
     return { error: `Processing Failed: ${(error as Error).message}` };
+  }
+}
+
+// Helper: AI Traveler Matching
+async function normalizeTravelers(scrapedTravelers: any[], familyMembers: any[]): Promise<any[]> {
+  try {
+    // Simplify family members for the prompt (name + nicknames)
+    const knownMembers = familyMembers.map(m => ({
+      name: m.name,
+      nicknames: m.nicknames || []
+    }));
+
+    const prompt = `
+        I have a list of Scraped Travelers from a document:
+        ${JSON.stringify(scrapedTravelers)}
+
+        I have a list of Official Family Members (with known nicknames):
+        ${JSON.stringify(knownMembers)}
+
+        Task: Filter and Normalize the scraped travelers.
+        
+        Rules:
+        1.  **Strict Filtering**: The output list must ONLY contain names that correspond to an Official Family Member.
+        2.  **Match & Rename**: If a scraped name matches a family member (e.g. "Roy R.", "Ori Rubin", "Baby Leo") -> Use the **Official Name** (e.g. "Roy", "Ori", "Leo").
+        3.  **Exclude Others**: If a scraped name (e.g. "John Doe", "Unknown Guest") does NOT match any family member -> **OMIT IT** from the output entirely.
+        
+        Output:
+        - Return a JSON Array of objects, preserving the original structure but with the "name" field normalized.
+        - If the input was just strings, return strings. 
+        - ERROR: If input is objects, return objects with 'name' property updated.
+        
+        Return JSON Array ONLY.
+        `;
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", generationConfig: { responseMimeType: "application/json" } });
+    const result = await model.generateContent(prompt);
+    const normalized = JSON.parse(result.response.text());
+
+    console.log("[AI Matching] Normalized Travelers:", normalized);
+    return Array.isArray(normalized) ? normalized : scrapedTravelers;
+
+  } catch (e) {
+    console.error("Traveler validation failed", e);
+    return scrapedTravelers; // Fallback to original
+  }
+}
+
+export async function normalizeAllTravelersAction() {
+  try {
+    const { getTrips, saveTrip } = await import("@/app/trip-actions");
+    const { getSettings } = await import("@/app/settings-actions");
+
+    const trips = await getTrips();
+    const settings = await getSettings();
+
+    if (!settings.familyMembers || settings.familyMembers.length === 0) {
+      return { success: false, error: "No family members configured in settings." };
+    }
+
+    let updateCount = 0;
+    const updates: string[] = [];
+
+    console.log(`[Admin] Normalizing travelers for ${trips.length} trips...`);
+
+    for (const trip of trips) {
+      if (trip.travelers && trip.travelers.length > 0) {
+        let tripUpdated = false;
+
+        // 1. Normalize Trip-Level Travelers
+        const oldTravelersJson = JSON.stringify(trip.travelers);
+        const normalized = await normalizeTravelers(trip.travelers, settings.familyMembers);
+        const newTravelersJson = JSON.stringify(normalized);
+
+        if (oldTravelersJson !== newTravelersJson) {
+          trip.travelers = normalized;
+          tripUpdated = true;
+          updates.push(`Updated Top-Level Travelers ${trip.destination} (${trip.id})`);
+        }
+
+        // 2. Normalize Flight Travelers
+        if (trip.flights && trip.flights.length > 0) {
+          for (let i = 0; i < trip.flights.length; i++) {
+            const flight = trip.flights[i];
+            if (flight.travelers && flight.travelers.length > 0) {
+              const oldFlightTravelers = JSON.stringify(flight.travelers);
+              const normalizedFlightTravelers = await normalizeTravelers(flight.travelers, settings.familyMembers);
+
+              if (oldFlightTravelers !== JSON.stringify(normalizedFlightTravelers)) {
+                trip.flights[i].travelers = normalizedFlightTravelers;
+                tripUpdated = true;
+                updates.push(`Updated Flight ${flight.flightNumber} Travelers`);
+              }
+            }
+          }
+        }
+
+        // 3. Normalize Hotel Travelers
+        if (trip.hotels && trip.hotels.length > 0) {
+          for (let i = 0; i < trip.hotels.length; i++) {
+            const hotel = trip.hotels[i];
+            // Hotels usually don't have travelers list in my schema, but if they do:
+            if (hotel.travelers && hotel.travelers.length > 0) {
+              const oldHotelTravelers = JSON.stringify(hotel.travelers);
+              const normalizedHotelTravelers = await normalizeTravelers(hotel.travelers, settings.familyMembers);
+
+              if (oldHotelTravelers !== JSON.stringify(normalizedHotelTravelers)) {
+                trip.hotels[i].travelers = normalizedHotelTravelers;
+                tripUpdated = true;
+                updates.push(`Updated Hotel ${hotel.name} Travelers`);
+              }
+            }
+          }
+        }
+
+        if (tripUpdated) {
+          console.log(`[Admin] Saving updates for trip: ${trip.id}`);
+          await saveTrip(trip);
+          updateCount++;
+        }
+      }
+    }
+
+    return {
+      success: true,
+      report: `Normalized travelers for ${updateCount} trips.\n\nUpdated:\n${updates.join("\n")}`
+    };
+
+  } catch (error) {
+    console.error("Bulk normalization failed:", error);
+    return { success: false, error: (error as Error).message };
   }
 }
 

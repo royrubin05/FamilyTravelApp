@@ -32,7 +32,15 @@ Return ONLY a JSON object with the following schema:
       "checkOut": "Date Time"
     }
   ],
-  "activities": []
+  "activities": [],
+  "trip_title_dashboard": "Origin <-> Destination",
+  "trip_title_page": "City Name",
+  "ai_summary": {
+    "topology": "Round Trip | One Way | Open Jaw | Multi-City",
+    "human_title": "Trip to City",
+    "verbose_description": "Natural language summary.",
+    "layover_text": "Layover description."
+  }
 }
 
 Rules:
@@ -42,6 +50,16 @@ Rules:
    - Clean the name: Remove airport codes (e.g. convert "City (CODE)" to "City").
 4. If "dates" are missing, INFER them from the first flight departure.
 5. Do NOT include markdown formatting (\`\`\`json). Just the raw JSON.
+6. Generate Titles (AI Summary):
+   - "trip_title_dashboard": Visual Route (e.g. "LAX <-> LHR" or "A to B (connecting in X)").
+   - "trip_title_page": Main City Name (e.g. "London").
+   - "ai_summary":
+     - Use natural language rules:
+     - Use City Names Only (convert codes).
+     - human_title: "Trip to [City]" / "Flight to [City]".
+     - verbose_description: Complete, grammatical sentence: "Departing [Origin] on [Date] for [Dest], connecting in [Stop]."
+     - layover_text: "Layover in [Stop]" (instead of "1 stop via...").
+     - IF NO FLIGHTS: "dashboard_title" = City Name. "human_title" = "Trip to [City]".
 `;
 
 export async function parseTripWithGemini(fileBuffer: Buffer, mimeType: string) {
