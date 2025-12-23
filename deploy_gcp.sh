@@ -81,6 +81,7 @@ gcloud storage cp src/data/*.json gs://${BUCKET_NAME}/data/
 # Sync Public Assets (Images & Docs) - recursive with rsync-like behavior
 gcloud storage cp -r public/images gs://${BUCKET_NAME}/public/
 gcloud storage cp -r public/documents gs://${BUCKET_NAME}/public/
+gcloud storage cp -r public/icons gs://${BUCKET_NAME}/public/
 
 echo "✅ Data synced to bucket (overrides container content)"
 echo "📦 Uploading source to staging bucket..."

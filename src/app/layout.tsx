@@ -26,6 +26,15 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "TravelRoots",
   },
+  icons: {
+    icon: [
+      { url: '/icon.png', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '512x512', type: 'image/png' },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
