@@ -4,7 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { Home, Share2, Check, LayoutDashboard, Layers, Plane, Component, ChevronLeft, ArrowUp, ArrowDown, Users, GripVertical } from "lucide-react";
 import { GlobalHeader } from "@/components/ui/GlobalHeader";
+import { PublicHeader } from "@/components/ui/PublicHeader";
+import { ShareControl } from "@/components/sharing/ShareControl";
 import EditGroupModal from "./EditGroupModal";
+import ShareGroupModal from "./ShareGroupModal";
 import { motion } from "framer-motion";
 import { deleteTripGroupAction, reorderTripGroup } from "@/app/trip-actions";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
@@ -38,10 +41,11 @@ interface GroupContentProps {
     initialImages: Record<string, string>;
     isAuthenticated?: boolean;
     backgroundImage?: string | null;
+    isPublicView?: boolean;
 }
 
 // Separate component for the sortable trip item to encapsulate hooks
-function SortableTripItem({ trip, index, isLast, isAuthenticated, formatDate }: any) {
+function SortableTripItem({ trip, index, isLast, isAuthenticated, formatDate, isPublicView, groupShareToken }: any) {
     const {
         attributes,
         listeners,
@@ -176,7 +180,7 @@ function SortableTripItem({ trip, index, isLast, isAuthenticated, formatDate }: 
 
                     <div className="mt-4 pt-4 border-t border-white/5">
                         <Link
-                            href={`/trip?id=${trip.id}`}
+                            href={isPublicView ? `/share/group/${groupShareToken}/trip/${trip.id}` : `/trip?id=${trip.id}`}
                             className="text-xs font-bold uppercase tracking-wider text-white/60 hover:text-white transition-colors flex items-center gap-2"
                         >
                             View Full Trip Details <ChevronLeft className="h-3 w-3 rotate-180" />
@@ -189,10 +193,10 @@ function SortableTripItem({ trip, index, isLast, isAuthenticated, formatDate }: 
     );
 }
 
-export default function GroupContent({ group, trips, allTrips = [], initialImages, isAuthenticated = false, backgroundImage }: GroupContentProps) {
-    const [isShared, setIsShared] = useState(false);
+export default function GroupContent({ group, trips, allTrips = [], initialImages, isAuthenticated = false, backgroundImage, isPublicView = false }: GroupContentProps) {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [orderedTrips, setOrderedTrips] = useState(trips);
 
     if (!group) return <div>Group not found</div>;
@@ -254,11 +258,8 @@ export default function GroupContent({ group, trips, allTrips = [], initialImage
         }
     };
 
-    const handleShare = () => {
-        navigator.clipboard.writeText(window.location.href);
-        setIsShared(true);
-        setTimeout(() => setIsShared(false), 2000);
-    };
+    // Drag handler
+
 
     const handleDeleteGroup = async () => {
         await deleteTripGroupAction(group.id);
@@ -293,19 +294,36 @@ export default function GroupContent({ group, trips, allTrips = [], initialImage
             </div>
 
             {/* Top Navigation */}
-            <GlobalHeader>
-                <button
-                    onClick={handleShare}
-                    className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5 flex items-center justify-center"
-                    title="Share Trip Group"
+            {isPublicView ? (
+                <PublicHeader />
+            ) : (
+                <GlobalHeader
+                    additionalMenuItems={isAuthenticated ? [
+                        {
+                            label: "Share Group",
+                            onClick: () => setIsShareModalOpen(true),
+                            icon: <Share2 className="h-4 w-4" />,
+                            className: "text-neutral-800"
+                        }
+                    ] : []}
                 >
-                    {isShared ? (
-                        <Check className="h-5 w-5 text-green-400" />
-                    ) : (
-                        <Share2 className="h-5 w-5" />
+                    {isAuthenticated && (
+                        <>
+                            <div className="h-6 w-px bg-white/10 hidden md:block" />
+                            <button
+                                onClick={() => setIsEditModalOpen(true)}
+                                className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5 flex items-center justify-center group relative"
+                                title="Edit Group"
+                            >
+                                <LayoutDashboard className="h-5 w-5" />
+                                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                    Edit Group
+                                </span>
+                            </button>
+                        </>
                     )}
-                </button>
-            </GlobalHeader>
+                </GlobalHeader>
+            )}
 
             {/* Main Content */}
             <div className="relative z-10 px-6 pt-10">
@@ -339,30 +357,15 @@ export default function GroupContent({ group, trips, allTrips = [], initialImage
                                     isLast={index === orderedTrips.length - 1}
                                     isAuthenticated={isAuthenticated}
                                     formatDate={formatDate}
+                                    isPublicView={isPublicView}
+                                    groupShareToken={group.shareToken}
                                 />
                             ))}
                         </SortableContext>
                     </DndContext>
                 </div>
 
-                {/* Footer Actions */}
-                {isAuthenticated && (
-                    <div className="flex justify-center items-center gap-4 mt-8 mb-8 border-t border-white/10 pt-8 max-w-lg mx-auto">
-                        <button
-                            onClick={() => setIsEditModalOpen(true)}
-                            className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-6 py-3 rounded-full border border-white/10"
-                        >
-                            <span className="hidden sm:inline">Edit Group</span>
-                            <span className="sm:hidden">Edit</span>
-                        </button>
-                        <button
-                            onClick={() => setIsDeleteModalOpen(true)}
-                            className="text-red-400/80 hover:text-red-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-6 py-3 hover:bg-red-500/10 rounded-full border border-transparent hover:border-red-500/20"
-                        >
-                            Ungroup
-                        </button>
-                    </div>
-                )}
+                {/* Footer Actions Removed */}
             </div>
 
             <ConfirmationModal
@@ -380,6 +383,17 @@ export default function GroupContent({ group, trips, allTrips = [], initialImage
                 onClose={() => setIsEditModalOpen(false)}
                 group={group}
                 allTrips={allTrips}
+                onDelete={() => {
+                    setIsEditModalOpen(false);
+                    // Small delay to allow modal to close smoothly before opening confirmation
+                    setTimeout(() => setIsDeleteModalOpen(true), 100);
+                }}
+            />
+
+            <ShareGroupModal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                group={group}
             />
         </div>
     );

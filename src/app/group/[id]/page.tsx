@@ -22,11 +22,31 @@ export default async function GroupPage({ params }: GroupPageProps) {
             return <div className="p-10 text-white">Group not found</div>;
         }
 
-        const allTrips = await getTrips();
+        const allTripsData = await getTrips();
+        const rawAllTrips = Array.isArray(allTripsData) ? allTripsData : [];
+
+        // Deduplicate allTrips to ensure safety across the entire page (including Edit Modal)
+        const uniqueAllTripsMap = new Map();
+        rawAllTrips.forEach((t: any) => {
+            if (t && t.id) {
+                uniqueAllTripsMap.set(t.id, t);
+            }
+        });
+        const allTrips = Array.from(uniqueAllTripsMap.values());
+
         // Filter trips that belong to this group - specific safety check for ids
         const groupIds = group.ids || [];
-        const subTrips = allTrips
-            .filter((t: any) => groupIds.includes(t.id))
+
+        // Deduplicate trips found by ID (in case getTrips returns duplicates or groupIds has dups)
+        // With allTrips already deduped, we just need to match
+        const uniqueTripsMap = new Map();
+        allTrips.forEach((t: any) => {
+            if (t && t.id && groupIds.includes(t.id)) {
+                uniqueTripsMap.set(t.id, t);
+            }
+        });
+
+        const subTrips = Array.from(uniqueTripsMap.values())
             .sort((a: any, b: any) => {
                 // Sort by the order defined in the group's 'ids' array
                 const indexA = groupIds.indexOf(a.id);
@@ -39,7 +59,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
 
         // Check auth status
         const cookieStore = await cookies();
-        const isAuthenticated = !!cookieStore.get("auth_session");
+        const isAuthenticated = !!(cookieStore.get("session") || cookieStore.get("auth_session"));
 
         return <GroupContent group={group} trips={subTrips} allTrips={allTrips} initialImages={initialImages} isAuthenticated={isAuthenticated} backgroundImage={settings?.backgroundImage} />;
     } catch (error) {

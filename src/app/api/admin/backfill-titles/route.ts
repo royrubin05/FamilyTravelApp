@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import { generateTripTitles } from "@/lib/aiTitling";
 
 export const maxDuration = 300; // 5 minutes max
@@ -19,46 +19,71 @@ export async function GET(request: Request) {
     }
 
     try {
-        const snapshot = await db.collection("trips").get();
+        // 1. Process Root Trips Collection
+        const rootSnapshot = await db.collection("trips").get();
         let updatedCount = 0;
         const errors: any[] = [];
+        const results: any[] = [];
 
-        const updatePromises = snapshot.docs.map(async (doc) => {
+        const processTrip = async (doc: any, collectionPath: string) => {
             const trip = { id: doc.id, ...doc.data() } as any;
-            console.log(`Processing ${trip.id}...`);
+            console.log(`Processing ${collectionPath}/${trip.id}...`);
 
             try {
                 const result = await generateTripTitles(trip);
-                await db.collection("trips").doc(trip.id).update({
+                await db.doc(`${collectionPath}/${trip.id}`).update({
                     trip_title_dashboard: result.dashboard,
                     trip_title_page: result.page,
                     dates: result.dates,
                     ai_summary: result.ai_summary
                 });
                 updatedCount++;
-                return {
+                results.push({
                     id: trip.id,
+                    path: collectionPath,
                     status: "updated",
                     title: result.dashboard,
                     dates: result.dates,
                     ai_summary: result.ai_summary
-                };
+                });
             } catch (err: any) {
-                console.error(`Error processing ${trip.id}:`, err);
-                errors.push({ id: trip.id, error: err.message });
-                return { id: trip.id, status: "error", error: err.message };
+                console.error(`Error processing ${trip.id} in ${collectionPath}:`, err);
+                errors.push({ id: trip.id, path: collectionPath, error: err.message });
+                results.push({ id: trip.id, path: collectionPath, status: "error", error: err.message });
             }
-        });
+        };
 
-        const results = await Promise.all(updatePromises);
+        // Process Root
+        await Promise.all(rootSnapshot.docs.map(doc => processTrip(doc, "trips")));
+
+        // 2. Process Users' Trips Collections (via Auth List)
+        let processedUsersCount = 0;
+        let listUsersResult = await auth.listUsers(1000);
+
+        while (listUsersResult.users.length > 0) {
+            for (const user of listUsersResult.users) {
+                processedUsersCount++;
+                const userTripsSnapshot = await db.collection("users").doc(user.uid).collection("trips").get();
+                if (!userTripsSnapshot.empty) {
+                    await Promise.all(userTripsSnapshot.docs.map(doc => processTrip(doc, `users/${user.uid}/trips`)));
+                }
+            }
+            if (listUsersResult.pageToken) {
+                listUsersResult = await auth.listUsers(1000, listUsersResult.pageToken);
+            } else {
+                break;
+            }
+        }
 
         return NextResponse.json({
-            message: "Backfill complete",
-            processed: snapshot.size,
+            message: "Backfill complete (Root + Users)",
+            processedRoot: rootSnapshot.size,
+            processedUsers: processedUsersCount,
             updated: updatedCount,
             errors,
             details: results
         });
+
 
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

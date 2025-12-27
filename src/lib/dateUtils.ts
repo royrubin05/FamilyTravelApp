@@ -84,3 +84,13 @@ export const isTripCompleted = (dateStr: string): boolean => {
     // If start timestamp is valid and passed
     return startTimestamp > 0 && startTimestamp < now;
 };
+
+/**
+ * Determines if a trip has started (is in the past or currently active).
+ */
+export const hasTripStarted = (dateStr: string): boolean => {
+    if (!dateStr) return false;
+    const now = new Date().getTime();
+    const startTimestamp = parseTripDate(dateStr);
+    return startTimestamp > 0 && startTimestamp < now;
+};

@@ -1,10 +1,14 @@
 "use client";
 
-import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User, Edit2, AlertTriangle, LogOut } from "lucide-react";
+import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User, Edit2, AlertTriangle, LogOut, Settings, Shield, ArchiveRestore, RefreshCw, Calendar, Ban } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DataAuditManager } from "./DataAuditManager";
 import { useState, useRef } from "react";
 import { uploadBackgroundImage, removeBackgroundImage } from "@/app/settings-actions";
+import { useTrips } from "@/context/TripContext";
+import { restoreTripAction, deleteTripAction } from "@/app/trip-actions";
+import { useRouter } from "next/navigation";
+
+const DEFAULT_BACKGROUND_IMAGE = "/images/backgrounds/bg-1766165588828.webp";
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -14,12 +18,33 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettings }: SettingsModalProps) {
-    const [activeSection, setActiveSection] = useState<"appearance" | "members" | "audit">("appearance");
+    const [activeSection, setActiveSection] = useState<"general" | "appearance" | "members" | "cancelled">("general");
     const [isUploading, setIsUploading] = useState(false);
+    const router = useRouter();
+
+    // Context for cancelled trips
+    const { trips, deleteTrip } = useTrips();
+    // Filter cancelled trips
+    const cancelledTrips = trips.filter((t: any) => t.status === 'cancelled');
+
     const [newMemberName, setNewMemberName] = useState("");
     const [newMemberNickname, setNewMemberNickname] = useState("");
     const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+
+    const handleRestoreTrip = async (id: string) => {
+        if (!confirm("Are you sure you want to restore this trip? It will appear in your upcoming/completed lists again.")) return;
+        await restoreTripAction(id);
+        router.refresh(); // Refresh to update context
+    };
+
+    const handleDeleteTripForever = async (id: string, destination: string) => {
+        if (!confirm(`Are you sure you want to PERMANENTLY delete the trip to ${destination}? This cannot be undone.`)) return;
+        await deleteTrip(id); // Context action or server action? Context usually wraps server action but updates local state.
+        // If deleteTrip in context doesn't handle sync, we might need router.refresh()
+        // But useTrips implementation typically handles optimistics or refresh.
+    };
 
     const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -161,7 +186,7 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
             <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="w-full max-w-4xl bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden h-[80vh] flex flex-col md:flex-row"
+                className="w-full max-w-4xl bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden h-[85dvh] md:h-[80vh] flex flex-col md:flex-row"
             >
                 {/* Sidebar */}
                 <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-white/10 bg-black/20 p-4">
@@ -173,6 +198,16 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
                     </div>
 
                     <div className="space-y-1">
+                        <button
+                            onClick={() => setActiveSection("general")}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "general"
+                                ? "bg-white/10 text-white"
+                                : "text-white/50 hover:text-white hover:bg-white/5"
+                                }`}
+                        >
+                            <Settings className="h-4 w-4" />
+                            General
+                        </button>
                         <button
                             onClick={() => setActiveSection("appearance")}
                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "appearance"
@@ -194,37 +229,40 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
                             Family Members
                         </button>
 
-                        <div className="h-px bg-white/10 my-2 mx-3" />
-                        <button
-                            onClick={() => setActiveSection("audit")}
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "audit"
-                                ? "bg-amber-500/20 text-amber-500"
-                                : "text-white/50 hover:text-amber-500 hover:bg-amber-500/10"
-                                }`}
-                        >
-                            <AlertTriangle className="h-4 w-4" />
-                            Data Audit
-                        </button>
+
 
                         <div className="flex-1" /> {/* Spacer */}
 
                         <div className="h-px bg-white/10 my-2 mx-3" />
                         <button
                             onClick={async () => {
-                                const { logoutAction } = await import("@/app/actions");
-                                await logoutAction();
-                                window.location.href = "/login";
+                                const { logoutSession } = await import("@/app/auth-actions");
+                                const { signOut } = await import("firebase/auth");
+                                const { auth } = await import("@/lib/firebase-config");
+
+                                await signOut(auth); // Client Logout
+                                await logoutSession(); // Server Cookie Logout
+                                window.location.href = "/login-v2";
                             }}
                             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-colors group"
                         >
                             <LogOut className="h-4 w-4 group-hover:text-red-400" />
                             Sign Out
                         </button>
+                        {(currentSettings as any).isAdmin && (
+                            <button
+                                onClick={() => window.location.href = "/admin"}
+                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors"
+                            >
+                                <Shield className="h-4 w-4" />
+                                Admin Dashboard
+                            </button>
+                        )}
                     </div>
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 flex flex-col min-w-0 bg-neutral-900/50 relative">
+                <div className="flex-1 flex flex-col min-w-0 bg-neutral-900/50 relative overflow-hidden">
                     <button
                         onClick={onClose}
                         className="hidden md:block absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full text-white/50 hover:text-white z-10"
@@ -233,6 +271,37 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
                     </button>
 
                     <div className="flex-1 overflow-y-auto">
+
+                        {activeSection === "general" && (
+                            <div className="p-8 max-w-2xl">
+                                <h3 className="text-xl font-serif mb-6">General Settings</h3>
+
+                                <div className="space-y-6">
+                                    <div className="bg-black/20 border border-white/5 rounded-xl p-6">
+                                        <h4 className="text-sm font-bold uppercase tracking-widest text-white/70 mb-4">Family Identity</h4>
+
+                                        <div className="flex flex-col gap-4">
+                                            <div>
+                                                <label className="block text-sm text-white/50 mb-2">Family Display Name</label>
+                                                <div className="p-4 bg-neutral-800 border border-white/5 rounded-lg flex items-center justify-between">
+                                                    <span className="text-white text-lg font-medium">
+                                                        {(currentSettings as any).displayName || "No Family Name Set"}
+                                                    </span>
+                                                    {(currentSettings as any).isAdmin && (
+                                                        <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded border border-amber-400/20">
+                                                            Admin Managed
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-white/30 mt-2">
+                                                    This name will be displayed on the header and throughout the app.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {activeSection === "appearance" && (
                             <div className="p-8 max-w-2xl">
@@ -243,9 +312,9 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
                                         <h4 className="text-sm font-bold uppercase tracking-widest text-white/70 mb-4">Background Image</h4>
 
                                         <div className="relative aspect-video w-full rounded-lg overflow-hidden border border-white/10 mb-4 bg-neutral-950 group">
-                                            {currentSettings?.backgroundImage ? (
+                                            {currentSettings?.backgroundImage || DEFAULT_BACKGROUND_IMAGE ? (
                                                 <img
-                                                    src={currentSettings.backgroundImage}
+                                                    src={currentSettings?.backgroundImage || DEFAULT_BACKGROUND_IMAGE}
                                                     alt="Dashboard Background"
                                                     className="w-full h-full object-cover"
                                                 />
@@ -307,7 +376,7 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
                                 <div className="space-y-6">
                                     <div className="bg-black/20 border border-white/5 rounded-xl p-6">
                                         <div className="flex flex-col gap-3 mb-6">
-                                            <div className="flex gap-3">
+                                            <div className="flex flex-col md:flex-row gap-3">
                                                 <input
                                                     type="text"
                                                     value={newMemberName}
@@ -395,14 +464,9 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
                             </div>
                         )}
 
-                        {activeSection === "audit" && (
-                            <div className="h-full">
-                                <DataAuditManager />
-                            </div>
-                        )}
                     </div>
                 </div>
-            </motion.div>
+            </motion.div >
         </div>
     );
 }

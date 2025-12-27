@@ -1,15 +1,17 @@
 "use server";
 
-"use server";
-
 import { db } from "@/lib/firebase";
 import { revalidatePath } from "next/cache";
 
 import { parseTripDate } from "@/lib/dateUtils";
+import { getCurrentUser } from "@/lib/auth-context";
 
 export async function getTrips() {
+    // Auth check must be outside try/catch to allow redirect
+    const user = await getCurrentUser();
+
     try {
-        const snapshot = await db.collection("trips").get();
+        const snapshot = await db.collection("users").doc(user.uid).collection("trips").get();
         if (snapshot.empty) return [];
 
         const trips = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -26,29 +28,16 @@ export async function getTrips() {
 
 export async function saveTrip(newTrip: any) {
     try {
+        const user = await getCurrentUser();
         // 1. Check for Exact ID Match (Update existing)
-        const docRef = db.collection("trips").doc(newTrip.id);
+        const docRef = db.collection("users").doc(user.uid).collection("trips").doc(newTrip.id);
         const docSnap = await docRef.get();
 
         if (docSnap.exists) {
-            // Overwrite or Deep Merge?
-            // The JSON logic was "overwrite properties if array element matches, else append"
-            // Since we are moving to DB, let's keep it simple: Overwrite the doc with merged fields if necessary. 
-            // Actually, the previous logic did "Array Merging". Let's preserve that if possible or simplify.
-            // For simplicity and robustness given the switch to DB:
-            // Just update the doc. If complex merging matches are needed, read -> merge -> set.
-
-            // NOTE: The previous logic also checked for "Destination Aggregation / Fuzzy Match" which changes the ID!
-            // That is complex to port 1:1 without scanning all trips.
-            // Let's implement the fuzzy match scan.
-
             await docRef.set(newTrip, { merge: true });
             revalidatePath("/");
             return { success: true, id: newTrip.id };
         } else {
-            // 2. Create New Trip
-            // We removed the fuzzy matching based on destination name because it was causing incorrect merges (e.g. different dates).
-            // The AI now handles the merging decision by returning the existing ID if it detects a match with dates.
             console.log(`[Server] Creating new trip: ${newTrip.id}`);
             await docRef.set(newTrip);
             revalidatePath("/");
@@ -62,17 +51,14 @@ export async function saveTrip(newTrip: any) {
 
 export async function deleteTripAction(id: string) {
     try {
+        const user = await getCurrentUser();
         // 1. Remove from any Trip Groups
-        const groupsSnapshot = await db.collection("trip_groups").where("ids", "array-contains", id).get();
+        const groupsSnapshot = await db.collection("users").doc(user.uid).collection("groups").where("ids", "array-contains", id).get();
 
         if (!groupsSnapshot.empty) {
             const batch = db.batch();
             groupsSnapshot.forEach(doc => {
-                const groupRef = db.collection("trip_groups").doc(doc.id);
-                // We manually filter to be safe, or use FieldValue.arrayRemove if we imported it.
-                // Since we don't have FieldValue imported from admin easily here without checking imports,
-                // let's just read-modify-write or assume we can filter. 
-                // Actually, let's use the current data since we have the snapshot.
+                const groupRef = db.collection("users").doc(user.uid).collection("groups").doc(doc.id);
                 const groupData = doc.data();
                 const newIds = (groupData.ids || []).filter((tripId: string) => tripId !== id);
                 batch.update(groupRef, { ids: newIds, updatedAt: new Date().toISOString() });
@@ -82,7 +68,7 @@ export async function deleteTripAction(id: string) {
         }
 
         // 2. Delete the Trip
-        await db.collection("trips").doc(id).delete();
+        await db.collection("users").doc(user.uid).collection("trips").doc(id).delete();
 
         revalidatePath("/");
         return { success: true };
@@ -92,10 +78,48 @@ export async function deleteTripAction(id: string) {
     }
 }
 
+export async function cancelTripAction(id: string, credits?: Record<string, number>, expirationDate?: string) {
+    try {
+        const user = await getCurrentUser();
+        // Set status to 'cancelled' and save credits/expiration if provided
+        await db.collection("users").doc(user.uid).collection("trips").doc(id).set({
+            status: "cancelled",
+            cancelledAt: new Date().toISOString(),
+            credits: credits || null,
+            creditExpirationDate: expirationDate || null
+        }, { merge: true });
+
+        revalidatePath("/");
+        return { success: true };
+    } catch (error) {
+        console.error("Error cancelling trip:", error);
+        return { success: false, error: "Failed to cancel trip" };
+    }
+}
+
+export async function restoreTripAction(id: string) {
+    try {
+        const user = await getCurrentUser();
+        // Remove status (or set to active if we strictly enforce it, but removing works as default is active-ish)
+        // Let's set to 'active' to be explicit
+        await db.collection("users").doc(user.uid).collection("trips").doc(id).set({
+            status: "active",
+            cancelledAt: null
+        }, { merge: true });
+
+        revalidatePath("/");
+        return { success: true };
+    } catch (error) {
+        console.error("Error restoring trip:", error);
+        return { success: false, error: "Failed to restore trip" };
+    }
+}
+
 
 export async function removeTravelerFromTripAction(tripId: string, travelerToRemove: { id?: string, name: string }) {
     try {
-        const tripRef = db.collection("trips").doc(tripId);
+        const user = await getCurrentUser();
+        const tripRef = db.collection("users").doc(user.uid).collection("trips").doc(tripId);
         const tripDoc = await tripRef.get();
 
         if (!tripDoc.exists) {
@@ -154,7 +178,8 @@ function sanitizeFirestoreData(data: any): any {
 
 export async function getTripGroups() {
     try {
-        const snapshot = await db.collection("trip_groups").get();
+        const user = await getCurrentUser();
+        const snapshot = await db.collection("users").doc(user.uid).collection("groups").get();
         if (snapshot.empty) return [];
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         return sanitizeFirestoreData(data);
@@ -168,8 +193,9 @@ export async function saveTripGroup(group: any) {
     try {
         // Ensure ID
         const groupId = group.id || `group-${Date.now()}`;
+        const user = await getCurrentUser();
 
-        await db.collection("trip_groups").doc(groupId).set({
+        await db.collection("users").doc(user.uid).collection("groups").doc(groupId).set({
             ...group,
             id: groupId,
             updatedAt: new Date().toISOString()
@@ -185,7 +211,8 @@ export async function saveTripGroup(group: any) {
 
 export async function reorderTripGroup(groupId: string, newOrderedIds: string[]) {
     try {
-        await db.collection("trip_groups").doc(groupId).update({
+        const user = await getCurrentUser();
+        await db.collection("users").doc(user.uid).collection("groups").doc(groupId).update({
             ids: newOrderedIds,
             updatedAt: new Date().toISOString()
         });
@@ -200,7 +227,8 @@ export async function reorderTripGroup(groupId: string, newOrderedIds: string[])
 
 export async function deleteTripGroupAction(id: string) {
     try {
-        await db.collection("trip_groups").doc(id).delete();
+        const user = await getCurrentUser();
+        await db.collection("users").doc(user.uid).collection("groups").doc(id).delete();
         revalidatePath("/");
         return { success: true };
     } catch (error) {
@@ -254,7 +282,12 @@ export async function createManualTrip(data: {
 
         // 4. Save (Merge)
         console.log(`[Server] Saving Manual Trip: ${id}`);
-        await db.collection("trips").doc(id).set(newTrip, { merge: true });
+        // We reuse saveTrip logic or duplicate it. Since we have getCurrentUser logic there, let's just write directly or call saveTrip?
+        // Let's write directly to avoid circular dependency if we moved saveTrip. But here createManualTrip is in the SAME file.
+        // Wait, saveTrip is exported from this file? Yes.
+        // We can just call saveTrip(newTrip).
+
+        await saveTrip(newTrip);
 
         revalidatePath("/");
         return { success: true, id };
@@ -262,5 +295,39 @@ export async function createManualTrip(data: {
     } catch (error) {
         console.error("Error creating manual trip:", error);
         return { success: false, error: "Failed to create trip." };
+    }
+}
+
+export interface UploadLog {
+    id: string;
+    fileName: string;
+    gcsUrl: string;
+    status: 'success' | 'failed';
+    error?: string;
+    tripId?: string;
+    debugPrompt?: string;
+    debugResponse?: string;
+    timestamp: string;
+    isTest?: boolean;
+}
+
+export async function logUploadAttempt(data: Omit<UploadLog, "timestamp">) {
+    try {
+        const user = await getCurrentUser();
+        // Use provided ID or generate one
+        const uploadId = data.id || `upload-${Date.now()}`;
+
+        await db.collection("users").doc(user.uid).collection("uploads").doc(uploadId).set({
+            ...data,
+            id: uploadId,
+            timestamp: new Date().toISOString()
+        });
+
+        console.log(`[Server] Logged upload attempt: ${uploadId} (${data.status})`);
+        return { success: true, id: uploadId };
+    } catch (error) {
+        console.error("Error logging upload attempt:", error);
+        // Don't throw, just return false so we don't break the main flow
+        return { success: false, error: "Failed to log upload" };
     }
 }

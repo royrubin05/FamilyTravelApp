@@ -1,0 +1,901 @@
+[
+  {
+    "id": "bahamas-2026",
+    "sourceFileName": "Manual Entry",
+    "trip_title_dashboard": "Trip to Bahamas",
+    "isManual": true,
+    "destination": "Bahamas",
+    "coordinates": {
+      "lng": -77.3963,
+      "lat": 25.0343
+    },
+    "dates": "Mar 30, 2026 - Apr 05, 2026",
+    "travelers": [
+      {
+        "name": "Adi",
+        "age": "Adult",
+        "role": "Adult"
+      },
+      {
+        "role": "Adult",
+        "name": "Jonathan",
+        "age": "Adult"
+      },
+      {
+        "name": "Ori",
+        "age": "Adult",
+        "role": "Adult"
+      },
+      {
+        "age": "Adult",
+        "name": "Roy",
+        "role": "Adult"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Trip to Bahamas from Mar 30, 2026 - Apr 05, 2026",
+      "topology": "No Flights",
+      "human_title": "Trip to Bahamas"
+    },
+    "activities": [
+      {
+        "description": "Manual Entry",
+        "title": "Yacht Trip - Squalo Yacht"
+      }
+    ],
+    "uploadedAt": "2025-12-23T01:59:30.733Z",
+    "trip_title_page": "Trip to Bahamas",
+    "updatedAt": "2025-12-23T04:47:43.470Z"
+  },
+  {
+    "id": "desert-hot-springs-ca-2026-01-08",
+    "image": "https://placehold.co/800x600/101010/FFF?text=Desert%20Hot%20Springs%20Spa",
+    "trip_title_dashboard": "Trip to Desert Hot Springs",
+    "destination": "Desert Hot Springs",
+    "coordinates": {
+      "lng": -116.5017,
+      "lat": 33.9569
+    },
+    "dates": "Jan 08, 2026 - Jan 09, 2026",
+    "travelers": [
+      {
+        "role": "Traveler",
+        "name": "Adi",
+        "evidence": "Manual Entry",
+        "id": "adi"
+      }
+    ],
+    "sourceDocuments": [
+      {
+        "url": "/documents/1766119110704-gmail___fwd__itinerary_confirmation.pdf",
+        "name": "Gmail - Fwd_ Itinerary Confirmation.pdf"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Trip to Desert Hot Springs from Jan 08, 2026 - Jan 09, 2026",
+      "topology": "No Flights",
+      "human_title": "Trip to Desert Hot Springs"
+    },
+    "hotels": [
+      {
+        "checkOut": "Friday, January 9, 2026",
+        "checkIn": "Thursday, January 8, 2026",
+        "address": "67425 Two Bunch Palms Trail, Desert Hot Springs, CA 92240, United States",
+        "confirmation": "47527SF033156",
+        "name": "Two Bunch Palms"
+      }
+    ],
+    "startDateISO": "2026-01-08",
+    "flights": [],
+    "image_keyword": "Desert Hot Springs Spa",
+    "trip_title_page": "Trip to Desert Hot Springs",
+    "updatedAt": "2025-12-23T04:47:44.779Z"
+  },
+  {
+    "id": "fort-lauderdale-2026-924793",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766473919778-hotel_booking_miami.pdf",
+    "sourceFileName": "hotel-booking-miami.pdf",
+    "trip_title_dashboard": "Trip to Fort Lauderdale",
+    "debugResponse": "```json\n{\n  \"destination\": \"Hollywood, FL\",\n  \"dates\": \"Jan 14, 2026 - Jan 18, 2026\",\n  \"image_keyword\": \"Hollywood\",\n  \"travelers\": [\n    {\n      \"name\": \"Roy Rubin\",\n      \"role\": \"Adult\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"Adi Rubin\",\n      \"role\": \"Child\",\n      \"age\": \"Child\"\n    }\n  ],\n  \"flights\": [],\n  \"hotels\": [\n    {\n      \"name\": \"The Diplomat Beach Resort, Curio Collection by Hilton\",\n      \"address\": \"3555 South Ocean Drive Hollywood, FL 33019\",\n      \"checkIn\": \"Jan 14, 2026\",\n      \"checkOut\": \"Jan 18, 2026\"\n    }\n  ],\n  \"activities\": [],\n  \"trip_title_dashboard\": \"Hollywood\",\n  \"trip_title_page\": \"Hollywood\",\n  \"ai_summary\": {\n    \"topology\": \"Round Trip\",\n    \"human_title\": \"Trip to Hollywood\",\n    \"verbose_description\": \"Staying in Hollywood on Jan 14, 2026.\",\n    \"layover_text\": null\n  }\n}\n```",
+    "destination": "Fort Lauderdale",
+    "dates": "Jan 14, 2026 - Jan 18, 2026",
+    "travelers": [
+      {
+        "age": "Adult",
+        "name": "Roy",
+        "role": "Adult"
+      },
+      {
+        "name": "Adi",
+        "age": "Child",
+        "role": "Child"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Trip to Fort Lauderdale from Jan 14, 2026 - Jan 18, 2026",
+      "topology": "No Flights",
+      "human_title": "Trip to Fort Lauderdale"
+    },
+    "hotels": [
+      {
+        "name": "The Diplomat Beach Resort, Curio Collection by Hilton",
+        "address": "3555 South Ocean Drive Hollywood, FL 33019",
+        "checkOut": "Jan 18, 2026",
+        "checkIn": "Jan 14, 2026"
+      }
+    ],
+    "activities": [],
+    "uploadedAt": "2025-12-23T07:12:04.793Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"MMM DD, YYYY - MMM DD, YYYY\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": [],\n  \"trip_title_dashboard\": \"Origin <-> Destination\",\n  \"trip_title_page\": \"City Name\",\n  \"ai_summary\": {\n    \"topology\": \"Round Trip | One Way | Open Jaw | Multi-City\",\n    \"human_title\": \"Trip to City\",\n    \"verbose_description\": \"Natural language summary.\",\n    \"layover_text\": \"Layover description.\"\n  }\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates as \"MMM DD, YYYY - MMM DD, YYYY\" (e.g. \"Jan 04, 2026 - May 27, 2026\"). Do NOT use parentheses for the year.\n3. CRITICAL: You MUST populate \"destination\". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.\n   - Clean the name: Remove airport codes (e.g. convert \"City (CODE)\" to \"City\").\n4. If \"dates\" are missing, INFER them from the first flight departure.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n6. Generate Titles (AI Summary):\n   - \"trip_title_dashboard\": Visual Route (e.g. \"LAX <-> LHR\" or \"A to B (connecting in X)\").\n   - \"trip_title_page\": Main City Name (e.g. \"London\").\n   - \"ai_summary\":\n     - Use natural language rules:\n     - Use City Names Only (convert codes).\n     - human_title: \"Trip to [City]\" / \"Flight to [City]\".\n     - verbose_description: Complete, grammatical sentence: \"Departing [Origin] on [Date] for [Dest], connecting in [Stop].\"\n     - layover_text: \"Layover in [Stop]\" (instead of \"1 stop via...\").\n     - IF NO FLIGHTS: \"dashboard_title\" = City Name. \"human_title\" = \"Trip to [City]\".\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (426154 bytes)]",
+    "flights": [],
+    "image_keyword": "Hollywood",
+    "trip_title_page": "Trip to Fort Lauderdale"
+  },
+  {
+    "id": "fort-lauderdale-2026-958576",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766468952004-gmail___jetblue_booking_confirmation_for_roee_rubin___yvgris.pdf",
+    "sourceFileName": "Gmail - JetBlue booking confirmation for ROEE RUBIN - YVGRIS.pdf",
+    "trip_title_dashboard": "Flight to Fort Lauderdale",
+    "debugResponse": "```json\n{\n  \"destination\": \"Fort Lauderdale, US\",\n  \"dates\": \"Mar 28, 2026 - Mar 29, 2026\",\n  \"image_keyword\": \"Fort Lauderdale\",\n  \"travelers\": [\n    {\n      \"name\": \"ROEE RUBIN\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"ADI RUBIN\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"JONATHAN RUBIN\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"JetBlue\",\n      \"flightNumber\": \"2500\",\n      \"departure\": \"Mar 28, 2026 10:20 PM (LAX)\",\n      \"arrival\": \"Mar 29, 2026 6:08 AM (FLL)\",\n      \"confirmation\": \"YVGRIS\",\n      \"travelers\": [\n        \"ROEE RUBIN\",\n        \"ADI RUBIN\",\n        \"JONATHAN RUBIN\"\n      ]\n    }\n  ],\n  \"hotels\": [],\n  \"activities\": []\n}\n```",
+    "destination": "Fort Lauderdale",
+    "dates": "Mar 28, 2026 - Mar 29, 2026",
+    "travelers": [
+      {
+        "name": "Roy",
+        "role": "Traveler",
+        "age": "Adult"
+      },
+      {
+        "role": "Traveler",
+        "name": "Adi",
+        "age": "Adult"
+      },
+      {
+        "age": "Adult",
+        "role": "Traveler",
+        "name": "Jonathan"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Departing Los Angeles on Mar 28, 2026 for Fort Lauderdale.",
+      "topology": "One Way",
+      "human_title": "Flight to Fort Lauderdale"
+    },
+    "hotels": [],
+    "activities": [],
+    "uploadedAt": "2025-12-23T05:49:18.576Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"MMM DD, YYYY - MMM DD, YYYY\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": []\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates as \"MMM DD, YYYY - MMM DD, YYYY\" (e.g. \"Jan 04, 2026 - May 27, 2026\"). Do NOT use parentheses for the year.\n3. CRITICAL: You MUST populate \"destination\". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.\n   - Clean the name: Remove airport codes (e.g. convert \"City (CODE)\" to \"City\").\n4. If \"dates\" are missing, INFER them from the first flight departure.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (1455272 bytes)]",
+    "image_keyword": "Fort Lauderdale",
+    "trip_title_page": "Flight to Fort Lauderdale",
+    "flights": [
+      {
+        "distanceMiles": "2,342",
+        "confirmation": "YVGRIS",
+        "departure": "Mar 28, 2026 10:20 PM (LAX)",
+        "duration": "4h 48m",
+        "airline": "JetBlue",
+        "travelers": [
+          "Roee",
+          "Adi",
+          "Jonathan"
+        ],
+        "flightNumber": "2500",
+        "arrival": "Mar 29, 2026 6:08 AM (FLL)"
+      }
+    ]
+  },
+  {
+    "id": "los-angeles-2026-553650",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766467546002-gmail___your_trip_confirmation__nas___lax_.pdf",
+    "sourceFileName": "Gmail - Your trip confirmation (NAS - LAX).pdf",
+    "trip_title_dashboard": "Trip to Los Angeles",
+    "debugResponse": "```json\n{\n  \"destination\": \"Los Angeles, USA\",\n  \"dates\": \"Apr 05, 2026 - Apr 05, 2026\",\n  \"image_keyword\": \"Los Angeles\",\n  \"travelers\": [\n    {\n      \"name\": \"Roee Rubin\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"Adi Rubin\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"Ori Rubin\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"Jonathan Rubin\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"American Airlines\",\n      \"flightNumber\": \"AA 2526\",\n      \"departure\": \"Apr 05, 2026 4:20 PM (NAS)\",\n      \"arrival\": \"Apr 05, 2026 7:01 PM (CLT)\",\n      \"confirmation\": \"HPLYXU\",\n      \"travelers\": [\n        \"Roee Rubin\",\n        \"Adi Rubin\",\n        \"Ori Rubin\",\n        \"Jonathan Rubin\"\n      ]\n    },\n    {\n      \"airline\": \"American Airlines\",\n      \"flightNumber\": \"AA 2023\",\n      \"departure\": \"Apr 05, 2026 8:45 PM (CLT)\",\n      \"arrival\": \"Apr 05, 2026 11:17 PM (LAX)\",\n      \"confirmation\": \"HPLYXU\",\n      \"travelers\": [\n        \"Roee Rubin\",\n        \"Adi Rubin\",\n        \"Ori Rubin\",\n        \"Jonathan Rubin\"\n      ]\n    }\n  ],\n  \"hotels\": [],\n  \"activities\": []\n}\n```",
+    "destination": "Los Angeles",
+    "dates": "Apr 05, 2026 - Apr 05, 2026",
+    "travelers": [
+      {
+        "role": "Traveler",
+        "age": "Adult",
+        "name": "Roee"
+      },
+      {
+        "role": "Traveler",
+        "name": "Adi",
+        "age": "Adult"
+      },
+      {
+        "age": "Adult",
+        "name": "Ori",
+        "role": "Traveler"
+      },
+      {
+        "age": "Adult",
+        "role": "Traveler",
+        "name": "Jonathan"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "Layover in Charlotte",
+      "verbose_description": "Departing Nassau on April 05, 2026 for Los Angeles, connecting in Charlotte.",
+      "topology": "Round Trip",
+      "human_title": "Trip to Los Angeles"
+    },
+    "hotels": [],
+    "activities": [],
+    "uploadedAt": "2025-12-23T05:25:53.651Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"MMM DD, YYYY - MMM DD, YYYY\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": []\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates as \"MMM DD, YYYY - MMM DD, YYYY\" (e.g. \"Jan 04, 2026 - May 27, 2026\"). Do NOT use parentheses for the year.\n3. CRITICAL: You MUST populate \"destination\". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.\n   - Clean the name: Remove airport codes (e.g. convert \"City (CODE)\" to \"City\").\n4. If \"dates\" are missing, INFER them from the first flight departure.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (969950 bytes)]",
+    "image_keyword": "Los Angeles",
+    "trip_title_page": "Trip to Los Angeles",
+    "flights": [
+      {
+        "duration": "3h 11m",
+        "arrival": "Apr 05, 2026 7:01 PM (CLT)",
+        "departure": "Apr 05, 2026 4:20 PM (NAS)",
+        "distanceMiles": "582",
+        "travelers": [
+          "Roee",
+          "Adi",
+          "Ori",
+          "Jonathan"
+        ],
+        "confirmation": "HPLYXU",
+        "airline": "American Airlines",
+        "flightNumber": "AA 2526"
+      },
+      {
+        "distanceMiles": "2,125",
+        "arrival": "Apr 05, 2026 11:17 PM (LAX)",
+        "flightNumber": "AA 2023",
+        "travelers": [
+          "Roee",
+          "Adi",
+          "Ori",
+          "Jonathan"
+        ],
+        "departure": "Apr 05, 2026 8:45 PM (CLT)",
+        "airline": "American Airlines",
+        "duration": "4h 02m",
+        "confirmation": "HPLYXU"
+      }
+    ]
+  },
+  {
+    "id": "los-angeles-ca-2025-12-24",
+    "trip_title_dashboard": "Flight to Los Angeles",
+    "destination": "Los Angeles",
+    "coordinates": {
+      "lng": -118.2437,
+      "lat": 34.0522
+    },
+    "matched_city_key": "los angeles",
+    "dates": "Dec 24, 2025 - Dec 24, 2025",
+    "travelers": [
+      {
+        "name": "Ori",
+        "evidence": "Found 'ORI' in flight confirmation",
+        "id": "ori",
+        "role": "Traveler"
+      }
+    ],
+    "sourceDocuments": [
+      {
+        "name": "itinerary_2025-10-21 0043.pdf",
+        "url": "/documents/1766185327420-itinerary_2025_10_21_0043.pdf"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Departing Tel Aviv on December 24, 2025 for Los Angeles.",
+      "topology": "One Way",
+      "human_title": "Flight to Los Angeles"
+    },
+    "hotels": [],
+    "activities": [],
+    "startDateISO": "2025-12-24",
+    "image_keyword": "Los Angeles",
+    "trip_title_page": "Flight to Los Angeles",
+    "updatedAt": "2025-12-23T04:47:46.031Z",
+    "flights": [
+      {
+        "duration": "15h 45m",
+        "flightNumber": "LY 5",
+        "arrival": "Wed, Dec 24, 2025 6:00 AM (Los Angeles Intl - LAX)",
+        "travelers": [
+          "Ori"
+        ],
+        "confirmation": "3UINJQ",
+        "departure": "Wed, Dec 24, 2025 12:45 AM (Ben Gurion - TLV)",
+        "distanceMiles": "7,530",
+        "airline": "EL AL ISRAEL (LY)"
+      }
+    ]
+  },
+  {
+    "id": "miami-2025",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766453459170-gmail______thanks__your_booking_is_confirmed_at_nassau_suite_south_beach__an_all_suite_hotel.pdf",
+    "sourceFileName": "Gmail - 🛄 Thanks! Your booking is confirmed at Nassau Suite South Beach, an All Suite Hotel.pdf",
+    "trip_title_dashboard": "Trip to Miami",
+    "debugResponse": "```json\n{\n  \"destination\": \"Miami Beach, USA\",\n  \"dates\": \"Mar 29, 2026 - Mar 30, 2026\",\n  \"image_keyword\": \"Miami Beach\",\n  \"travelers\": [\n    {\n      \"name\": \"Roy Rubin\",\n      \"role\": \"Adult\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"Liron Rubin\",\n      \"role\": \"Adult\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"Child 1\",\n      \"role\": \"Child\",\n      \"age\": \"13\"\n    },\n    {\n      \"name\": \"Child 2\",\n      \"role\": \"Child\",\n      \"age\": \"14\"\n    }\n  ],\n  \"flights\": [],\n  \"hotels\": [\n    {\n      \"name\": \"Nassau Suite South Beach, an All Suite Hotel\",\n      \"address\": \"1414 Collins Avenue, Miami Beach, FL 33139, United States\",\n      \"checkIn\": \"Mar 29, 2026 15:00\",\n      \"checkOut\": \"Mar 30, 2026 11:00\"\n    }\n  ],\n  \"activities\": []\n}\n```",
+    "destination": "Miami",
+    "coordinates": {
+      "lng": -80.1918,
+      "lat": 25.7617
+    },
+    "dates": "Mar 29, 2026 - Mar 30, 2026",
+    "travelers": [
+      {
+        "age": "Adult",
+        "name": "Roy",
+        "role": "Adult"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Trip to Miami from Mar 29, 2026 - Mar 30, 2026",
+      "topology": "No Flights",
+      "human_title": "Trip to Miami"
+    },
+    "hotels": [
+      {
+        "checkIn": "Mar 29, 2026 15:00",
+        "name": "Nassau Suite South Beach, an All Suite Hotel",
+        "checkOut": "Mar 30, 2026 11:00",
+        "address": "1414 Collins Avenue, Miami Beach, FL 33139, United States"
+      }
+    ],
+    "activities": [],
+    "uploadedAt": "2025-12-23T01:31:04.116Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"MMM DD, YYYY - MMM DD, YYYY\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": []\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates as \"MMM DD, YYYY - MMM DD, YYYY\" (e.g. \"Jan 04, 2026 - May 27, 2026\"). Do NOT use parentheses for the year.\n3. CRITICAL: You MUST populate \"destination\". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.\n   - Clean the name: Remove airport codes (e.g. convert \"City (CODE)\" to \"City\").\n4. If \"dates\" are missing, INFER them from the first flight departure.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (919861 bytes)]",
+    "flights": [],
+    "image_keyword": "Miami Beach",
+    "trip_title_page": "Trip to Miami",
+    "updatedAt": "2025-12-23T04:47:47.303Z"
+  },
+  {
+    "id": "miami-2026-006929",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766474000607-roy_flight_miami.pdf",
+    "sourceFileName": "roy-flight-miami.pdf",
+    "trip_title_dashboard": "Trip to Miami",
+    "debugResponse": "```json\n{\n  \"destination\": \"Miami, USA\",\n  \"dates\": \"Jan 14, 2026 - Jan 18, 2026\",\n  \"image_keyword\": \"Miami\",\n  \"travelers\": [\n    {\n      \"name\": \"Adi Rubin\",\n      \"role\": \"Adult\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"Jonathan Rubin\",\n      \"role\": \"Adult\",\n      \"age\": \"Adult\"\n    }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"American Airlines\",\n      \"flightNumber\": \"AA 2129\",\n      \"departure\": \"Jan 14, 2026 07:00 AM (LAX)\",\n      \"arrival\": \"Jan 14, 2026 02:56 PM (MIA)\",\n      \"confirmation\": \"ALNMWW\",\n      \"travelers\": [\n        \"Adi Rubin\",\n        \"Jonathan Rubin\"\n      ]\n    },\n    {\n      \"airline\": \"American Airlines\",\n      \"flightNumber\": \"AA 1994\",\n      \"departure\": \"Jan 18, 2026 01:40 PM (MIA)\",\n      \"arrival\": \"Jan 18, 2026 04:40 PM (LAX)\",\n      \"confirmation\": \"ALNMWW\",\n      \"travelers\": [\n        \"Adi Rubin\",\n        \"Jonathan Rubin\"\n      ]\n    }\n  ],\n  \"hotels\": [],\n  \"activities\": [],\n  \"trip_title_dashboard\": \"LAX <-> MIA\",\n  \"trip_title_page\": \"Miami\",\n  \"ai_summary\": {\n    \"topology\": \"Round Trip\",\n    \"human_title\": \"Trip to Miami\",\n    \"verbose_description\": \"Departing Los Angeles on Jan 14, 2026 for Miami.\",\n    \"layover_text\": null\n  }\n}\n```",
+    "destination": "Miami",
+    "dates": "Jan 14, 2026 - Jan 18, 2026",
+    "travelers": [
+      {
+        "role": "Adult",
+        "age": "Adult",
+        "name": "Adi"
+      },
+      {
+        "age": "Adult",
+        "role": "Adult",
+        "name": "Jonathan"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Departing Los Angeles on Jan 14, 2026 for Miami.",
+      "topology": "Round Trip",
+      "human_title": "Trip to Miami"
+    },
+    "hotels": [],
+    "activities": [],
+    "uploadedAt": "2025-12-23T07:13:26.929Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"MMM DD, YYYY - MMM DD, YYYY\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": [],\n  \"trip_title_dashboard\": \"Origin <-> Destination\",\n  \"trip_title_page\": \"City Name\",\n  \"ai_summary\": {\n    \"topology\": \"Round Trip | One Way | Open Jaw | Multi-City\",\n    \"human_title\": \"Trip to City\",\n    \"verbose_description\": \"Natural language summary.\",\n    \"layover_text\": \"Layover description.\"\n  }\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates as \"MMM DD, YYYY - MMM DD, YYYY\" (e.g. \"Jan 04, 2026 - May 27, 2026\"). Do NOT use parentheses for the year.\n3. CRITICAL: You MUST populate \"destination\". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.\n   - Clean the name: Remove airport codes (e.g. convert \"City (CODE)\" to \"City\").\n4. If \"dates\" are missing, INFER them from the first flight departure.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n6. Generate Titles (AI Summary):\n   - \"trip_title_dashboard\": Visual Route (e.g. \"LAX <-> LHR\" or \"A to B (connecting in X)\").\n   - \"trip_title_page\": Main City Name (e.g. \"London\").\n   - \"ai_summary\":\n     - Use natural language rules:\n     - Use City Names Only (convert codes).\n     - human_title: \"Trip to [City]\" / \"Flight to [City]\".\n     - verbose_description: Complete, grammatical sentence: \"Departing [Origin] on [Date] for [Dest], connecting in [Stop].\"\n     - layover_text: \"Layover in [Stop]\" (instead of \"1 stop via...\").\n     - IF NO FLIGHTS: \"dashboard_title\" = City Name. \"human_title\" = \"Trip to [City]\".\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (1066738 bytes)]",
+    "image_keyword": "Miami",
+    "trip_title_page": "Trip to Miami",
+    "flights": [
+      {
+        "distanceMiles": "2,342",
+        "flightNumber": "AA 2129",
+        "duration": "4h 56m",
+        "travelers": [
+          "Adi",
+          "Jonathan"
+        ],
+        "departure": "Jan 14, 2026 07:00 AM (LAX)",
+        "arrival": "Jan 14, 2026 02:56 PM (MIA)",
+        "airline": "American Airlines",
+        "confirmation": "ALNMWW"
+      },
+      {
+        "arrival": "Jan 18, 2026 04:40 PM (LAX)",
+        "duration": "5h 30m",
+        "airline": "American Airlines",
+        "distanceMiles": "2,342",
+        "confirmation": "ALNMWW",
+        "travelers": [
+          "Adi",
+          "Jonathan"
+        ],
+        "flightNumber": "AA 1994",
+        "departure": "Jan 18, 2026 01:40 PM (MIA)"
+      }
+    ]
+  },
+  {
+    "id": "miami-2026-046228",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766474040135-adi_flight_miami.pdf",
+    "sourceFileName": "adi-flight-miami.pdf",
+    "trip_title_dashboard": "Trip to Miami",
+    "debugResponse": "```json\n{\n  \"destination\": \"Miami, USA\",\n  \"dates\": \"Jan 12, 2026 - Jan 18, 2026\",\n  \"image_keyword\": \"Miami\",\n  \"travelers\": [\n    {\n      \"name\": \"Roee Rubin\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"American Airlines\",\n      \"flightNumber\": \"AA 2129\",\n      \"departure\": \"Jan 12, 2026 7:00 AM (LAX)\",\n      \"arrival\": \"Jan 12, 2026 2:56 PM (MIA)\",\n      \"confirmation\": \"ALBAOD\",\n      \"travelers\": [\n        \"Roee Rubin\"\n      ]\n    },\n    {\n      \"airline\": \"American Airlines\",\n      \"flightNumber\": \"AA 1994\",\n      \"departure\": \"Jan 18, 2026 1:40 PM (MIA)\",\n      \"arrival\": \"Jan 18, 2026 4:40 PM (LAX)\",\n      \"confirmation\": \"ALBAOD\",\n      \"travelers\": [\n        \"Roee Rubin\"\n      ]\n    }\n  ],\n  \"hotels\": [],\n  \"activities\": [],\n  \"trip_title_dashboard\": \"LAX <-> MIA\",\n  \"trip_title_page\": \"Miami\",\n  \"ai_summary\": {\n    \"topology\": \"Round Trip\",\n    \"human_title\": \"Trip to Miami\",\n    \"verbose_description\": \"Departing Los Angeles on Jan 12, 2026 for Miami.\",\n    \"layover_text\": null\n  }\n}\n```",
+    "destination": "Miami",
+    "dates": "Jan 12, 2026 - Jan 18, 2026",
+    "travelers": [
+      {
+        "name": "Roy",
+        "age": "Adult",
+        "role": "Traveler"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Departing Los Angeles on January 12, 2026 for Miami.",
+      "topology": "Round Trip",
+      "human_title": "Trip to Miami"
+    },
+    "hotels": [],
+    "activities": [],
+    "uploadedAt": "2025-12-23T07:14:06.228Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"MMM DD, YYYY - MMM DD, YYYY\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": [],\n  \"trip_title_dashboard\": \"Origin <-> Destination\",\n  \"trip_title_page\": \"City Name\",\n  \"ai_summary\": {\n    \"topology\": \"Round Trip | One Way | Open Jaw | Multi-City\",\n    \"human_title\": \"Trip to City\",\n    \"verbose_description\": \"Natural language summary.\",\n    \"layover_text\": \"Layover description.\"\n  }\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates as \"MMM DD, YYYY - MMM DD, YYYY\" (e.g. \"Jan 04, 2026 - May 27, 2026\"). Do NOT use parentheses for the year.\n3. CRITICAL: You MUST populate \"destination\". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.\n   - Clean the name: Remove airport codes (e.g. convert \"City (CODE)\" to \"City\").\n4. If \"dates\" are missing, INFER them from the first flight departure.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n6. Generate Titles (AI Summary):\n   - \"trip_title_dashboard\": Visual Route (e.g. \"LAX <-> LHR\" or \"A to B (connecting in X)\").\n   - \"trip_title_page\": Main City Name (e.g. \"London\").\n   - \"ai_summary\":\n     - Use natural language rules:\n     - Use City Names Only (convert codes).\n     - human_title: \"Trip to [City]\" / \"Flight to [City]\".\n     - verbose_description: Complete, grammatical sentence: \"Departing [Origin] on [Date] for [Dest], connecting in [Stop].\"\n     - layover_text: \"Layover in [Stop]\" (instead of \"1 stop via...\").\n     - IF NO FLIGHTS: \"dashboard_title\" = City Name. \"human_title\" = \"Trip to [City]\".\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (1060258 bytes)]",
+    "image_keyword": "Miami",
+    "trip_title_page": "Trip to Miami",
+    "flights": [
+      {
+        "distanceMiles": "2,342",
+        "arrival": "Jan 12, 2026 2:56 PM (MIA)",
+        "confirmation": "ALBAOD",
+        "airline": "American Airlines",
+        "flightNumber": "AA 2129",
+        "travelers": [
+          "Roy"
+        ],
+        "duration": "4h 56m",
+        "departure": "Jan 12, 2026 7:00 AM (LAX)"
+      },
+      {
+        "arrival": "Jan 18, 2026 4:40 PM (LAX)",
+        "travelers": [
+          {
+            "name": "Roy"
+          }
+        ],
+        "duration": "5h 30m",
+        "departure": "Jan 18, 2026 1:40 PM (MIA)",
+        "distanceMiles": "2,342",
+        "airline": "American Airlines",
+        "confirmation": "ALBAOD",
+        "flightNumber": "AA 1994"
+      }
+    ]
+  },
+  {
+    "id": "nassau-2025",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766450371618-gmail___ticket_confirmation_16pq7s.pdf",
+    "sourceFileName": "Gmail - Ticket Confirmation 16PQ7S.pdf",
+    "trip_title_dashboard": "Trip to Nassau",
+    "debugResponse": "```json\n{\n  \"destination\": \"Nassau, Bahamas\",\n  \"dates\": \"Mar 30, 2026 - Mar 30, 2026\",\n  \"image_keyword\": \"Nassau\",\n  \"travelers\": [\n    {\n      \"name\": \"ROEE RUBIN\",\n      \"role\": \"Adult\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"ADI RUBIN\",\n      \"role\": \"Adult\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"ORI RUBIN\",\n      \"role\": \"Adult\",\n      \"age\": \"Adult\"\n    },\n    {\n      \"name\": \"JONATHAN RUBIN\",\n      \"role\": \"Adult\",\n      \"age\": \"Adult\"\n    }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Bahamasair\",\n      \"flightNumber\": \"UP222\",\n      \"departure\": \"Mar 30, 2026 10:00 AM (MIA)\",\n      \"arrival\": \"Mar 30, 2026 11:00 AM (NAS)\",\n      \"confirmation\": \"16PQ7S\",\n      \"travelers\": [\n        \"ROEE RUBIN\",\n        \"ADI RUBIN\",\n        \"ORI RUBIN\",\n        \"JONATHAN RUBIN\"\n      ]\n    }\n  ],\n  \"hotels\": [],\n  \"activities\": []\n}\n```",
+    "destination": "Nassau",
+    "coordinates": {
+      "lng": -77.3554,
+      "lat": 25.0483
+    },
+    "dates": "Mar 30, 2026 - Mar 30, 2026",
+    "travelers": [
+      {
+        "name": "Roy",
+        "age": "Adult",
+        "role": "Adult"
+      },
+      {
+        "age": "Adult",
+        "name": "Adi",
+        "role": "Adult"
+      },
+      {
+        "name": "Ori",
+        "role": "Adult",
+        "age": "Adult"
+      },
+      {
+        "role": "Adult",
+        "name": "Jonathan",
+        "age": "Adult"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Departing Miami on Mar 30, 2026 for Nassau.",
+      "topology": "Round Trip",
+      "human_title": "Trip to Nassau"
+    },
+    "hotels": [],
+    "activities": [],
+    "uploadedAt": "2025-12-23T00:39:35.933Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"MMM DD, YYYY - MMM DD, YYYY\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": []\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates as \"MMM DD, YYYY - MMM DD, YYYY\" (e.g. \"Jan 04, 2026 - May 27, 2026\"). Do NOT use parentheses for the year.\n3. CRITICAL: You MUST populate \"destination\". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.\n   - Clean the name: Remove airport codes (e.g. convert \"City (CODE)\" to \"City\").\n4. If \"dates\" are missing, INFER them from the first flight departure.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (366035 bytes)]",
+    "image_keyword": "Nassau",
+    "trip_title_page": "Trip to Nassau",
+    "updatedAt": "2025-12-23T04:47:49.855Z",
+    "flights": [
+      {
+        "airline": "Bahamasair",
+        "travelers": [
+          "Roy",
+          "Adi",
+          "Ori",
+          "Jonathan"
+        ],
+        "distanceMiles": "180",
+        "duration": "1h 30m",
+        "confirmation": "16PQ7S",
+        "departure": "Mar 30, 2026 10:00 AM (MIA)",
+        "flightNumber": "UP 222",
+        "arrival": "Mar 30, 2026 11:00 AM (NAS)"
+      }
+    ]
+  },
+  {
+    "id": "tel-aviv--israel-2025",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766355550521-itinerary_2025_09_17_1429.pdf",
+    "sourceFileName": "itinerary_2025-09-17 1429.pdf",
+    "trip_title_dashboard": "Trip to Tel Aviv",
+    "debugResponse": "```json\n{\n  \"destination\": \"Tel Aviv, Israel\",\n  \"dates\": \"Tue, Oct 14 - Sat, Oct 25 (2025)\",\n  \"image_keyword\": \"Tel Aviv\",\n  \"travelers\": [\n    {\n      \"name\": \"ROEE RUBIN\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"UNITED\",\n      \"flightNumber\": \"2303\",\n      \"departure\": \"Tue, Oct 14, 2025 11:59 PM (LAX)\",\n      \"arrival\": \"Wed, Oct 15, 2025 8:09 AM (EWR)\",\n      \"confirmation\": \"C9EPJR\",\n      \"travelers\": [\n        \"ROEE RUBIN\"\n      ]\n    },\n    {\n      \"airline\": \"UNITED\",\n      \"flightNumber\": \"90\",\n      \"departure\": \"Wed, Oct 15, 2025 10:55 PM (EWR)\",\n      \"arrival\": \"Thu, Oct 16, 2025 4:20 PM (TLV)\",\n      \"confirmation\": \"C9EPJR\",\n      \"travelers\": [\n        \"ROEE RUBIN\"\n      ]\n    },\n    {\n      \"airline\": \"UNITED\",\n      \"flightNumber\": \"9121\",\n      \"departure\": \"Sat, Oct 25, 2025 4:45 AM (TLV)\",\n      \"arrival\": \"Sat, Oct 25, 2025 8:20 AM (FRA)\",\n      \"confirmation\": \"C9EPJR\",\n      \"travelers\": [\n        \"ROEE RUBIN\"\n      ]\n    },\n    {\n      \"airline\": \"UNITED\",\n      \"flightNumber\": \"8845\",\n      \"departure\": \"Sat, Oct 25, 2025 10:30 AM (FRA)\",\n      \"arrival\": \"Sat, Oct 25, 2025 1:00 PM (LAX)\",\n      \"confirmation\": \"C9EPJR\",\n      \"travelers\": [\n        \"ROEE RUBIN\"\n      ]\n    }\n  ],\n  \"hotels\": [],\n  \"activities\": []\n}\n```",
+    "destination": "Tel Aviv",
+    "coordinates": {
+      "lng": 34.7818,
+      "lat": 32.0853
+    },
+    "dates": "Oct 14, 2025 - Oct 25, 2025",
+    "travelers": [
+      {
+        "name": "Roy",
+        "role": "Traveler",
+        "age": "Adult"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "Layover in Newark",
+      "verbose_description": "Departing Los Angeles on October 14, 2025 for Tel Aviv, connecting in Newark.",
+      "topology": "Round Trip",
+      "human_title": "Trip to Tel Aviv"
+    },
+    "hotels": [],
+    "activities": [],
+    "uploadedAt": "2025-12-21T22:19:15.305Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"Mon, MMM DD - Mon, MMM DD (Year)\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": []\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates clearly.\n3. CRITICAL: You MUST populate \"destination\" and \"dates\". If they are not explicitly written at the top, INFER them from the first flight/hotel arrival. Do NOT return null for these fields.\n4. If other data is missing, use empty arrays.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (42935 bytes)]",
+    "image_keyword": "Tel Aviv",
+    "trip_title_page": "Trip to Tel Aviv",
+    "updatedAt": "2025-12-23T04:47:51.351Z",
+    "flights": [
+      {
+        "duration": "5h 40m",
+        "departure": "Tue, Oct 14, 2025 11:59 PM (LAX)",
+        "airline": "UNITED",
+        "distanceMiles": "2,454",
+        "travelers": [
+          "Roy"
+        ],
+        "flightNumber": "UA 2303",
+        "confirmation": "C9EPJR",
+        "arrival": "Wed, Oct 15, 2025 8:09 AM (EWR)"
+      },
+      {
+        "arrival": "Thu, Oct 16, 2025 4:20 PM (TLV)",
+        "duration": "11h 55m",
+        "confirmation": "C9EPJR",
+        "distanceMiles": "5,674",
+        "airline": "UNITED",
+        "travelers": [
+          "Roy"
+        ],
+        "flightNumber": "UA 90",
+        "departure": "Wed, Oct 15, 2025 10:55 PM (EWR)"
+      },
+      {
+        "flightNumber": "UA 9121",
+        "distanceMiles": "2,036",
+        "arrival": "Sat, Oct 25, 2025 8:20 AM (FRA)",
+        "travelers": [
+          "Roy"
+        ],
+        "airline": "UNITED",
+        "departure": "Sat, Oct 25, 2025 4:45 AM (TLV)",
+        "duration": "4h 05m",
+        "confirmation": "C9EPJR"
+      },
+      {
+        "arrival": "Sat, Oct 25, 2025 1:00 PM (LAX)",
+        "airline": "UNITED",
+        "distanceMiles": "5,800",
+        "duration": "12h 30m",
+        "flightNumber": "UA 8845",
+        "travelers": [
+          "Roy"
+        ],
+        "confirmation": "C9EPJR",
+        "departure": "Sat, Oct 25, 2025 10:30 AM (FRA)"
+      }
+    ]
+  },
+  {
+    "id": "tel-aviv-2025",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766463678380-itinerary_2025_12_09_0209__2_.pdf",
+    "sourceFileName": "itinerary_2025-12-09 0209 (2).pdf",
+    "trip_title_dashboard": "Trip to Tel Aviv",
+    "debugResponse": "```json\n{\n  \"destination\": \"Tel Aviv, Israel\",\n  \"dates\": \"Mar 02, 2026 - Mar 15, 2026\",\n  \"image_keyword\": \"Tel Aviv\",\n  \"travelers\": [\n    {\n      \"name\": \"ROEE RUBIN\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"UNITED\",\n      \"flightNumber\": \"1855\",\n      \"departure\": \"Mar 02, 2026 1:25 PM (LAX)\",\n      \"arrival\": \"Mar 02, 2026 9:25 PM (EWR)\",\n      \"confirmation\": \"MZP2VJ\",\n      \"travelers\": [\n        \"ROEE RUBIN\"\n      ]\n    },\n    {\n      \"airline\": \"UNITED\",\n      \"flightNumber\": \"90\",\n      \"departure\": \"Mar 02, 2026 11:35 PM (EWR)\",\n      \"arrival\": \"Mar 03, 2026 5:00 PM (TLV)\",\n      \"confirmation\": \"MZP2VJ\",\n      \"travelers\": [\n        \"ROEE RUBIN\"\n      ]\n    },\n    {\n      \"airline\": \"UNITED\",\n      \"flightNumber\": \"9121\",\n      \"departure\": \"Mar 15, 2026 5:15 AM (TLV)\",\n      \"arrival\": \"Mar 15, 2026 8:55 AM (FRA)\",\n      \"confirmation\": \"MZP2VJ\",\n      \"travelers\": [\n        \"ROEE RUBIN\"\n      ]\n    },\n    {\n      \"airline\": \"UNITED\",\n      \"flightNumber\": \"8845\",\n      \"departure\": \"Mar 15, 2026 10:25 AM (FRA)\",\n      \"arrival\": \"Mar 15, 2026 2:05 PM (LAX)\",\n      \"confirmation\": \"MZP2VJ\",\n      \"travelers\": [\n        \"ROEE RUBIN\"\n      ]\n    }\n  ],\n  \"hotels\": [],\n  \"activities\": []\n}\n```",
+    "destination": "Tel Aviv",
+    "coordinates": {
+      "lng": 34.7818,
+      "lat": 32.0853
+    },
+    "dates": "Mar 02, 2026 - Mar 15, 2026",
+    "travelers": [
+      {
+        "age": "Adult",
+        "role": "Traveler",
+        "name": "Roy"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "Layover in Newark",
+      "verbose_description": "Departing Los Angeles on March 02, 2026 for Tel Aviv, connecting in Newark.",
+      "topology": "Round Trip",
+      "human_title": "Trip to Tel Aviv"
+    },
+    "hotels": [],
+    "activities": [],
+    "uploadedAt": "2025-12-23T04:21:23.950Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"MMM DD, YYYY - MMM DD, YYYY\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": []\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates as \"MMM DD, YYYY - MMM DD, YYYY\" (e.g. \"Jan 04, 2026 - May 27, 2026\"). Do NOT use parentheses for the year.\n3. CRITICAL: You MUST populate \"destination\". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.\n   - Clean the name: Remove airport codes (e.g. convert \"City (CODE)\" to \"City\").\n4. If \"dates\" are missing, INFER them from the first flight departure.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (42878 bytes)]",
+    "image_keyword": "Tel Aviv",
+    "trip_title_page": "Trip to Tel Aviv",
+    "updatedAt": "2025-12-23T04:47:52.614Z",
+    "flights": [
+      {
+        "departure": "Mar 02, 2026 1:25 PM (LAX)",
+        "travelers": [
+          "Roy"
+        ],
+        "confirmation": "MZP2VJ",
+        "arrival": "Mar 02, 2026 9:25 PM (EWR)",
+        "duration": "5h 30m",
+        "distanceMiles": "2,454",
+        "airline": "UNITED",
+        "flightNumber": "UA 1855"
+      },
+      {
+        "airline": "UNITED",
+        "distanceMiles": "5,675",
+        "departure": "Mar 02, 2026 11:35 PM (EWR)",
+        "duration": "11h 55m",
+        "confirmation": "MZP2VJ",
+        "flightNumber": "UA 90",
+        "travelers": [
+          "Roy"
+        ],
+        "arrival": "Mar 03, 2026 5:00 PM (TLV)"
+      },
+      {
+        "duration": "4h 10m",
+        "airline": "UNITED",
+        "confirmation": "MZP2VJ",
+        "arrival": "Mar 15, 2026 8:55 AM (FRA)",
+        "distanceMiles": "2,060",
+        "flightNumber": "UA 9121",
+        "departure": "Mar 15, 2026 5:15 AM (TLV)",
+        "travelers": [
+          "Roy"
+        ]
+      },
+      {
+        "airline": "UNITED",
+        "travelers": [
+          "Roy"
+        ],
+        "flightNumber": "UA 8845",
+        "duration": "12h 40m",
+        "arrival": "Mar 15, 2026 2:05 PM (LAX)",
+        "distanceMiles": "5,800",
+        "departure": "Mar 15, 2026 10:25 AM (FRA)",
+        "confirmation": "MZP2VJ"
+      }
+    ]
+  },
+  {
+    "id": "tel-aviv-2026-02-08",
+    "image": "/images/destinations/tel-aviv-real.jpg",
+    "trip_title_dashboard": "Trip to Tel Aviv",
+    "destination": "Tel Aviv",
+    "coordinates": {
+      "lng": 34.7818,
+      "lat": 32.0853
+    },
+    "matched_city_key": "tel aviv",
+    "dates": "Feb 08, 2026 - Feb 16, 2026",
+    "travelers": [
+      {
+        "name": "Adi",
+        "id": "adi",
+        "role": "Traveler"
+      }
+    ],
+    "sourceDocuments": [
+      {
+        "name": "itinerary_2025-12-08 1809 (1).pdf",
+        "url": "/documents/1766119614365-itinerary_2025_12_08_1809__1_.pdf"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "Layover in Washington",
+      "verbose_description": "Departing Los Angeles on February 08, 2026 for Tel Aviv, connecting in Washington.",
+      "topology": "Round Trip",
+      "human_title": "Trip to Tel Aviv"
+    },
+    "hotels": [],
+    "activities": [],
+    "startDateISO": "2026-02-08",
+    "image_keyword": "Tel Aviv",
+    "trip_title_page": "Trip to Tel Aviv",
+    "updatedAt": "2025-12-23T04:47:53.895Z",
+    "flights": [
+      {
+        "duration": "5h 25m",
+        "departure": "Sun, Feb 8, 2026 12:40 PM (Los Angeles Intl - LAX)",
+        "airline": "UNITED (UA)",
+        "travelers": [
+          "Adi"
+        ],
+        "distanceMiles": "2,288",
+        "confirmation": "J8TG15",
+        "flightNumber": "UA 1635",
+        "arrival": "Sun, Feb 8, 2026 8:35 PM (Washington Dulles Intl - IAD)"
+      },
+      {
+        "flightNumber": "UA 72",
+        "duration": "11h 20m",
+        "departure": "Sun, Feb 8, 2026 10:40 PM (Washington Dulles Intl - IAD)",
+        "arrival": "Mon, Feb 9, 2026 4:30 PM (Ben Gurion - TLV)",
+        "distanceMiles": "5,670",
+        "travelers": [
+          "Adi"
+        ],
+        "airline": "UNITED (UA)",
+        "confirmation": "J8TG15"
+      },
+      {
+        "departure": "Mon, Feb 16, 2026 5:15 AM (Ben Gurion - TLV)",
+        "confirmation": "J8TG15",
+        "flightNumber": "UA 9121",
+        "travelers": [
+          "Adi"
+        ],
+        "airline": "UNITED (UA)",
+        "distanceMiles": "2,000",
+        "duration": "4h 10m",
+        "arrival": "Mon, Feb 16, 2026 8:55 AM (Frankfurt Main - FRA)"
+      },
+      {
+        "travelers": [
+          "Adi"
+        ],
+        "distanceMiles": "5,800",
+        "arrival": "Mon, Feb 16, 2026 1:05 PM (Los Angeles Intl - LAX)",
+        "airline": "UNITED (UA)",
+        "departure": "Mon, Feb 16, 2026 10:25 AM (Frankfurt Main - FRA)",
+        "duration": "12h 10m",
+        "confirmation": "J8TG15",
+        "flightNumber": "UA 8845"
+      }
+    ]
+  },
+  {
+    "id": "tel-aviv-2026-021042",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766466016346-itinerary_2025_10_27_1856__2_.pdf",
+    "sourceFileName": "itinerary_2025-10-27 1856 (2).pdf",
+    "trip_title_dashboard": "Trip to Tel Aviv",
+    "debugResponse": "```json\n{\n  \"destination\": \"Tel Aviv, Israel\",\n  \"dates\": \"Mar 29, 2026 - Apr 12, 2026\",\n  \"image_keyword\": \"Tel Aviv\",\n  \"travelers\": [\n    {\n      \"name\": \"ORI RUBIN\",\n      \"role\": \"Traveler\",\n      \"age\": \"Adult\"\n    }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"EL AL ISRAEL (LY)\",\n      \"flightNumber\": \"17\",\n      \"departure\": \"Mar 29, 2026 01:00 AM (TLV)\",\n      \"arrival\": \"Mar 29, 2026 07:50 AM (MIA)\",\n      \"confirmation\": \"BOQ3DD\",\n      \"travelers\": [\n        \"ORI RUBIN\"\n      ]\n    },\n    {\n      \"airline\": \"EL AL ISRAEL (LY)\",\n      \"flightNumber\": \"106\",\n      \"departure\": \"Apr 11, 2026 11:15 PM (LAX)\",\n      \"arrival\": \"Apr 12, 2026 11:10 PM (TLV)\",\n      \"confirmation\": \"BOQ3DD\",\n      \"travelers\": [\n        \"ORI RUBIN\"\n      ]\n    }\n  ],\n  \"hotels\": [],\n  \"activities\": []\n}\n```",
+    "destination": "Tel Aviv",
+    "dates": "Mar 29, 2026 - Apr 12, 2026",
+    "travelers": [
+      {
+        "role": "Traveler",
+        "age": "Adult",
+        "name": "Ori"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Departing Tel Aviv on March 29, 2026 for Miami, then departing Los Angeles on April 11, 2026 for Tel Aviv.",
+      "topology": "Round Trip",
+      "human_title": "Trip to Tel Aviv"
+    },
+    "hotels": [],
+    "activities": [],
+    "uploadedAt": "2025-12-23T05:00:21.042Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"MMM DD, YYYY - MMM DD, YYYY\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": []\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates as \"MMM DD, YYYY - MMM DD, YYYY\" (e.g. \"Jan 04, 2026 - May 27, 2026\"). Do NOT use parentheses for the year.\n3. CRITICAL: You MUST populate \"destination\". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.\n   - Clean the name: Remove airport codes (e.g. convert \"City (CODE)\" to \"City\").\n4. If \"dates\" are missing, INFER them from the first flight departure.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (31600 bytes)]",
+    "image_keyword": "Tel Aviv",
+    "trip_title_page": "Trip to Tel Aviv",
+    "flights": [
+      {
+        "airline": "EL AL ISRAEL (LY)",
+        "departure": "Mar 29, 2026 01:00 AM (TLV)",
+        "distanceMiles": "7,543",
+        "flightNumber": "LY 17",
+        "duration": "13h 20m",
+        "arrival": "Mar 29, 2026 07:50 AM (MIA)",
+        "confirmation": "BOQ3DD",
+        "travelers": [
+          "Ori"
+        ]
+      },
+      {
+        "departure": "Apr 11, 2026 11:15 PM (LAX)",
+        "arrival": "Apr 12, 2026 11:10 PM (TLV)",
+        "flightNumber": "LY 106",
+        "travelers": [
+          "Ori"
+        ],
+        "distanceMiles": "7,355",
+        "duration": "13h 25m",
+        "confirmation": "BOQ3DD",
+        "airline": "EL AL ISRAEL (LY)"
+      }
+    ]
+  },
+  {
+    "id": "tel-aviv-2026-249711",
+    "sourceDocument": "https://storage.googleapis.com/travelapp05-travel-data/documents/1766475243340-itinerary_2025_10_21_0139__2_.pdf",
+    "sourceFileName": "itinerary_2025-10-21 0139 (2).pdf",
+    "trip_title_dashboard": "Trip to Tel Aviv",
+    "debugResponse": "```json\n{\n  \"destination\": \"Tel Aviv, Israel\",\n  \"dates\": \"Jan 04, 2026 - May 27, 2026\",\n  \"image_keyword\": \"Tel Aviv\",\n  \"travelers\": [\n    {\n      \"name\": \"ORI RUBIN\",\n      \"role\": \"Adult\",\n      \"age\": \"Adult\"\n    }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"EL AL ISRAEL\",\n      \"flightNumber\": \"6\",\n      \"departure\": \"Jan 04, 2026 2:00 PM (LAX)\",\n      \"arrival\": \"Jan 05, 2026 1:45 PM (TLV)\",\n      \"confirmation\": \"CX63BI\",\n      \"travelers\": [\n        \"ORI RUBIN\"\n      ]\n    },\n    {\n      \"airline\": \"EL AL ISRAEL\",\n      \"flightNumber\": \"5\",\n      \"departure\": \"May 27, 2026 1:05 AM (TLV)\",\n      \"arrival\": \"May 27, 2026 6:00 AM (LAX)\",\n      \"confirmation\": \"CX63BI\",\n      \"travelers\": [\n        \"ORI RUBIN\"\n      ]\n    }\n  ],\n  \"hotels\": [],\n  \"activities\": [],\n  \"trip_title_dashboard\": \"LAX <-> TLV\",\n  \"trip_title_page\": \"Tel Aviv\",\n  \"ai_summary\": {\n    \"topology\": \"Round Trip\",\n    \"human_title\": \"Trip to Tel Aviv\",\n    \"verbose_description\": \"Departing Los Angeles on Jan 04, 2026 for Tel Aviv.\",\n    \"layover_text\": null\n  }\n}\n```",
+    "destination": "Tel Aviv",
+    "dates": "Jan 04, 2026 - May 27, 2026",
+    "travelers": [
+      {
+        "role": "Adult",
+        "age": "Adult",
+        "name": "Ori"
+      }
+    ],
+    "ai_summary": {
+      "layover_text": "",
+      "verbose_description": "Departing Los Angeles on January 04, 2026 for Tel Aviv.",
+      "topology": "Round Trip",
+      "human_title": "Trip to Tel Aviv"
+    },
+    "hotels": [],
+    "activities": [],
+    "uploadedAt": "2025-12-23T07:34:09.711Z",
+    "debugPrompt": "System: \nYou are an intelligent travel assistant. Your task is to extract structured travel itinerary data from the provided document (PDF or Email).\n\nReturn ONLY a JSON object with the following schema:\n{\n  \"destination\": \"City, Country\",\n  \"dates\": \"MMM DD, YYYY - MMM DD, YYYY\",\n  \"image_keyword\": \"City Name\",\n  \"travelers\": [\n    { \"name\": \"Name\", \"role\": \"Adult/Child/Traveler\", \"age\": \"Adult\" }\n  ],\n  \"flights\": [\n    {\n      \"airline\": \"Airline Name\",\n      \"flightNumber\": \"XX123\",\n      \"departure\": \"Date Time (Airport Code)\",\n      \"arrival\": \"Date Time (Airport Code)\",\n      \"confirmation\": \"ABC1234\",\n      \"travelers\": [\"Name 1\", \"Name 2\"]\n    }\n  ],\n  \"hotels\": [\n    {\n      \"name\": \"Hotel Name\",\n      \"address\": \"Full Address\",\n      \"checkIn\": \"Date Time\",\n      \"checkOut\": \"Date Time\"\n    }\n  ],\n  \"activities\": [],\n  \"trip_title_dashboard\": \"Origin <-> Destination\",\n  \"trip_title_page\": \"City Name\",\n  \"ai_summary\": {\n    \"topology\": \"Round Trip | One Way | Open Jaw | Multi-City\",\n    \"human_title\": \"Trip to City\",\n    \"verbose_description\": \"Natural language summary.\",\n    \"layover_text\": \"Layover description.\"\n  }\n}\n\nRules:\n1. Extract ALL travelers found in the document.\n2. Format dates as \"MMM DD, YYYY - MMM DD, YYYY\" (e.g. \"Jan 04, 2026 - May 27, 2026\"). Do NOT use parentheses for the year.\n3. CRITICAL: You MUST populate \"destination\". If it is not explicitly written at the top, INFER it from the arrival airport of the first inbound flight or the location of the hotel.\n   - Clean the name: Remove airport codes (e.g. convert \"City (CODE)\" to \"City\").\n4. If \"dates\" are missing, INFER them from the first flight departure.\n5. Do NOT include markdown formatting (```json). Just the raw JSON.\n6. Generate Titles (AI Summary):\n   - \"trip_title_dashboard\": Visual Route (e.g. \"LAX <-> LHR\" or \"A to B (connecting in X)\").\n   - \"trip_title_page\": Main City Name (e.g. \"London\").\n   - \"ai_summary\":\n     - Use natural language rules:\n     - Use City Names Only (convert codes).\n     - human_title: \"Trip to [City]\" / \"Flight to [City]\".\n     - verbose_description: Complete, grammatical sentence: \"Departing [Origin] on [Date] for [Dest], connecting in [Stop].\"\n     - layover_text: \"Layover in [Stop]\" (instead of \"1 stop via...\").\n     - IF NO FLIGHTS: \"dashboard_title\" = City Name. \"human_title\" = \"Trip to [City]\".\n\n\nUser: Extract trip details from this document.\n\n[Attached File: application/pdf (31585 bytes)]",
+    "image_keyword": "Tel Aviv",
+    "trip_title_page": "Trip to Tel Aviv",
+    "flights": [
+      {
+        "distanceMiles": "7,360",
+        "duration": "13h 15m",
+        "confirmation": "CX63BI",
+        "travelers": [
+          "Ori"
+        ],
+        "airline": "EL AL ISRAEL",
+        "arrival": "Jan 05, 2026 1:45 PM (TLV)",
+        "flightNumber": "LY 6",
+        "departure": "Jan 04, 2026 2:00 PM (LAX)"
+      },
+      {
+        "airline": "EL AL ISRAEL",
+        "duration": "15h 25m",
+        "departure": "May 27, 2026 1:05 AM (TLV)",
+        "arrival": "May 27, 2026 6:00 AM (LAX)",
+        "travelers": [
+          "Ori"
+        ],
+        "confirmation": "CX63BI",
+        "distanceMiles": "7,530",
+        "flightNumber": "LY 5"
+      }
+    ]
+  }
+]

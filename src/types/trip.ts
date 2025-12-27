@@ -13,6 +13,10 @@ export interface Trip {
     debugPrompt?: string;
     debugResponse?: string;
     matched_city_key?: string;
+    // Public Sharing
+    isPublic?: boolean;
+    shareToken?: string;
+    status?: 'active' | 'cancelled' | 'draft';
 }
 
 export interface TripGroup {
@@ -23,4 +27,7 @@ export interface TripGroup {
     endDate: string; // ISO or formatted date string
     image?: string; // Cover image for the whole group
     createdAt?: string;
+    // Public Sharing
+    isPublic?: boolean;
+    shareToken?: string;
 }

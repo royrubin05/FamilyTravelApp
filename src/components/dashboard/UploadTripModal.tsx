@@ -67,7 +67,7 @@ export function UploadTripModal({ isOpen, onClose, onUploadComplete }: UploadTri
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="relative w-full max-w-md bg-neutral-900 border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden"
+                className="relative w-full max-w-md bg-neutral-900 border border-white/10 rounded-2xl p-6 shadow-2xl max-h-[85dvh] overflow-y-auto"
             >
                 <button
                     onClick={handleClose}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Calendar, Users, Plane, Bed, Check } from "lucide-react";
+import { Calendar, Users, Plane, Bed, Check } from "lucide-react";
 import { useTrips } from "@/context/TripContext";
 import { getDestinationImage, GENERIC_FALLBACK } from "@/lib/imageUtils";
 import { isTripCompleted, parseTripDate } from "@/lib/dateUtils";
@@ -129,9 +129,7 @@ export function TripListItem({
                         </div>
                     </div>
 
-                    <div className="hidden md:flex items-center justify-center pl-2 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-1/2 -translate-y-1/2">
-                        <ArrowRight className="h-5 w-5 text-white" />
-                    </div>
+
                 </motion.div>
             </Link>
         </>

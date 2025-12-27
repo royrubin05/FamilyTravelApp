@@ -3,6 +3,7 @@
 import { db } from "@/lib/firebase";
 import path from "path";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/lib/auth-context";
 
 // Removed local dir constants as they are no longer needed
 
@@ -20,18 +21,48 @@ function sanitizeFirestoreData(data: any): any {
     return data;
 }
 
-export async function getSettings(): Promise<{ backgroundImage: string | null; familyMembers?: any[] }> {
+export async function getSettings(): Promise<{ backgroundImage: string | null; familyMembers?: any[]; displayName?: string; isAdmin: boolean }> {
+    // Auth check outside try/catch
+    const user = await getCurrentUser();
+
     try {
-        const doc = await db.collection("settings").doc("global").get();
-        if (doc.exists) {
-            const data = doc.data();
-            return sanitizeFirestoreData(data) as { backgroundImage: string | null; familyMembers?: any[] };
-        }
-        // Return default structure if empty
-        return { backgroundImage: null, familyMembers: [] };
+        // Parallel fetch: Settings Config AND User Profile
+        const [settingsDoc, userDoc] = await Promise.all([
+            db.collection("users").doc(user.uid).collection("settings").doc("config").get(),
+            db.collection("users").doc(user.uid).get()
+        ]);
+
+        const settingsData = settingsDoc.exists ? sanitizeFirestoreData(settingsDoc.data()) : { backgroundImage: null, familyMembers: [] };
+        const userData = userDoc.exists ? userDoc.data() : {};
+
+        return {
+            ...settingsData,
+            displayName: userData?.displayName || "",
+            isAdmin: user.role === 'admin'
+        };
     } catch (error) {
         console.error("Error fetching settings:", error);
-        return { backgroundImage: null, familyMembers: [] };
+        return { backgroundImage: null, familyMembers: [], isAdmin: false };
+    }
+}
+
+export async function updateFamilyProfile(data: { displayName: string }) {
+    const user = await getCurrentUser();
+
+    if (!data.displayName || !data.displayName.trim()) {
+        return { success: false, error: "Display name is required" };
+    }
+
+    try {
+        await db.collection("users").doc(user.uid).set({
+            displayName: data.displayName.trim()
+        }, { merge: true });
+
+        revalidatePath("/");
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update profile:", error);
+        return { success: false, error: "Failed to update profile" };
     }
 }
 
@@ -52,7 +83,8 @@ export async function uploadBackgroundImage(formData: FormData) {
         const publicUrl = await uploadToGCS(Buffer.from(arrayBuffer), gcsPath, file.type);
 
         // Update Settings in Firestore
-        await db.collection("settings").doc("global").set({ backgroundImage: publicUrl }, { merge: true });
+        const user = await getCurrentUser();
+        await db.collection("users").doc(user.uid).collection("settings").doc("config").set({ backgroundImage: publicUrl }, { merge: true });
 
         revalidatePath("/");
 
@@ -65,7 +97,8 @@ export async function uploadBackgroundImage(formData: FormData) {
 
 export async function removeBackgroundImage() {
     try {
-        await db.collection("settings").doc("global").set({ backgroundImage: null }, { merge: true });
+        const user = await getCurrentUser();
+        await db.collection("users").doc(user.uid).collection("settings").doc("config").set({ backgroundImage: null }, { merge: true });
         revalidatePath("/");
         return { success: true };
     } catch (error) {
@@ -75,7 +108,8 @@ export async function removeBackgroundImage() {
 
 export async function updateSettings(newSettings: any) {
     try {
-        await db.collection("settings").doc("global").set(newSettings, { merge: true });
+        const user = await getCurrentUser();
+        await db.collection("users").doc(user.uid).collection("settings").doc("config").set(newSettings, { merge: true });
         revalidatePath("/");
         return { success: true };
     } catch (error) {

@@ -23,7 +23,7 @@ export default async function TripPage({ searchParams }: PageProps) {
 
     // Check auth status
     const cookieStore = await cookies();
-    const isAuthenticated = !!cookieStore.get("auth_session");
+    const isAuthenticated = !!(cookieStore.get("session") || cookieStore.get("auth_session"));
 
     // Await searchParams for Next.js 15+ compatibility
     const resolvedParams = await searchParams;

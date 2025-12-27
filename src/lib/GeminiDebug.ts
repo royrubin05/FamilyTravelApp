@@ -21,6 +21,8 @@ Return ONLY a JSON object with the following schema:
       "flightNumber": "XX123",
       "departure": "Date Time (Airport Code)",
       "arrival": "Date Time (Airport Code)",
+      "duration": "11h 20m",
+      "distanceMiles": "5,400",
       "confirmation": "ABC1234",
       "travelers": ["Name 1", "Name 2"]
     }
@@ -74,19 +76,28 @@ Rules:
    D. **\`layover_text\`:**
       - Instead of "1 stop via EWR", use: "Layover in [City Name]".
 
+   7. Flight Numbers: MUST be 'IATA [Space] Number' (e.g. 'UA 84'). If document only has number, infer IATA code from Airline.
+   8. Flight Details:
+      - Extract "duration" if available (format: "Xh Ym").
+      - Extract "distanceMiles" if available (format: "X,XXX").
+      - **CRITICAL:** If duration or miles are NOT listed, you MUST ESTIMATE them based on the Origin/Destination airports.
+         - *Example:* "JFK" to "LHR" is approx "7h 0m" and "3,450".
+         - Do not leave these blank. Estimate conservatively.
+
    E. Mappings:
       - Map "human_title" to both "trip_title_dashboard" and "trip_title_page".
 `;
 
 
-export async function parseTripWithGemini(fileBuffer: Buffer, mimeType: string) {
+export async function parseTripWithGemini(fileBuffer: Buffer, mimeType: string, familyMembers: any[] = []) {
   try {
     const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash",
       systemInstruction: PROMPT_SYSTEM_INSTRUCTION
     });
 
-    const prompt = "Extract trip details from this document.";
+    const knownTravelers = familyMembers.map(m => m.name).join(", ");
+    const prompt = `Extract trip details from this document.${knownTravelers ? `\n\nContext - Known Family Travelers: ${knownTravelers}` : ""}`;
 
     // Convert Buffer to Base64
     const filePart = {

@@ -1,0 +1,22 @@
+.git
+.github
+.vscode
+.idea
+node_modules
+.next
+build
+dist
+out
+coverage
+.DS_Store
+*.pem
+*.log
+
+# Explicitly Allow .env.local for build context
+!.env.local
+
+# Ignore other env files to be safe
+.env
+.env.development
+.env.test
+.env.production

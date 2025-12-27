@@ -4,15 +4,17 @@ import { useState } from "react";
 import { X, Check } from "lucide-react";
 import { saveTripGroup } from "@/app/trip-actions";
 import { getTripRouteTitle } from "@/lib/tripUtils";
+import { isTripCompleted, parseTripDate } from "@/lib/dateUtils";
 
 interface EditGroupModalProps {
     isOpen: boolean;
     onClose: () => void;
     group: any;
     allTrips: any[];
+    onDelete?: () => void;
 }
 
-export default function EditGroupModal({ isOpen, onClose, group, allTrips }: EditGroupModalProps) {
+export default function EditGroupModal({ isOpen, onClose, group, allTrips, onDelete }: EditGroupModalProps) {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(group.ids || []));
     const [isSaving, setIsSaving] = useState(false);
 
@@ -65,65 +67,80 @@ export default function EditGroupModal({ isOpen, onClose, group, allTrips }: Edi
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-[#1A1A1A] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+            <div className="relative bg-[#1A1A1A] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90dvh] flex flex-col shadow-2xl">
 
-                <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                <div className="p-6 border-b border-white/10 flex justify-between items-center shrink-0">
                     <h2 className="text-xl font-serif text-white">Edit Trip Group</h2>
                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                         <X className="h-5 w-5 text-white/60" />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    <p className="text-sm text-white/60 mb-4">Select trips to include in this group:</p>
-                    {allTrips.map(trip => {
-                        const isSelected = selectedIds.has(trip.id);
-                        return (
-                            <div
-                                key={trip.id}
-                                onClick={() => toggleTrip(trip.id)}
-                                className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${isSelected
-                                    ? "bg-blue-500/10 border-blue-500/50"
-                                    : "bg-white/5 border-white/5 hover:border-white/20"
-                                    }`}
-                            >
-                                <div>
-                                    <div className="font-bold text-white">{trip.trip_title_dashboard || getTripRouteTitle(trip)}</div>
-                                    <div className="text-xs text-white/50">{trip.dates}</div>
-                                    {trip.travelers?.length > 0 && (
-                                        <div className="text-[10px] text-white/40 mt-1 flex flex-wrap gap-1">
-                                            {trip.travelers.map((t: any, i: number) => (
-                                                <span key={i} className="bg-white/10 px-1.5 py-0.5 rounded-sm">
-                                                    {(typeof t === 'string' ? t : t.name)}
-                                                </span>
-                                            ))}
+                <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                    <div>
+                        <p className="text-sm text-white/60 mb-4">Select upcoming trips to include in this group:</p>
+                        {allTrips
+                            .filter(trip => !isTripCompleted(trip.dates))
+                            .sort((a, b) => parseTripDate(a.dates) - parseTripDate(b.dates))
+                            .map(trip => {
+                                const isSelected = selectedIds.has(trip.id);
+                                return (
+                                    <div
+                                        key={trip.id}
+                                        onClick={() => toggleTrip(trip.id)}
+                                        className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${isSelected
+                                            ? "bg-blue-500/10 border-blue-500/50"
+                                            : "bg-white/5 border-white/5 hover:border-white/20"
+                                            }`}
+                                    >
+                                        <div>
+                                            <div className="font-bold text-white">{trip.trip_title_dashboard || getTripRouteTitle(trip)}</div>
+                                            <div className="text-xs text-white/50">{trip.dates}</div>
+                                            {trip.travelers?.length > 0 && (
+                                                <div className="text-[10px] text-white/40 mt-1 flex flex-wrap gap-1">
+                                                    {trip.travelers.map((t: any, i: number) => (
+                                                        <span key={i} className="bg-white/10 px-1.5 py-0.5 rounded-sm">
+                                                            {(typeof t === 'string' ? t : t.name)}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                                {isSelected && (
-                                    <div className="h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                        <Check className="h-4 w-4 text-white" />
+                                        {isSelected && (
+                                            <div className="h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center">
+                                                <Check className="h-4 w-4 text-white" />
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                        );
-                    })}
+                                );
+                            })}
+                    </div>
                 </div>
 
-                <div className="p-6 border-t border-white/10 flex justify-end gap-3">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 rounded-lg text-sm font-medium text-white/60 hover:text-white transition-colors"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-900/20 disabled:opacity-50"
-                    >
-                        {isSaving ? "Saving..." : "Save Changes"}
-                    </button>
+                <div className="p-6 border-t border-white/10 flex justify-between items-center gap-3">
+                    {onDelete && (
+                        <button
+                            onClick={onDelete}
+                            className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
+                        >
+                            Ungroup
+                        </button>
+                    )}
+                    <div className="flex gap-3">
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 rounded-lg text-sm font-medium text-white/60 hover:text-white transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-900/20 disabled:opacity-50"
+                        >
+                            {isSaving ? "Saving..." : "Save Changes"}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

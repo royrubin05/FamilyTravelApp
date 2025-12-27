@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SmartCard } from "@/components/journey/SmartCard";
-import { User, Home, Plane, Building, Ticket, Share2, Check, Copy, X, FolderOpen, Trash2, Terminal, Activity, Layers, ChevronRight, ChevronLeft } from "lucide-react";
+import { User, Home, Plane, Building, Ticket, Share2, Check, Copy, X, FolderOpen, Trash2, Terminal, Activity, Layers, ChevronRight, ChevronLeft, ArchiveRestore, Ban } from "lucide-react";
 import { GlobalHeader } from "@/components/ui/GlobalHeader";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -12,9 +12,13 @@ import { getDestinationImage, GENERIC_FALLBACK, getNormalizedKeys } from "@/lib/
 import { getCheckInUrl } from "@/lib/airlineUtils";
 import { getStorageUrl } from "@/lib/storageUtils";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { removeTravelerFromTripAction } from "@/app/trip-actions";
+import { removeTravelerFromTripAction, cancelTripAction } from "@/app/trip-actions";
 import { DebugPromptModal } from "@/components/ui/DebugPromptModal";
 import { getTripRouteTitle } from "@/lib/tripUtils";
+
+import { ShareControl } from "@/components/sharing/ShareControl";
+import { PublicHeader } from "@/components/ui/PublicHeader";
+import EditTripModal from "@/components/trip/EditTripModal";
 
 interface TripContentProps {
     destinationImages?: Record<string, string>;
@@ -23,9 +27,10 @@ interface TripContentProps {
     isAuthenticated?: boolean;
     linkedGroup?: any;
     backgroundImage?: string | null;
+    isPublicView?: boolean;
 }
 
-export default function TripContent({ destinationImages, initialTrip, familyMembers = [], isAuthenticated = false, linkedGroup, backgroundImage }: TripContentProps) {
+export default function TripContent({ destinationImages, initialTrip, familyMembers = [], isAuthenticated = false, linkedGroup, backgroundImage, isPublicView = false }: TripContentProps) {
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
     const { trips } = useTrips();
@@ -72,13 +77,7 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
     // Removed flightGroups logic as per user request to remove traveler grouping.
 
     const [activeTab, setActiveTab] = useState<"overview" | "itinerary">("overview");
-    const [isShared, setIsShared] = useState(false);
 
-    const handleShare = () => {
-        navigator.clipboard.writeText(window.location.href);
-        setIsShared(true);
-        setTimeout(() => setIsShared(false), 2000);
-    };
 
     const [copiedConfirmation, setCopiedConfirmation] = useState<string | null>(null);
     const handleCopyConfirmation = (code: string) => {
@@ -89,8 +88,11 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
 
     const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
     const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
+    const [isEditTripModalOpen, setIsEditTripModalOpen] = useState(false);
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+
     const router = useRouter();
     const { deleteTrip } = useTrips(); // useTrips is already called below, careful of duplicates
 
@@ -101,13 +103,47 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
         }
     };
 
-    const [travelerToRemove, setTravelerToRemove] = useState<{ id?: string, name: string } | null>(null);
+    const [cancelCredits, setCancelCredits] = useState<Record<string, number>>({});
+    const [totalCancelCredit, setTotalCancelCredit] = useState<string>("");
+    const [applyCreditEvenly, setApplyCreditEvenly] = useState(true);
+    const [creditExpirationDate, setCreditExpirationDate] = useState<string>("");
 
+    // Initialize credits state when modal opens
+    useEffect(() => {
+        if (isCancelModalOpen && trip.travelers) {
+            const initial: Record<string, number> = {};
+            trip.travelers.forEach((t: any) => {
+                const key = t.id || t.name;
+                initial[key] = 0;
+            });
+            setCancelCredits(initial);
+            // setApplyCreditEvenly(true); // Default to true always
+        }
+    }, [isCancelModalOpen, trip.travelers]);
+
+    const handleCancel = async () => {
+        if (trip.id) {
+            await cancelTripAction(trip.id, cancelCredits, creditExpirationDate);
+            router.push("/");
+        }
+    };
+
+    // Calculate validation
+    const currentAllocated = Object.values(cancelCredits).reduce((a, b) => a + b, 0);
+    const totalInput = parseFloat(totalCancelCredit) || 0;
+    const isAllocationMismatch = !applyCreditEvenly && Math.abs(currentAllocated - totalInput) > 0.01 && totalInput > 0;
+
+    const handleCreditChange = (travelerId: string, value: string) => {
+        const num = parseFloat(value) || 0;
+        setCancelCredits(prev => ({ ...prev, [travelerId]: num }));
+    };
+
+    // ...
+
+    const [travelerToRemove, setTravelerToRemove] = useState<{ id?: string, name: string } | null>(null);
 
     const handleRemoveTraveler = async () => {
         if (!trip.id || !travelerToRemove) return;
-
-        // Optimistic update or wait for server? Wait for server for safety.
         await removeTravelerFromTripAction(trip.id, travelerToRemove);
         setTravelerToRemove(null);
         router.refresh();
@@ -182,25 +218,40 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
             </div>
 
             {/* Top Navigation */}
-            <GlobalHeader>
-                <button
-                    onClick={handleShare}
-                    className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5 flex items-center justify-center"
-                    title="Share Trip"
-                >
-                    {isShared ? (
-                        <Check className="h-5 w-5 text-green-400" />
-                    ) : (
-                        <Share2 className="h-5 w-5" />
-                    )}
-                </button>
-            </GlobalHeader>
+            {isPublicView ? (
+                <PublicHeader />
+            ) : (
+                <GlobalHeader
+                    additionalMenuItems={isAuthenticated ? [
+                        {
+                            label: "Share Trip",
+                            onClick: () => setIsEditTripModalOpen(true),
+                            icon: <Share2 className="h-4 w-4" />,
+                            className: "text-neutral-800"
+                        },
+                        { type: 'separator' },
+                        {
+                            label: "Cancel Trip / Credit",
+                            onClick: () => setIsCancelModalOpen(true),
+                            icon: <Ban className="h-4 w-4" />,
+                            className: "text-neutral-800"
+                        },
+                        { type: 'separator' },
+                        {
+                            label: "Delete Trip",
+                            onClick: () => setIsDeleteModalOpen(true),
+                            icon: <Trash2 className="h-4 w-4" />,
+                            className: "text-red-600 font-bold hover:bg-red-50"
+                        }
+                    ] : []}
+                />
+            )}
 
             {/* Main Content */}
             <div className="relative z-10 px-6 pt-10">
 
-                {/* Linked Group Banner */}
-                {linkedGroup && (
+                {/* Linked Group Banner - Hide in Public View if not relevant (assumed hidden for now to avoid complexity) */}
+                {!isPublicView && linkedGroup && (
                     <Link href={`/group/${linkedGroup.id}`}>
                         <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-between group cursor-pointer">
                             <div className="flex items-center gap-3">
@@ -327,7 +378,10 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                             <div className="mt-4 pt-4 border-t border-white/5 flex items-center gap-2">
                                                 <User className="h-3 w-3 text-white/40" />
                                                 <span className="text-xs text-white/60">
-                                                    {flight.travelers.map((t: any) => getTravelerName({ name: t })).join(", ")}
+                                                    {flight.travelers.map((t: any) => {
+                                                        const val = typeof t === 'string' ? t : t.name;
+                                                        return getTravelerName({ name: val });
+                                                    }).join(", ")}
                                                 </span>
                                             </div>
                                         )}
@@ -413,17 +467,19 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                                     <p className="text-sm font-medium leading-none">{displayName}</p>
                                                 </div>
 
-                                                {/* Remove Button (Hover only) */}
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setTravelerToRemove({ id: traveler.id, name: traveler.name });
-                                                    }}
-                                                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                                                    title="Remove Traveler"
-                                                >
-                                                    <X className="h-3 w-3" />
-                                                </button>
+                                                {/* Remove Button (Hover only) - Auth only */}
+                                                {!isPublicView && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setTravelerToRemove({ id: traveler.id, name: traveler.name });
+                                                        }}
+                                                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+                                                        title="Remove Traveler"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                )}
                                             </div>
                                         );
                                     })}
@@ -442,150 +498,276 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                     }
 
                     {/* Source Documents Section */}
-                    {
-                        (() => {
-                            const docs = [];
-                            if (trip.sourceDocuments && Array.isArray(trip.sourceDocuments)) {
-                                docs.push(...trip.sourceDocuments);
-                            } else if (trip.sourceDocument) {
-                                docs.push({ url: trip.sourceDocument, name: trip.sourceFileName || "Source Document" });
-                            }
 
-                            if (docs.length === 0) return null;
 
-                            return (
-                                <>
-                                    <div className="pt-12 flex flex-col items-center gap-4 pb-8">
-                                        {docs.length > 1 ? (
-                                            <button
-                                                onClick={() => setIsDocsModalOpen(true)}
-                                                className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl backdrop-blur-md text-sm font-medium transition-all w-full max-w-xs justify-center group"
-                                            >
-                                                <FolderOpen className="h-4 w-4 text-white/70 group-hover:text-amber-300 transition-colors" />
-                                                <span>Download {docs.length} Source Documents</span>
-                                            </button>
-                                        ) : (
-                                            <a
-                                                href={getStorageUrl(docs[0].url)}
-                                                download={docs[0].name}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl backdrop-blur-md text-sm font-medium transition-all w-full max-w-xs justify-center"
-                                            >
-                                                <Ticket className="h-4 w-4 shrink-0" />
-                                                <span className="truncate max-w-[250px]">{docs[0].name}</span>
-                                            </a>
-                                        )}
+                    {/* Bottom Actions - Auth Protected */}
+                    {isAuthenticated && (
+                        <div className="flex justify-center items-center gap-4 mt-4 mb-8">
+                            <button
+                                onClick={() => setIsDebugModalOpen(true)}
+                                className="text-white/30 hover:text-purple-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-full"
+                            >
+                                <Terminal className="h-4 w-4" />
+                                Debug Info
+                            </button>
+                        </div>
+                    )}
+
+                </div>
+
+                <ConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    title="Delete Trip"
+                    message={`Are you sure you want to PERMANENTLY delete the trip to ${trip.destination}? This cannot be undone.`}
+                    confirmLabel="Delete Forever"
+                    onConfirm={handleDelete}
+                    onCancel={() => setIsDeleteModalOpen(false)}
+                    isDestructive={true}
+                />
+
+                {/* Custom Cancel Trip Modal */}
+                {isCancelModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="w-full max-w-md bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                        >
+                            <div className="p-6">
+                                <div className="flex items-center gap-3 mb-4 text-amber-500">
+                                    <div className="p-3 bg-amber-500/10 rounded-full">
+                                        <Layers className="h-6 w-6" />
                                     </div>
+                                    <h3 className="text-xl font-bold text-white">Archive & Track Credits</h3>
+                                </div>
 
-                                    {/* Source Docs Modal */}
-                                    <AnimatePresence>
-                                        {isDocsModalOpen && (
-                                            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                                                <motion.div
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0 }}
-                                                    onClick={() => setIsDocsModalOpen(false)}
-                                                    className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                                <p className="text-white/60 text-sm mb-6">
+                                    Cancelling this trip will move it to your <b>Cancelled / Credit</b> archive.
+                                    Record your flight credits below so you can track them for future use.
+                                </p>
+
+                                {trip.travelers && trip.travelers.length > 0 && (
+                                    <div className="mb-6 bg-black/20 rounded-xl p-4 border border-white/5">
+                                        <h4 className="text-xs font-bold uppercase tracking-widest text-white/50 mb-3">
+                                            Flight Credits
+                                        </h4>
+
+                                        {/* Total / Evenly Logic */}
+                                        <div className="mb-4 space-y-2">
+                                            <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/10 focus-within:border-white/30 transition-colors">
+                                                <span className="text-white/30 text-xs">$</span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    placeholder="Total Credit Amount"
+                                                    value={totalCancelCredit}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setTotalCancelCredit(val);
+                                                        // Distribute if checked
+                                                        if (applyCreditEvenly && val) {
+                                                            const total = parseFloat(val);
+                                                            if (!isNaN(total)) {
+                                                                const share = total / trip.travelers.length;
+                                                                const newCredits: Record<string, number> = {};
+                                                                trip.travelers.forEach((t: any) => {
+                                                                    newCredits[t.id || t.name] = Math.floor(share * 100) / 100; // 2 decimal
+                                                                });
+                                                                setCancelCredits(newCredits);
+                                                            }
+                                                        } else if (applyCreditEvenly && !val) {
+                                                            // Clear if total cleared
+                                                            setCancelCredits({});
+                                                        }
+                                                    }}
+                                                    className="w-full bg-transparent text-white text-sm focus:outline-none font-medium"
                                                 />
-                                                <motion.div
-                                                    initial={{ scale: 0.95, opacity: 0 }}
-                                                    animate={{ scale: 1, opacity: 1 }}
-                                                    exit={{ scale: 0.95, opacity: 0 }}
-                                                    className="relative w-full max-w-md bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden"
-                                                >
-                                                    <div className="flex justify-between items-center mb-6">
-                                                        <h3 className="font-serif text-xl">Source Documents</h3>
-                                                        <button onClick={() => setIsDocsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                                                            <X className="h-5 w-5 opacity-70" />
-                                                        </button>
+                                            </div>
+                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${applyCreditEvenly ? 'bg-amber-500 border-amber-500' : 'border-white/20 group-hover:border-white/40'}`}>
+                                                    {applyCreditEvenly && <Check className="w-3 h-3 text-black" />}
+                                                </div>
+                                                <input
+                                                    type="checkbox"
+                                                    className="hidden"
+                                                    checked={applyCreditEvenly}
+                                                    onChange={(e) => {
+                                                        const isChecked = e.target.checked;
+                                                        setApplyCreditEvenly(isChecked);
+                                                        if (isChecked && totalCancelCredit) {
+                                                            // Re-distribute
+                                                            const total = parseFloat(totalCancelCredit);
+                                                            if (!isNaN(total)) {
+                                                                const share = total / trip.travelers.length;
+                                                                const newCredits: Record<string, number> = {};
+                                                                trip.travelers.forEach((t: any) => {
+                                                                    newCredits[t.id || t.name] = Math.floor(share * 100) / 100;
+                                                                });
+                                                                setCancelCredits(newCredits);
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                                <span className="text-xs text-white/60 group-hover:text-white/80 transition-colors">Apply evenly for all passengers</span>
+                                            </label>
+                                        </div>
+
+                                        <div className="space-y-3 pl-2 border-l-2 border-white/5">
+                                            {/* Show breakdown only if Manual Distribution */}
+                                            {!applyCreditEvenly && trip.travelers.map((t: any) => {
+                                                const key = t.id || t.name;
+                                                return (
+                                                    <div key={key} className="flex items-center justify-between">
+                                                        <span className="text-sm text-white/80">{t.name}</span>
+                                                        <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-1.5 border border-white/10 focus-within:border-white/30 transition-colors">
+                                                            <span className="text-white/30 text-xs">$</span>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                placeholder="0"
+                                                                value={cancelCredits[key] || ""}
+                                                                onChange={(e) => {
+                                                                    handleCreditChange(key, e.target.value)
+                                                                }}
+                                                                className="w-20 bg-transparent text-white text-right text-sm focus:outline-none"
+                                                            />
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-3">
-                                                        {docs.map((doc: any, idx: number) => (
-                                                            <a
-                                                                key={idx}
-                                                                href={getStorageUrl(doc.url)}
-                                                                download={doc.name}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-xl transition-all group"
-                                                            >
-                                                                <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 group-hover:text-amber-300 transition-colors">
-                                                                    <Ticket className="h-5 w-5" />
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="font-medium text-sm truncate">{doc.name}</p>
-                                                                    <p className="text-xs text-white/40 truncate">PDF Document</p>
-                                                                </div>
-                                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0">
-                                                                    <Copy className="h-4 w-4 rotate-180" /> {/* Using Copy as 'Download' icon approximation or just generic arrow */}
-                                                                </div>
-                                                            </a>
-                                                        ))}
-                                                    </div>
-                                                </motion.div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Validation Warning */}
+                                        {isAllocationMismatch && (
+                                            <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-400 flex items-center justify-between">
+                                                <span>Allocation mismatch!</span>
+                                                <span className="font-mono font-bold">${currentAllocated.toLocaleString()} vs ${totalInput.toLocaleString()}</span>
                                             </div>
                                         )}
-                                    </AnimatePresence>
-                                </>
-                            );
-                        })()
-                    }
+                                    </div>
+                                )}
 
-                </div >
+                                {/* Expiration Date */}
+                                <div className="mb-6">
+                                    <label className="block text-xs uppercase text-white/40 font-bold tracking-widest mb-2">
+                                        Expiration Date (Optional)
+                                    </label>
+                                    <input
+                                        type="date"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-white/30 transition-colors"
+                                        value={creditExpirationDate}
+                                        onChange={(e) => setCreditExpirationDate(e.target.value)}
+                                    />
+                                </div>
 
-                {/* Bottom Actions - Auth Protected */}
-                {isAuthenticated && (
-                    <div className="flex justify-center items-center gap-4 mt-4 mb-8">
-                        <button
-                            onClick={() => setIsDebugModalOpen(true)}
-                            className="text-white/30 hover:text-purple-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-full"
-                        >
-                            <Terminal className="h-4 w-4" />
-                            Debug Info
-                        </button>
-
-                        <div className="h-4 w-px bg-white/10" />
-
-                        <button
-                            onClick={() => setIsDeleteModalOpen(true)}
-                            className="text-white/30 hover:text-red-400 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-full"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            Delete Trip
-                        </button>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setIsCancelModalOpen(false)}
+                                        className="flex-1 px-4 py-3 rounded-xl font-medium text-sm transition-colors bg-white/5 hover:bg-white/10 text-white"
+                                    >
+                                        Keep Trip
+                                    </button>
+                                    <button
+                                        onClick={handleCancel}
+                                        className="flex-1 px-4 py-3 rounded-xl font-medium text-sm transition-colors bg-amber-500 hover:bg-amber-400 text-black"
+                                    >
+                                        Update Trip Record
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
                     </div>
                 )}
-            </div >
 
-            <ConfirmationModal
-                isOpen={isDeleteModalOpen}
-                title="Delete Trip"
-                message={`Are you sure you want to remove the trip to ${trip.destination}? This action cannot be undone.`}
-                confirmLabel="Delete"
-                onConfirm={handleDelete}
-                onCancel={() => setIsDeleteModalOpen(false)}
-                isDestructive={true}
-            />
+                {/* Source Documents Modal - Logic Restored */}
+                <AnimatePresence>
+                    {isDocsModalOpen && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsDocsModalOpen(false)}
+                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                            />
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.95, opacity: 0 }}
+                                className="relative w-full max-w-md bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden"
+                            >
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="font-serif text-xl">Source Documents</h3>
+                                    <button onClick={() => setIsDocsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                        <X className="h-5 w-5 opacity-70" />
+                                    </button>
+                                </div>
+                                <div className="space-y-3">
+                                    {(() => {
+                                        // Re-calculate docs here as it was local scope before
+                                        const docs = [];
+                                        if (trip.sourceDocuments && Array.isArray(trip.sourceDocuments)) {
+                                            docs.push(...trip.sourceDocuments);
+                                        } else if (trip.sourceDocument) {
+                                            docs.push({ url: trip.sourceDocument, name: trip.sourceFileName || "Source Document" });
+                                        }
 
-            <ConfirmationModal
-                isOpen={!!travelerToRemove}
-                title="Remove Traveler"
-                message={`Are you sure you want to remove ${travelerToRemove?.name || "this traveler"} from the trip?`}
-                confirmLabel="Remove"
-                onConfirm={handleRemoveTraveler}
-                onCancel={() => setTravelerToRemove(null)} // Clear selection on cancel
-                isDestructive={true}
-            />
+                                        if (docs.length === 0) {
+                                            return <div className="text-white/40 text-center py-4">No source documents available.</div>;
+                                        }
 
-            <DebugPromptModal
-                isOpen={isDebugModalOpen}
-                onClose={() => setIsDebugModalOpen(false)}
-                debugPrompt={trip.debugPrompt}
-                debugResponse={trip.debugResponse}
-            />
+                                        return docs.map((doc: any, idx: number) => (
+                                            <a
+                                                key={idx}
+                                                href={getStorageUrl(doc.url)}
+                                                download={doc.name}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-xl transition-all group"
+                                            >
+                                                <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 group-hover:text-amber-300 transition-colors">
+                                                    <Ticket className="h-5 w-5" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-medium text-sm truncate">{doc.name}</p>
+                                                    <p className="text-xs text-white/40 truncate">PDF Document</p>
+                                                </div>
+                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0">
+                                                    <Copy className="h-4 w-4 rotate-180" />
+                                                </div>
+                                            </a>
+                                        ));
+                                    })()}
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
 
-        </div >
+                <EditTripModal
+                    isOpen={isEditTripModalOpen}
+                    onClose={() => setIsEditTripModalOpen(false)}
+                    trip={trip}
+                />
+
+                <ConfirmationModal
+                    isOpen={!!travelerToRemove}
+                    title="Remove Traveler"
+                    message={`Are you sure you want to remove ${travelerToRemove?.name || "this traveler"} from the trip?`}
+                    confirmLabel="Remove"
+                    onConfirm={handleRemoveTraveler}
+                    onCancel={() => setTravelerToRemove(null)} // Clear selection on cancel
+                    isDestructive={true}
+                />
+
+                <DebugPromptModal
+                    isOpen={isDebugModalOpen}
+                    onClose={() => setIsDebugModalOpen(false)}
+                    debugPrompt={trip.debugPrompt}
+                    debugResponse={trip.debugResponse}
+                />
+
+            </div>
+        </div>
     );
 }
