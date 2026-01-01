@@ -34,8 +34,8 @@ export default function FamilyListClient({ initialFamilies }: { initialFamilies:
                 const idToken = await userCredential.user.getIdToken();
 
                 // 3. Create Server Session
-                const { createSession } = await import("@/app/auth-actions");
-                await createSession(idToken);
+                const { createUserSession } = await import("@/app/auth-actions");
+                await createUserSession(idToken);
 
                 // 4. Force Hard Redirect
                 window.location.href = "/";

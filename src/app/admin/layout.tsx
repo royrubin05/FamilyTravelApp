@@ -1,7 +1,5 @@
 import { getCurrentUser } from "@/lib/auth-context";
 import { redirect } from "next/navigation";
-import { GlobalHeader } from "@/components/ui/GlobalHeader";
-import { AdminNav } from "@/components/admin/AdminNav";
 
 export default async function AdminLayout({
     children,
@@ -16,13 +14,7 @@ export default async function AdminLayout({
 
     return (
         <div className="min-h-screen bg-neutral-950 text-white">
-            <GlobalHeader hideGlobalActions={true} />
-
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto p-4 md:p-8">
-                <AdminNav />
-                {children}
-            </main>
+            {children}
         </div>
     );
 }

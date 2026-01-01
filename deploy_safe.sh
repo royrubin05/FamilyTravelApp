@@ -42,13 +42,21 @@ if [ -z "$GEMINI_API_KEY" ]; then
     read -s GEMINI_API_KEY
 fi
 
+# Extract Email credentials
+if [ -f .env.local ]; then
+    echo "📧 Reading Email Config from .env.local..."
+    EMAIL_USER=$(grep EMAIL_USER .env.local | cut -d '=' -f2 | tr -d '"'\'' ')
+    EMAIL_PASSWORD=$(grep EMAIL_PASSWORD .env.local | cut -d '=' -f2 | tr -d '"'\'' ')
+    EMAIL_HOST=$(grep EMAIL_HOST .env.local | cut -d '=' -f2 | tr -d '"'\'' ')
+fi
+
 # DEPLOYMENT COMMAND
 # Matches the original but skips the 'Sync Data' steps
 gcloud run deploy ${SERVICE_NAME} \
   --image=${IMAGE_PATH} \
   --region=${REGION} \
   --allow-unauthenticated \
-  --set-env-vars=GEMINI_API_KEY="${GEMINI_API_KEY}" \
+  --set-env-vars=GEMINI_API_KEY="${GEMINI_API_KEY}",EMAIL_USER="${EMAIL_USER}",EMAIL_PASSWORD="${EMAIL_PASSWORD}",EMAIL_HOST="${EMAIL_HOST}" \
   --execution-environment=gen2
 
 echo ""

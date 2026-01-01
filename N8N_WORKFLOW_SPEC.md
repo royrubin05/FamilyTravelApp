@@ -3,18 +3,27 @@
 This document provides the specific code and prompts to use inside your n8n workflow nodes.
 
 ## Node 1: Webhook (Trigger)
-*   **Method**: POST
-*   **Path**: `/webhook/trip-upload`
-*   **Authentication**: Header Auth (or Basic Auth) - *We will set this up later.*
+*   **Trigger Type**: 
+    1.  **POST Webhook** (`/webhook/trip-upload`): for existing PDF upload flow.
+    2.  **Email Trigger** (IMAP / Gmail / SendGrid): for forwarded emails.
+*   **Output**: 
+    *   `senderEmail` (string)
+    *   `content` (text/html)
+    *   `attachments` (files)
 
 ---
 
-## Node 2: Google Cloud Storage (Download)
-*   **Resource**: File
-*   **Operation**: Get
-*   **Bucket Name**: `travelapp05-travel-data`
-*   **Object Name**: `{{ $json.body.fileKey }}` (Comes from Webhook)
-*   **Binary Property**: `data`
+## Node 2: Firestore (User Lookup)
+*   **Goal**: Find the user who owns this email.
+*   **Operation**: Get All
+*   **Collection**: `users`
+*   **Options**: 
+    *   **Filter**: (Client Side Filtering in next Code Node required because `forwardingEmails` is a complex object in `settings/config` subcollection, OR use Collection Group Query if indexed).
+    *   *Simpler Approach for V1*:
+        *   Receive Email.
+        *   Function: `findUserByForwardingEmail(senderEmail)`.
+        *   This requires a Collection Group Index on `settings` collection if we query directly, OR we can store a global `email_mapping` collection.
+        *   *Selected Strategy*: **Collection Group Query** on `settings` where `forwardingEmails` array-contains `senderEmail`.
 
 ---
 
@@ -23,7 +32,7 @@ This document provides the specific code and prompts to use inside your n8n work
 *   **Prompt**:
     ```text
     You are an expert Travel Assistant.
-    Extract the following details from the attached document:
+    Extract the following details from the attached document/email content:
     1. Destination (City, Country)
     2. Start Date (YYYY-MM-DD)
     3. End Date (YYYY-MM-DD)
@@ -44,7 +53,7 @@ This document provides the specific code and prompts to use inside your n8n work
 
 ## Node 4: Firestore (Get Context)
 *   **Operation**: Get All
-*   **Collection**: `trips`
+*   **Collection**: `users/{userId}/trips`
 *   **Limit**: 50 (or filter by dates if possible)
 
 ---
@@ -55,7 +64,7 @@ This document provides the specific code and prompts to use inside your n8n work
 ```javascript
 // Inputs:
 const newTrip = $('Gemini Chat').first().json;
-const existingTrips = $('Firestore').all().map(i => i.json);
+const existingTrips = $('Firestore Context').all().map(i => i.json);
 
 let finalTrip = null;
 let action = "create";
@@ -101,6 +110,6 @@ return {
 
 ## Node 6: Firestore (Save)
 *   **Operation**: Set
-*   **Collection**: `trips`
+*   **Collection**: `users/{userId}/trips`
 *   **Document ID**: `{{ $json.trip.id }}`
 *   **Data**: `{{ $json.trip }}`

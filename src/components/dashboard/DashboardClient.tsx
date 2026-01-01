@@ -18,6 +18,8 @@ import dynamic from "next/dynamic";
 import { InsightsTab } from "@/components/dashboard/insights/InsightsTab";
 import { ENABLE_INSIGHTS } from "@/lib/flags";
 
+import { DualRowFilters } from "@/components/dashboard/DualRowFilters";
+
 const TripMap = dynamic(() => import("./TripMap"), { ssr: false });
 
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
@@ -261,7 +263,11 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
   });
 
   // Sort
-  const sortedItems = finalFilteredItems.sort((a, b) => parseTripDate(a.dateForSort) - parseTripDate(b.dateForSort));
+  const sortedItems = finalFilteredItems.sort((a, b) => {
+    const dateA = parseTripDate(a.dateForSort);
+    const dateB = parseTripDate(b.dateForSort);
+    return statusTab === "completed" ? dateB - dateA : dateA - dateB;
+  });
 
   // Pagination
   const totalPages = Math.ceil(sortedItems.length / ITEMS_PER_PAGE);
@@ -362,93 +368,25 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
         </div>
       ) : (
         <>
-          {/* Status Tabs */}
-          <div className="max-w-4xl mx-auto mb-6 border-b border-white/10 relative z-30">
-            {/* Mobile Dropdown Trigger */}
-            <div className="md:hidden mb-4">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="w-full flex items-center justify-between bg-white/5 border border-white/10 text-white rounded-lg px-4 py-3 text-sm font-medium hover:bg-white/10 transition-colors"
-              >
-                <span className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-white/50" />
-                  <span>
-                    {statusTab === "upcoming" && "Upcoming Trips"}
-                    {statusTab === "completed" && "Completed Trips"}
-                    {statusTab === "cancelled" && "Cancelled / Credit"}
-                    {statusTab === "insights" && "Travel Insights"}
-                  </span>
-                </span>
-                <ChevronDown className={`w-4 h-4 transition-transform text-white/30 ${isMobileMenuOpen ? "rotate-180" : ""}`} />
-              </button>
+          {/* Dual Row Filters (Mobile Only) */}
+          <DualRowFilters
+            statusTab={statusTab}
+            setStatusTab={(val) => {
+              setStatusTab(val);
+              setCurrentPage(1);
+            }}
+            filter={filter}
+            setFilter={(val) => {
+              setFilter(val);
+              setCurrentPage(1);
+            }}
+            familyMembers={familyMembers}
+            enableInsights={ENABLE_INSIGHTS}
+          />
 
-              <AnimatePresence>
-                {isMobileMenuOpen && (
-                  <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm md:hidden">
-                    <motion.div
-                      initial={{ y: "100%" }}
-                      animate={{ y: 0 }}
-                      exit={{ y: "100%" }}
-                      transition={{ type: "spring", damping: 25, stiffness: 500 }}
-                      className="w-full bg-neutral-900 rounded-t-2xl border-t border-white/10 p-6 pb-12 max-h-[80vh] overflow-y-auto"
-                    >
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-serif text-white">Select View</h3>
-                        <button
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className="p-2 bg-white/5 rounded-full text-white/50 hover:text-white"
-                        >
-                          <X className="h-5 w-5" />
-                        </button>
-                      </div>
-
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => { setStatusTab("upcoming"); setCurrentPage(1); setIsMobileMenuOpen(false); }}
-                          className={`w-full flex items-center justify-between px-4 py-4 rounded-xl text-left transition-colors ${statusTab === "upcoming" ? "bg-white text-black font-bold" : "bg-white/5 text-white/70 hover:bg-white/10"}`}
-                        >
-                          <span>Upcoming Trips</span>
-                          {statusTab === "upcoming" && <CheckSquare className="h-5 w-5" />}
-                        </button>
-
-                        <button
-                          onClick={() => { setStatusTab("completed"); setCurrentPage(1); setIsMobileMenuOpen(false); }}
-                          className={`w-full flex items-center justify-between px-4 py-4 rounded-xl text-left transition-colors ${statusTab === "completed" ? "bg-white text-black font-bold" : "bg-white/5 text-white/70 hover:bg-white/10"}`}
-                        >
-                          <span>Completed Trips</span>
-                          {statusTab === "completed" && <CheckSquare className="h-5 w-5" />}
-                        </button>
-
-                        <button
-                          onClick={() => { setStatusTab("cancelled"); setCurrentPage(1); setIsMobileMenuOpen(false); }}
-                          className={`w-full flex items-center justify-between px-4 py-4 rounded-xl text-left transition-colors ${statusTab === "cancelled" ? "bg-white text-black font-bold" : "bg-white/5 text-white/70 hover:bg-white/10"}`}
-                        >
-                          <span className="flex items-center gap-2"><CreditCard className="w-4 h-4" /> Cancelled / Credits</span>
-                          {statusTab === "cancelled" && <CheckSquare className="h-5 w-5" />}
-                        </button>
-
-                        {ENABLE_INSIGHTS && (
-                          <button
-                            onClick={() => { setStatusTab("insights"); setCurrentPage(1); setIsMobileMenuOpen(false); }}
-                            className={`w-full flex items-center justify-between px-4 py-4 rounded-xl text-left transition-colors ${statusTab === "insights" ? "bg-white text-black font-bold" : "bg-white/5 text-white/70 hover:bg-white/10"}`}
-                          >
-                            <span className="flex items-center gap-2"><Sparkles className="w-4 h-4" /> Insights</span>
-                            {statusTab === "insights" && <CheckSquare className="h-5 w-5" />}
-                          </button>
-                        )}
-                      </div>
-                    </motion.div>
-                    <div
-                      className="absolute inset-0 z-[-1]"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    />
-                  </div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Desktop Tabs (Original) - Hidden on Mobile */}
-            <div className="hidden md:flex justify-between items-end">
+          {/* Status Tabs (Desktop Only) */}
+          <div className="max-w-4xl mx-auto mb-6 border-b border-white/10 relative z-30 hidden md:block">
+            <div className="flex justify-between items-end">
               <div className="flex gap-8">
                 <button
                   onClick={() => { setStatusTab("upcoming"); setCurrentPage(1); }}
@@ -501,14 +439,9 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
             </div>
           </div>
 
-          {/* Member Filters - Same as before */}
-          <div className="max-w-4xl mx-auto mb-8">
-            {/* ... Filters UI ... */}
-            {/* Keeping existing Filter JSX implicitly via context match if possible, but replace block targets it? */}
-            {/* Wait, the replace block below starts AFTER filter UI. I need to be careful with context. */}
-            {/* Actually I'm REPLACING the tabs section, so I can just include the new tab safely. */}
-
-            <div className="hidden md:flex gap-3 overflow-x-auto pb-4 no-scrollbar">
+          {/* Member Filters (Desktop) */}
+          <div className="max-w-4xl mx-auto mb-8 hidden md:block">
+            <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
               {memberFilters.map((m) => (
                 <button
                   key={m.id}
@@ -522,74 +455,7 @@ export default function DashboardClient({ initialImages, initialTrips, initialGr
                 </button>
               ))}
             </div>
-            {/* Mobile View: Modal Trigger */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsFilterOpen(true)}
-                className="w-full flex items-center justify-between bg-white/5 border border-white/10 text-white rounded-lg px-4 py-3 text-sm font-medium hover:bg-white/10 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-white/50" />
-                  <span>
-                    {filter === "all"
-                      ? "All Travelers"
-                      : `Filter by: ${memberFilters.find(m => m.id === filter)?.label}`}
-                  </span>
-                </div>
-                <ChevronRight className="h-4 w-4 rotate-90 text-white/30" />
-              </button>
-            </div>
           </div>
-
-          {/* Mobile Filter Modal */}
-          <AnimatePresence>
-            {isFilterOpen && (
-              <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm md:hidden">
-                <motion.div
-                  initial={{ y: "100%" }}
-                  animate={{ y: 0 }}
-                  exit={{ y: "100%" }}
-                  transition={{ type: "spring", damping: 25, stiffness: 500 }}
-                  className="w-full bg-neutral-900 rounded-t-2xl border-t border-white/10 p-6 pb-12 max-h-[80vh] overflow-y-auto"
-                >
-                  {/* ... Filter Modal Content ... */}
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-serif text-white">Filter by Person</h3>
-                    <button
-                      onClick={() => setIsFilterOpen(false)}
-                      className="p-2 bg-white/5 rounded-full text-white/50 hover:text-white"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-2">
-                    {memberFilters.map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => {
-                          setFilter(m.id);
-                          setCurrentPage(1);
-                          setIsFilterOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between px-4 py-4 rounded-xl text-left transition-colors ${filter === m.id
-                          ? "bg-white text-black font-bold"
-                          : "bg-white/5 text-white/70 hover:bg-white/10"
-                          }`}
-                      >
-                        <span>{m.label}</span>
-                        {filter === m.id && <CheckSquare className="h-5 w-5" />}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-                <div
-                  className="absolute inset-0 z-[-1]"
-                  onClick={() => setIsFilterOpen(false)}
-                />
-              </div>
-            )}
-          </AnimatePresence>
 
           {/* Floating Action Bar for Group Creation */}
           {/* ... */}

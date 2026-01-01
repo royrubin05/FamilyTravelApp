@@ -26,4 +26,8 @@ try {
     console.error("❌ Firebase Client Init Failed:", error);
 }
 
-export { app, auth };
+// Initialize Firestore
+import { getFirestore } from "firebase/firestore";
+const db = app ? getFirestore(app) : undefined;
+
+export { app, auth, db };

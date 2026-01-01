@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
-import { Plus, Settings, Check, Share2, Layers, X, FileUp, PlusCircle } from "lucide-react";
+import { Plus, Settings, Check, Share2, Layers, X, FileUp, PlusCircle, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
@@ -127,6 +127,13 @@ export const GlobalHeader = forwardRef<GlobalHeaderRef, GlobalHeaderProps>(({ ch
                             >
                                 <Settings className="h-5 w-5" />
                             </button>
+                            <Link
+                                href="/help"
+                                className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/5 flex items-center justify-center"
+                                title="Help & User Guide"
+                            >
+                                <HelpCircle className="h-5 w-5" />
+                            </Link>
                             <div className="relative" ref={actionsRef}>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setIsActionsOpen(!isActionsOpen); }}

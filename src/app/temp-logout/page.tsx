@@ -1,6 +1,6 @@
 "use client";
 
-import { logoutSession } from "@/app/auth-actions";
+import { logoutUser } from "@/app/auth-actions";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -11,7 +11,7 @@ export default function TempLogoutPage() {
     useEffect(() => {
         const doLogout = async () => {
             try {
-                await logoutSession();
+                await logoutUser();
                 setStatus("Logged out. Redirecting...");
                 setTimeout(() => {
                     router.push("/login-v2");

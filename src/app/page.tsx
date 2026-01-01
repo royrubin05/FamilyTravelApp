@@ -4,6 +4,7 @@ import LandingPage from "@/components/landing/LandingPage";
 import { getTrips, getTripGroups } from "./trip-actions";
 import { getSettings } from "./settings-actions";
 import { cookies } from "next/headers";
+import { TripProvider } from "@/context/TripContext";
 
 export const dynamic = 'force-dynamic';
 
@@ -23,10 +24,14 @@ export default async function Home({ searchParams }: { searchParams: { [key: str
     const initialGroups = await getTripGroups();
     const initialSettings = await getSettings();
 
-    return <DashboardClient
-        initialImages={initialImages}
-        initialTrips={initialTrips}
-        initialGroups={initialGroups}
-        initialSettings={initialSettings}
-    />;
+    return (
+        <TripProvider>
+            <DashboardClient
+                initialImages={initialImages}
+                initialTrips={initialTrips}
+                initialGroups={initialGroups}
+                initialSettings={initialSettings}
+            />
+        </TripProvider>
+    );
 }

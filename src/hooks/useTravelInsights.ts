@@ -138,29 +138,29 @@ export function useTravelInsights(trips: Trip[], travelerFilter: string, yearFil
             }
         });
 
-        // 4. Quirky Text Generation
+
+
+        // 4. Quirky Text Generation (Fallback)
         const name = travelerFilter === 'all' ? "the family" : travelerFilter; // "the family" vs "Roy"
         const yearLabel = yearFilter === 'all' ? "Across all trips" : `In ${yearFilter}`;
 
-        let quirkyText = "";
+        let fallbackText = "";
+
+        // Define outside scope
+        const sortedCities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]);
 
         if (totalMiles === 0 && hotelCount === 0) {
-            quirkyText = "No insights are collected yet.";
+            fallbackText = "No insights are collected yet.";
         } else {
             // Construct lists
-            const sortedCities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]);
             const top3Cities = sortedCities.slice(0, 3).map(([c]) => c).join(", ");
 
-            // "In {Year}, the family covered {TotalMiles} miles and logged {TotalHours} hours in the sky. Their travels included {HotelCount} hotel stays across destinations like {CityList}. {TopCity} was the clear favorite, visited {TopCount} times."
-
-            quirkyText = `${yearLabel}, ${topAirlineCount > 0 ? name : "we"} covered ${totalMiles.toLocaleString()} miles and logged ${totalHours} hours in the sky. Their travels included ${hotelCount} hotel stays across destinations like ${top3Cities || "various places"}. ${topDestName !== "N/A" ? `${topDestName} was the clear favorite, visited ${topDestCount} times.` : ""}`;
+            fallbackText = `${yearLabel}, ${topAirlineCount > 0 ? name : "we"} covered ${totalMiles.toLocaleString()} miles and logged ${totalHours} hours in the sky. Their travels included ${hotelCount} hotel stays across destinations like ${top3Cities || "various places"}. ${topDestName !== "N/A" ? `${topDestName} was the clear favorite, visited ${topDestCount} times.` : ""}`;
 
             // Adjust pronouns if specific traveler
             if (travelerFilter !== 'all') {
-                quirkyText = quirkyText.replace("Their travels", "Member travels").replace("the family", name);
-                // "In 2024, Roy covered... His travels..." hard to get pronoun right without gender.
-                // Let's stick to "The travels included..." to be safe, or "Trips included".
-                quirkyText = quirkyText.replace("Their travels", "The trips");
+                fallbackText = fallbackText.replace("Their travels", "Member travels").replace("the family", name);
+                fallbackText = fallbackText.replace("Their travels", "The trips");
             }
         }
 
@@ -171,7 +171,8 @@ export function useTravelInsights(trips: Trip[], travelerFilter: string, yearFil
             countryCount: countriesVisited.size,
             topAirline: { name: topAirlineName, count: topAirlineCount },
             topDestination: { name: topDestName, count: topDestCount },
-            quirkyText,
+            visitedCities: sortedCities.slice(0, 5).map(([c]) => c), // Return top 5 cities
+            fallbackText,
             hasData: totalMiles > 0 || hotelCount > 0
         };
 

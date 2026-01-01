@@ -62,27 +62,25 @@ export const isTripCompleted = (dateStr: string): boolean => {
             }
 
             if (!isNaN(endTimestamp)) {
-                // Return true if end date is in the past
-                return endTimestamp < now;
+                // Set to End of Day (23:59:59.999)
+                const d = new Date(endTimestamp);
+                d.setHours(23, 59, 59, 999);
+                return d.getTime() < now;
             }
         }
     }
 
     // Fallback: Use parseTripDate logic (start date)
-    // If it's a single date "Spring 2025" or "Oct 25"
-    // Ideally "Spring 2025" implies the whole season.
-    // Let's stick to simple: if sortable start date is significantly in past?
-    // Actually, simply checking if START date is in past is usually "In Progress" or "Completed".
-    // Let's use start date + typical duration (e.g. 7 days) if no range?
-    // Or just strictly: If start date is in past -> Completed? No, might be active.
-
-    // For now: "Completed" means the entire trip is in the past.
-    // If we only have start date, let's assume it's completed if start date is < now - 7 days?
-    // Or just simplistic: < now.
-
+    // Treating single date trips as "All Day" -> Completed only after that day ends.
     const startTimestamp = parseTripDate(dateStr);
-    // If start timestamp is valid and passed
-    return startTimestamp > 0 && startTimestamp < now;
+
+    if (startTimestamp > 0) {
+        const d = new Date(startTimestamp);
+        d.setHours(23, 59, 59, 999);
+        return d.getTime() < now;
+    }
+
+    return false;
 };
 
 /**

@@ -9,7 +9,11 @@
 *   **Visual Continuity**: Assigns consistent "Trip Graphics" and "City Images" to create a premium, polished dashboard aesthetic.
 
 ## 3. Key Features
-### 3.1 AI Trip Parsing & Normalization
+### 3.1 Intelligent Ingestion & Validation
+*   **Booking Validation Service (BVS)**: acts as a smart gatekeeper for incoming emails.
+    *   **Junk Filtering**: Uses Gemini AI to analyze content and classify messages as `VALID` (Transactional Booking) or `INVALID` (Marketing/Newsletter) with >85% confidence.
+    *   **Cloud Quarantine**: Rejected emails are securely stored in Firestore (`admin_quarantine`) for Admin review, ensuring no data is processed locally or lost.
+    *   **User Feedback**: Automatically notifies users via email if their submission is rejected.
 *   **PDF to JSON**: Extracts structured data from chaotic flight confirmations and hotel bookings.
 *   **Intelligent Identification**:
     *   **Topology Detection**: Distinguishes between "One Way", "Round Trip", and "Multi-City" based on flight connection times.

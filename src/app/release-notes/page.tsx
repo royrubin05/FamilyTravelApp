@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -18,8 +18,15 @@ import {
     Calendar
 } from "lucide-react";
 import { GlobalHeader } from "@/components/ui/GlobalHeader";
+import { checkSession } from "@/app/auth-actions";
 
 export default function ReleaseNotesPage() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        checkSession().then(setIsLoggedIn);
+    }, []);
+
     return (
         <div className="min-h-screen bg-neutral-950 text-white selection:bg-amber-500/30">
             {/* Header for non-logged in users acts as branding */}
@@ -37,10 +44,10 @@ export default function ReleaseNotesPage() {
                         </div>
                     </Link>
                     <Link
-                        href="/login-v2"
+                        href={isLoggedIn ? "/" : "/login-v2"}
                         className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-colors"
                     >
-                        Login
+                        {isLoggedIn ? "Continue to Dashboard" : "Login"}
                     </Link>
                 </div>
 
@@ -71,6 +78,116 @@ export default function ReleaseNotesPage() {
                 >
                     {/* Timeline Dot */}
                     <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-8">
+                        <h2 className="text-2xl font-bold text-white">Version 2.3</h2>
+                        <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-white/20" />
+                        <div className="inline-flex items-center gap-2 text-white/40 font-mono text-sm uppercase tracking-wider">
+                            <Calendar className="w-4 h-4" />
+                            December 30, 2025
+                        </div>
+                    </div>
+
+                    {/* Feature Spotlight: Email Import */}
+                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-900/20 to-teal-900/20 border border-white/10 p-8 md:p-12 mb-12">
+                        {/* Background Decoration */}
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 blur-[100px] -translate-y-1/2 translate-x-1/2 rounded-full" />
+
+                        <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
+                            <div className="space-y-6">
+                                <div className="inline-flex items-center gap-2 text-emerald-400 font-bold uppercase tracking-wider text-sm">
+                                    <Sparkles className="w-4 h-4" />
+                                    New Feature
+                                </div>
+                                <h3 className="text-3xl font-bold text-white">Email Trip Import</h3>
+                                <p className="text-white/70 leading-relaxed text-lg">
+                                    Planning just got automated. Forward your flight and hotel confirmations directly to <span className="text-white font-mono bg-white/10 px-1 rounded">mytravelroot@gmail.com</span> and watch them appear on your dashboard instantly.
+                                </p>
+
+                                <ul className="space-y-4">
+                                    <li className="flex gap-3">
+                                        <div className="min-w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                                            <Share2 className="w-3 h-3 text-emerald-400" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-white text-sm">One-Step Import</h4>
+                                            <p className="text-white/50 text-sm">No more manual entry. Just forward the email. We handle reading the PDF, extracting dates, and building the itinerary.</p>
+                                        </div>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <div className="min-w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                                            <Check className="w-3 h-3 text-emerald-400" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-white text-sm">Instant Confirmation</h4>
+                                            <p className="text-white/50 text-sm">You'll receive a specialized "Travel Roots" reply confirming the import with a direct link to your new trip.</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* Visual Representation */}
+                            <div className="bg-black/40 border border-white/10 rounded-2xl p-6 relative shadow-2xl skew-x-1 transform transition-transform hover:skew-x-0 duration-500">
+                                <div className="absolute inset-0 bg-emerald-500/5 rounded-2xl" />
+                                <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                                            <span className="font-serif font-bold text-white">T</span>
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-bold text-white">Travel Roots</div>
+                                            <div className="text-xs text-white/40">Automatic Reply</div>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">Now</span>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="text-sm text-white/80">
+                                        Success! Your trip to <span className="text-white font-bold">Healdsburg</span> has been imported.
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-white/5">
+                                        <div className="w-full py-2 bg-white text-black text-center text-xs font-bold rounded">View Trip Dashboard</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {/* Linked Emails */}
+                        <div className="group bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 p-6 rounded-2xl transition-all">
+                            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 mb-4">
+                                <Globe className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2">Linked Emails</h3>
+                            <p className="text-white/60 text-sm leading-relaxed">
+                                Manage multiple forwarding addresses in Settings. Link your spouse's or work email so everyone can contribute to the family plan.
+                            </p>
+                        </div>
+
+                        {/* Intelligent Deduplication */}
+                        <div className="group bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 p-6 rounded-2xl transition-all">
+                            <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 mb-4">
+                                <Sparkles className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2">Smart Travelers</h3>
+                            <p className="text-white/60 text-sm leading-relaxed">
+                                Our AI now intelligently deduplicates traveler names and ensures only confirmed passengers are added to the trip.
+                            </p>
+                        </div>
+                    </div>
+                </motion.section>
+
+                {/* Release: v2.2.0 */}
+                <motion.section
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="mb-24 relative pl-8 border-l border-white/10"
+                >
+                    {/* Timeline Dot */}
+                    <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-white/20" />
 
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-8">
                         <h2 className="text-2xl font-bold text-white">Version 2.2</h2>

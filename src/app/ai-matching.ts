@@ -1,6 +1,7 @@
 "use server";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GEMINI_MODEL_NAME } from "@/lib/ai-config";
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey || "");
@@ -16,7 +17,7 @@ export async function matchTravelersWithAI(rawNames: string[], candidates: { nam
     console.log(`[AI Match] Starting for ${rawNames.length} names:`, rawNames);
 
     const model = genAI.getGenerativeModel({
-        model: "gemini-pro", // Fallback to stable pro model
+        model: GEMINI_MODEL_NAME,
         generationConfig: { responseMimeType: "application/json" }
     });
 

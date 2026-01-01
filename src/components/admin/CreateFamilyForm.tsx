@@ -53,6 +53,17 @@ export default function CreateFamilyForm() {
                     </div>
 
                     <div>
+                        <label className="block text-sm font-medium text-neutral-400 mb-1">Account Email (Optional)</label>
+                        <input
+                            name="email"
+                            type="email"
+                            placeholder="e.g. real.email@example.com"
+                            className="w-full p-2 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-neutral-500"
+                        />
+                        <p className="text-xs text-neutral-500 mt-1">Used for password reset. If empty, uses username@travelroots.internal.</p>
+                    </div>
+
+                    <div>
                         <label className="block text-sm font-medium text-neutral-400 mb-1">Username Prefix</label>
                         <div className="flex items-center">
                             <input

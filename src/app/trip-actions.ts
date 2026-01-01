@@ -148,6 +148,42 @@ export async function removeTravelerFromTripAction(tripId: string, travelerToRem
     }
 }
 
+export async function addTravelerToTripAction(tripId: string, traveler: { id?: string, name: string }) {
+    try {
+        const user = await getCurrentUser();
+        const tripRef = db.collection("users").doc(user.uid).collection("trips").doc(tripId);
+        const tripDoc = await tripRef.get();
+
+        if (!tripDoc.exists) {
+            return { success: false, error: "Trip not found" };
+        }
+
+        const tripData = tripDoc.data();
+        const currentTravelers = tripData?.travelers || [];
+
+        // Check for duplicates
+        // We match strictly on ID if available, or name if ID is missing.
+        const exists = currentTravelers.some((t: any) => {
+            if (traveler.id && t.id) return t.id === traveler.id;
+            return t.name === traveler.name;
+        });
+
+        if (exists) {
+            return { success: false, error: "Traveler already in trip" };
+        }
+
+        const updatedTravelers = [...currentTravelers, traveler];
+
+        await tripRef.update({ travelers: updatedTravelers });
+        revalidatePath("/");
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error adding traveler:", error);
+        return { success: false, error: "Failed to add traveler" };
+    }
+}
+
 // --- Trip Group Actions ---
 
 // Helper to sanitize Firestore data (convert timestamps to strings, etc)

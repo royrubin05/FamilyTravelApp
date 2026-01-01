@@ -28,8 +28,9 @@ export default function EditFamilyModal({ family, isOpen, onClose, onUpdateSucce
 
         const displayName = formData.get("displayName") as string;
         const password = formData.get("password") as string;
+        const email = formData.get("email") as string;
 
-        const res = await updateFamily(family.uid, { displayName, password });
+        const res = await updateFamily(family.uid, { displayName, password, email });
 
         setLoading(false);
         if (res.success) {
@@ -70,6 +71,19 @@ export default function EditFamilyModal({ family, isOpen, onClose, onUpdateSucce
                                 defaultValue={family.displayName}
                                 className="w-full p-2 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-white transition-all"
                             />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-neutral-400 mb-1">Account Email</label>
+                            <input
+                                name="email"
+                                type="email"
+                                required
+                                defaultValue={family.email}
+                                placeholder="name@example.com"
+                                className="w-full p-2 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-white transition-all"
+                            />
+                            <p className="text-xs text-neutral-500 mt-1">Used for password resets. Must be unique.</p>
                         </div>
 
                         <div>

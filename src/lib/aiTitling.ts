@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GEMINI_MODEL_NAME } from "@/lib/ai-config";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -68,7 +69,7 @@ export async function generateTripTitles(trip: any) {
     `;
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", generationConfig: { responseMimeType: "application/json" } });
+        const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME, generationConfig: { responseMimeType: "application/json" } });
         const result = await model.generateContent(prompt);
         const text = result.response.text();
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SmartCard } from "@/components/journey/SmartCard";
-import { User, Home, Plane, Building, Ticket, Share2, Check, Copy, X, FolderOpen, Trash2, Terminal, Activity, Layers, ChevronRight, ChevronLeft, ArchiveRestore, Ban } from "lucide-react";
+import { User, Home, Plane, Building, Ticket, Share2, Check, Copy, X, FolderOpen, Trash2, Terminal, Activity, Layers, ChevronRight, ChevronLeft, ArchiveRestore, Ban, Plus } from "lucide-react";
 import { GlobalHeader } from "@/components/ui/GlobalHeader";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -12,7 +12,7 @@ import { getDestinationImage, GENERIC_FALLBACK, getNormalizedKeys } from "@/lib/
 import { getCheckInUrl } from "@/lib/airlineUtils";
 import { getStorageUrl } from "@/lib/storageUtils";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { removeTravelerFromTripAction, cancelTripAction } from "@/app/trip-actions";
+import { removeTravelerFromTripAction, cancelTripAction, addTravelerToTripAction } from "@/app/trip-actions";
 import { DebugPromptModal } from "@/components/ui/DebugPromptModal";
 import { getTripRouteTitle } from "@/lib/tripUtils";
 
@@ -142,12 +142,42 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
 
     const [travelerToRemove, setTravelerToRemove] = useState<{ id?: string, name: string } | null>(null);
 
+    const [isAddTravelerOpen, setIsAddTravelerOpen] = useState(false);
+
+    // Click outside handler for Add Traveler dropdown
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            if (!target.closest('.add-traveler-dropdown') && !target.closest('.add-traveler-trigger')) {
+                setIsAddTravelerOpen(false);
+            }
+        };
+
+        if (isAddTravelerOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isAddTravelerOpen]);
+
+
     const handleRemoveTraveler = async () => {
         if (!trip.id || !travelerToRemove) return;
         await removeTravelerFromTripAction(trip.id, travelerToRemove);
         setTravelerToRemove(null);
         router.refresh();
     };
+
+    const handleAddTraveler = async (member: any) => {
+        if (!trip.id) return;
+        await addTravelerToTripAction(trip.id, { id: member.id, name: member.name });
+        setIsAddTravelerOpen(false);
+        router.refresh();
+    };
+
+    // Derived available family members
+    const availableFamilyMembers = familyMembers.filter((m: any) => {
+        return !trip.travelers.some((t: any) => (t.id && t.id === m.id) || t.name === m.name);
+    });
 
     // Helper to get display name
     const getTravelerName = (t: any) => {
@@ -160,61 +190,14 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
         <div className="relative min-h-screen w-full bg-black text-white font-sans selection:bg-white/30 p-4 md:p-8 pb-20">
 
             {/* Background Image Layer */}
+            {/* Background Image Layer */}
             <div className="fixed inset-0 z-0">
-                {backgroundImage ? (
-                    <div
-                        className="absolute inset-0 bg-cover bg-center bg-fixed transition-all duration-700"
-                        style={{
-                            backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${backgroundImage})`
-                        }}
-                    />
-                ) : (
-                    <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {trip && (
-                            <img
-                                src={(() => {
-                                    // 1. Check dynamic images map first
-                                    if (destinationImages) {
-                                        const keys = getNormalizedKeys(trip.destination);
-                                        for (const key of keys) {
-                                            if (destinationImages[key]) return destinationImages[key];
-                                        }
-                                    }
-
-                                    // 2. Use trip image if valid
-                                    if (trip.image && !trip.image.includes("placehold.co")) {
-                                        return trip.image;
-                                    }
-
-                                    // 3. Fallback
-                                    return getDestinationImage(trip.destination);
-                                })()}
-                                alt={trip.destination}
-                                onError={(e) => {
-                                    const target = e.currentTarget;
-                                    let fallbackUrl = getDestinationImage(trip.destination);
-
-                                    // Check dynamic map first
-                                    if (destinationImages) {
-                                        const keys = getNormalizedKeys(trip.destination);
-                                        for (const key of keys) {
-                                            if (destinationImages[key]) fallbackUrl = destinationImages[key];
-                                        }
-                                    }
-
-                                    if (target.src.includes(fallbackUrl) || target.src === GENERIC_FALLBACK) {
-                                        if (target.src !== GENERIC_FALLBACK) target.src = GENERIC_FALLBACK;
-                                        return;
-                                    }
-                                    target.src = fallbackUrl;
-                                }}
-                                className="h-full w-full object-cover opacity-50"
-                            />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
-                    </>
-                )}
+                <div
+                    className="absolute inset-0 bg-cover bg-center bg-fixed transition-all duration-700"
+                    style={{
+                        backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${backgroundImage || "/images/backgrounds/bg-1766165588828.webp"})`
+                    }}
+                />
             </div>
 
             {/* Top Navigation */}
@@ -223,6 +206,13 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
             ) : (
                 <GlobalHeader
                     additionalMenuItems={isAuthenticated ? [
+                        {
+                            label: "View Source Docs",
+                            onClick: () => setIsDocsModalOpen(true),
+                            icon: <FolderOpen className="h-4 w-4" />,
+                            className: "text-neutral-800"
+                        },
+                        { type: 'separator' },
                         {
                             label: "Share Trip",
                             onClick: () => setIsEditTripModalOpen(true),
@@ -406,6 +396,38 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                                 <p className="font-serif text-xl mb-1">{hotel.name}</p>
                                                 <p className="text-sm text-white/60">{hotel.address}</p>
                                             </div>
+                                            {hotel.confirmation && (
+                                                <button
+                                                    onClick={() => handleCopyConfirmation(hotel.confirmation)}
+                                                    className="group/code relative bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 px-4 py-2 rounded-lg backdrop-blur-md transition-all text-left min-w-[140px]"
+                                                    title="Copy Hotel Confirmation"
+                                                >
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <p className="text-[10px] text-purple-400/60 uppercase tracking-widest leading-none mb-1">Confirmation</p>
+                                                            <p className="text-xl font-mono font-bold text-purple-300 tracking-wider">
+                                                                {hotel.confirmation}
+                                                            </p>
+                                                        </div>
+                                                        <div className="opacity-0 group-hover/code:opacity-100 transition-opacity ml-3 mt-1">
+                                                            {copiedConfirmation === hotel.confirmation ? (
+                                                                <Check className="h-4 w-4 text-purple-400" />
+                                                            ) : (
+                                                                <Copy className="h-4 w-4 text-purple-400/50" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {copiedConfirmation === hotel.confirmation && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 5 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-purple-400 text-xs px-2 py-1 rounded whitespace-nowrap"
+                                                        >
+                                                            Copied!
+                                                        </motion.div>
+                                                    )}
+                                                </button>
+                                            )}
                                         </div>
                                         <div className="mt-6 flex gap-8 text-sm">
                                             <div>
@@ -455,9 +477,11 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                     <User className="h-5 w-5" />
                                     <h3 className="text-sm font-bold uppercase tracking-widest">Travelers</h3>
                                 </div>
-                                <div className="flex flex-wrap gap-4">
+                                <div className="flex flex-wrap gap-4 items-center">
                                     {trip.travelers.map((traveler: any, idx: number) => {
                                         const displayName = getTravelerName(traveler);
+                                        const canDelete = trip.travelers.length > 1; // Minimum 1 traveler rule
+
                                         return (
                                             <div key={idx} className="group relative flex items-center gap-3 bg-white/10 rounded-full pl-2 pr-4 py-2 border border-white/5 transition-colors hover:border-white/20 select-none">
                                                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold">
@@ -468,7 +492,7 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                                 </div>
 
                                                 {/* Remove Button (Hover only) - Auth only */}
-                                                {!isPublicView && (
+                                                {!isPublicView && canDelete && (
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
@@ -483,6 +507,47 @@ export default function TripContent({ destinationImages, initialTrip, familyMemb
                                             </div>
                                         );
                                     })}
+
+                                    {/* Add Traveler Button - Stylized Dropdown */}
+                                    {!isPublicView && isAuthenticated && availableFamilyMembers.length > 0 && (
+                                        <div className="relative group">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setIsAddTravelerOpen(!isAddTravelerOpen); }}
+                                                className={`add-traveler-trigger h-10 w-10 round-full flex items-center justify-center transition-all rounded-full ${isAddTravelerOpen ? 'bg-white text-black rotate-45' : 'bg-white/5 hover:bg-white/10 text-white/50 hover:text-white border border-white/5 hover:border-white/20'}`}
+                                            >
+                                                <Plus className="h-5 w-5" />
+                                            </button>
+
+                                            <AnimatePresence>
+                                                {isAddTravelerOpen && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.95 }}
+                                                        className="add-traveler-dropdown absolute left-0 top-full mt-2 w-56 bg-white text-black rounded-xl shadow-2xl overflow-hidden z-50 border border-neutral-200"
+                                                    >
+                                                        <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-400 border-b border-neutral-100 bg-neutral-50">
+                                                            Add Family Member
+                                                        </div>
+                                                        <div className="max-h-60 overflow-y-auto">
+                                                            {availableFamilyMembers.map((member: any) => (
+                                                                <button
+                                                                    key={member.id}
+                                                                    onClick={() => handleAddTraveler(member)}
+                                                                    className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-neutral-100 transition-colors group border-b border-neutral-50 last:border-0"
+                                                                >
+                                                                    <div className="h-8 w-8 rounded-full bg-neutral-100 flex items-center justify-center text-xs font-bold text-neutral-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                                                        {member.name[0]}
+                                                                    </div>
+                                                                    <span className="text-sm font-medium text-neutral-700 group-hover:text-black">{member.name}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    )}
                                 </div>
                             </section>
                         )

@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 // import { loginAction } from "@/app/actions";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase-config";
-import { createSession } from "@/app/auth-actions";
+import { createUserSession } from "@/app/auth-actions";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, LogIn, X } from "lucide-react";
 
@@ -36,12 +36,14 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
         try {
             // 1. Sanitize Input
-            let cleanUsername = username.trim();
+            let cleanUsername = username.trim().toLowerCase();
             let email = cleanUsername;
 
-            // If input does not look like an email, append internal domain
+            // If input does not look like an email, lookup actual email
             if (!cleanUsername.includes("@")) {
-                email = `${cleanUsername}@travelroots.internal`;
+                const { lookupUserEmail } = await import("@/app/auth-actions");
+                const foundEmail = await lookupUserEmail(cleanUsername);
+                email = foundEmail || `${cleanUsername}@travelroots.internal`;
             }
 
             // 2. Client-Side Login
@@ -49,7 +51,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             const idToken = await userCredential.user.getIdToken();
 
             // 3. Exchange Token for Session Cookie
-            const result = await createSession(idToken);
+            const result = await createUserSession(idToken);
 
             if (result.success) {
                 // Force hard reload to update middleware state and load dashboard

@@ -13,6 +13,42 @@ export type Trip = {
     [key: string]: any;
 };
 
+// --- Normalization Helpers ---
+
+// Helper: Normalize Destination (Simple Fuzzy Match)
+export async function normalizeDestination(input: string, existing: string[]): Promise<string> {
+    if (!input || typeof input !== 'string') return input || "";
+    const lowerInput = input.toLowerCase();
+    // Exact match (case insensitive)
+    const exact = existing.find(e => e.toLowerCase() === lowerInput);
+    if (exact) return exact;
+
+    // Partial match fallback could go here
+    return input;
+}
+
+// Helper: Normalize Travelers (AI Matching)
+export async function normalizeTravelers(travelers: any[], members: any[]): Promise<string[]> {
+    if (!travelers || travelers.length === 0) return [];
+    if (!members || members.length === 0) return travelers.map(t => typeof t === 'string' ? t : (t?.name || JSON.stringify(t)));
+
+    // Extract raw strings from mixed input
+    const rawNames = travelers.map(t => {
+        if (typeof t === 'string') return t;
+        if (typeof t === 'object' && t !== null && t.name) return t.name;
+        return String(t);
+    });
+
+    try {
+        // Dynamic import to avoid circular dependencies if any
+        const { matchTravelersWithAI } = await import("@/app/ai-matching");
+        return await matchTravelersWithAI(rawNames, members);
+    } catch (error) {
+        console.error("Failed to match travelers with AI, falling back to raw names:", error);
+        return rawNames;
+    }
+}
+
 // Extract code from string like "Dec 25 10:00 (JFK)" -> "JFK"
 function extractCode(str: string): string | null {
     if (!str) return null;
@@ -144,22 +180,22 @@ export function getTripRouteTitle(trip: Trip): string {
 export function getTripIcon(trip: any): string {
     const topology = trip.ai_summary?.topology || "";
 
-    // 1. AI Topology Match
+    const flights = trip.flights || [];
+    const hotels = trip.hotels || [];
+
+    // 1. Prioritize Hotel Only (No Flights + Has Hotels) -> Hotel Icon
+    if (flights.length === 0 && hotels.length > 0) {
+        return "/icons/hotel.jpg";
+    }
+
+    // 2. AI Topology Match
     if (topology === "One Way") return "/icons/one-way.jpg";
     if (topology === "Round Trip") return "/icons/round-trip.jpg";
     if (topology === "Multi-City" || topology === "Open Jaw") return "/icons/multi-city.jpg";
 
-    // 2. Fallback Inference
-    const flights = trip.flights || [];
-    const hotels = trip.hotels || [];
-
-    // Logic:
-    // No flights, but has hotels -> Hotel Trip
-    // No flights, no hotels -> Generic
-    // Flights exist -> Check topology (One Way vs Round Trip vs Multi)
-
+    // 3. Fallback Inference
     if (flights.length === 0) {
-        return hotels.length > 0 ? "/icons/hotel.jpg" : "/icons/generic.jpg";
+        return "/icons/generic.jpg";
     }
 
     if (flights.length === 1) return "/icons/one-way.jpg";

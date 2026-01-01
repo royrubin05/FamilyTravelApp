@@ -1,5 +1,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GEMINI_MODEL_NAME } from "@/lib/ai-config";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -92,28 +93,58 @@ Rules:
 export async function parseTripWithGemini(fileBuffer: Buffer, mimeType: string, familyMembers: any[] = []) {
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: GEMINI_MODEL_NAME,
       systemInstruction: PROMPT_SYSTEM_INSTRUCTION
     });
 
     const knownTravelers = familyMembers.map(m => m.name).join(", ");
-    const prompt = `Extract trip details from this document.${knownTravelers ? `\n\nContext - Known Family Travelers: ${knownTravelers}` : ""}`;
+    let prompt = `Extract trip details from this document.${knownTravelers ? `\n\nContext - Known Family Travelers: ${knownTravelers}` : ""}
+    
+    CRITICAL INSTRUCTION: ONLY list travelers that are EXPLICITLY named in the document. 
+    - Do NOT assume all family members are traveling. 
+    - If the document only says "Roy", do NOT include "Maya".
+    - If no travelers are listed, return an empty array.`;
+    let parts: any[] = [prompt];
 
-    // Convert Buffer to Base64
-    const filePart = {
-      inlineData: {
-        data: fileBuffer.toString("base64"),
-        mimeType: mimeType
-      },
-    };
+    // Handle Text/HTML content directly in prompt to avoid "InlineData not supported for text" errors
+    if (mimeType === "text/plain" || mimeType === "text/html") {
+      const textContent = fileBuffer.toString("utf-8");
+      parts = [prompt, `\n\n[DOCUMENT CONTENT START]\n${textContent}\n[DOCUMENT CONTENT END]`];
+    } else {
+      // Binary/PDF content
+      const filePart = {
+        inlineData: {
+          data: fileBuffer.toString("base64"),
+          mimeType: mimeType
+        },
+      };
+      parts.push(filePart);
+    }
 
-    const result = await model.generateContent([prompt, filePart]);
+    const result = await model.generateContent(parts);
     const response = await result.response;
     const text = response.text();
 
     // Clean up markdown if present
     const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
     const tripData = JSON.parse(jsonStr);
+
+    // --- STRICT VALIDATION ---
+    // Prevent "Unknown" destinations from junk emails being created as trips
+    const dest = tripData.destination;
+    if (!dest ||
+      typeof dest !== 'string' ||
+      dest.trim().toLowerCase() === "unknown" ||
+      dest.trim().toLowerCase() === "city, country" ||
+      dest.length < 3
+    ) {
+      return {
+        success: false,
+        error: "Parsing Validation Failed: No valid destination found (AI returned '" + dest + "'). Likely not a trip confirmation.",
+        debugPrompt: `System: ${PROMPT_SYSTEM_INSTRUCTION}\n\nUser: ${prompt}\n\n[Attached File: ${mimeType} (${fileBuffer.length} bytes)]`,
+        debugResponse: text
+      };
+    }
 
     return {
       success: true,

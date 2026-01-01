@@ -10,17 +10,9 @@ import { cookies } from "next/headers";
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+// DEPRECATED: Use src/app/auth-actions.ts
 export async function loginAction(email: string, pass: string) {
-  if (email === "roy.rubin@gmail.com" && pass === "123123") {
-    (await cookies()).set("auth_session", "valid", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: "/",
-    });
-    return { success: true };
-  }
-  return { success: false, error: "Invalid credentials" };
+  return { success: false, error: "Legacy login disabled. Please use the new client-side login flow." };
 }
 
 export async function logoutAction() {
@@ -132,8 +124,22 @@ export async function parseTripDocument(formData: FormData) {
       }
     }
 
-    // 3.5 Normalize Travelers - REMOVED (Now handled by Single-Shot AI Call)
-    // The Gemini 2.0 Flash call above now includes family context and performs matching directly.
+    // 3.5 Normalize Travelers (AI Post-Processing)
+    // We explicitly call this to ensure names match the defined family members list.
+    if (familyMembers.length > 0 && tripData.travelers && tripData.travelers.length > 0) {
+      console.log("[Server] Normalizing travelers against family list...");
+      const normalizedNames = await normalizeTravelers(tripData.travelers, familyMembers);
+
+      // Update tripData with normalized names (preserving role/age defaults if they were objects, but normalization returns strings mostly)
+      // The AI matching returns a string array of names. We need to map them back to objects if needed, 
+      // or just replace the list. The current `tripData.travelers` is likely mixed objects/strings.
+      // Let's rely on the AI output which gives us the canonical names.
+      tripData.travelers = normalizedNames.map(name => ({
+        name,
+        role: "Adult", // Default, or could imply from original if complex matching used
+        age: "Adult"
+      }));
+    }
 
     // 4. Save to Firestore
     const { saveTrip, logUploadAttempt } = await import("@/app/trip-actions");

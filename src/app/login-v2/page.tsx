@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase-config";
-import { createSession } from "@/app/auth-actions";
+import { createUserSession } from "@/app/auth-actions";
+import Link from "next/link";
 import Image from "next/image";
 
 export default function LoginV2Page() {
@@ -24,9 +25,12 @@ export default function LoginV2Page() {
             let cleanUsername = username.trim();
             let email = cleanUsername;
 
-            // If input does not look like an email, append internal domain
+            // If input does not look like an email, lookup actual email
             if (!cleanUsername.includes("@")) {
-                email = `${cleanUsername}@travelroots.internal`;
+                const { lookupUserEmail } = await import("@/app/auth-actions");
+                const foundEmail = await lookupUserEmail(cleanUsername);
+                // Fallback to internal domain only if lookup fails (legacy behavior)
+                email = foundEmail || `${cleanUsername}@travelroots.internal`;
             }
 
             console.log("Attempting login with:", email);
@@ -36,7 +40,7 @@ export default function LoginV2Page() {
             const idToken = await userCredential.user.getIdToken();
 
             // 3. Exchange Token for Session Cookie
-            const result = await createSession(idToken);
+            const result = await createUserSession(idToken); // Use NEW Server Action
 
             if (result.success) {
                 // Redirect to dashboard
@@ -67,8 +71,6 @@ export default function LoginV2Page() {
             <div className="w-full max-w-sm bg-neutral-900/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8 relative z-10">
                 <div className="flex flex-col items-center mb-8">
                     <div className="relative h-16 w-full mb-6 flex justify-center">
-                        {/* Use brightness-0 invert if the logo is black, or just standard if it's already white adapted. 
-                             Assuming v3 is colored/white or we force white via filter. */}
                         <Image
                             src="/images/travelroots-logo-v3.png"
                             alt="TravelRoots"
@@ -98,7 +100,12 @@ export default function LoginV2Page() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-xs font-bold text-white/60 uppercase tracking-widest pl-1">Password</label>
+                        <div className="flex justify-between items-center">
+                            <label className="block text-xs font-bold text-white/60 uppercase tracking-widest pl-1">Password</label>
+                            <Link href="/reset-password" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
+                                Forgot Password?
+                            </Link>
+                        </div>
                         <input
                             type="password"
                             value={password}

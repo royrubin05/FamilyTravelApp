@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User, Edit2, AlertTriangle, LogOut, Settings, Shield, ArchiveRestore, RefreshCw, Calendar, Ban } from "lucide-react";
+import { X, Image as ImageIcon, Layout, Loader2, Upload, Trash2, User, Edit2, AlertTriangle, LogOut, Settings, Shield, ArchiveRestore, RefreshCw, Calendar, Ban, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef } from "react";
 import { uploadBackgroundImage, removeBackgroundImage } from "@/app/settings-actions";
@@ -18,7 +18,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettings }: SettingsModalProps) {
-    const [activeSection, setActiveSection] = useState<"general" | "appearance" | "members" | "cancelled">("general");
+    const [activeSection, setActiveSection] = useState<"general" | "appearance" | "members" | "emails" | "cancelled">("general");
     const [isUploading, setIsUploading] = useState(false);
     const router = useRouter();
 
@@ -30,6 +30,9 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
     const [newMemberName, setNewMemberName] = useState("");
     const [newMemberNickname, setNewMemberNickname] = useState("");
     const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+    const [newEmail, setNewEmail] = useState("");
+    const [linkEmailError, setLinkEmailError] = useState<string | null>(null);
+    const [isEmailLoading, setIsEmailLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -179,6 +182,51 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
         }
     };
 
+    const handleAddEmail = async () => {
+        if (!newEmail.trim()) return;
+        setIsEmailLoading(true);
+
+        try {
+            const { addForwardingEmail } = await import("@/app/settings-actions");
+            const res = await addForwardingEmail(newEmail);
+
+            if (res.success) {
+                // Optimistic Update
+                const currentEmails = (currentSettings as any).forwardingEmails || [];
+                onUpdateSettings({
+                    ...currentSettings,
+                    forwardingEmails: [...currentEmails, newEmail.trim().toLowerCase()]
+                });
+                setNewEmail("");
+                setLinkEmailError(null);
+            } else {
+                setLinkEmailError(res.error || "Failed to add email");
+            }
+        } catch (error) {
+            console.error("Failed to add email", error);
+        } finally {
+            setIsEmailLoading(false);
+        }
+    };
+
+    const handleRemoveEmail = async (email: string) => {
+        if (!confirm(`Remove ${email} from your linked emails? Trips forwarded from this address will no longer be imported.`)) return;
+
+        try {
+            // Optimistic Update
+            const currentEmails = (currentSettings as any).forwardingEmails || [];
+            onUpdateSettings({
+                ...currentSettings,
+                forwardingEmails: currentEmails.filter((e: string) => e !== email)
+            });
+
+            const { removeForwardingEmail } = await import("@/app/settings-actions");
+            await removeForwardingEmail(email);
+        } catch (error) {
+            console.error("Failed to remove email", error);
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -228,6 +276,16 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
                             <User className="h-4 w-4" />
                             Family Members
                         </button>
+                        <button
+                            onClick={() => setActiveSection("emails")}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "emails"
+                                ? "bg-white/10 text-white"
+                                : "text-white/50 hover:text-white hover:bg-white/5"
+                                }`}
+                        >
+                            <Mail className="h-4 w-4" />
+                            Linked Emails
+                        </button>
 
 
 
@@ -236,12 +294,12 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
                         <div className="h-px bg-white/10 my-2 mx-3" />
                         <button
                             onClick={async () => {
-                                const { logoutSession } = await import("@/app/auth-actions");
+                                const { logoutUser } = await import("@/app/auth-actions");
                                 const { signOut } = await import("firebase/auth");
                                 const { auth } = await import("@/lib/firebase-config");
 
                                 await signOut(auth); // Client Logout
-                                await logoutSession(); // Server Cookie Logout
+                                await logoutUser(); // Server Cookie Logout
                                 window.location.href = "/login-v2";
                             }}
                             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-colors group"
@@ -364,6 +422,77 @@ export function SettingsModal({ isOpen, onClose, currentSettings, onUpdateSettin
                                         <p className="mt-3 text-xs text-white/40">
                                             Recommended size: 1920x1080 or larger. Supported formats: JPG, PNG, WebP.
                                         </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === "emails" && (
+                            <div className="p-8 max-w-2xl">
+                                <h3 className="text-xl font-serif mb-6">Linked Emails</h3>
+
+                                <div className="space-y-6">
+                                    <div className="bg-black/20 border border-white/5 rounded-xl p-6">
+                                        <h4 className="text-sm font-bold uppercase tracking-widest text-white/70 mb-4">Email Forwarding</h4>
+                                        <p className="text-sm text-white/60 mb-6 leading-relaxed">
+                                            Link your personal email addresses here. When you forward travel confirmations (flights, hotels) from these addresses to <span className="text-white font-mono bg-white/10 px-1 rounded">mytravelroot@gmail.com</span>, they will be automatically added to your dashboard.
+                                        </p>
+
+
+                                        <div className="flex flex-col gap-2 mb-6">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="email"
+                                                    value={newEmail}
+                                                    onChange={(e) => {
+                                                        setNewEmail(e.target.value);
+                                                        setLinkEmailError(null);
+                                                    }}
+                                                    placeholder="name@example.com"
+                                                    className={`flex-1 bg-white/5 border rounded-lg px-4 py-2 text-white placeholder:text-white/20 focus:outline-none ${linkEmailError ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-white/30'}`}
+                                                    onKeyDown={(e) => e.key === 'Enter' && handleAddEmail()}
+                                                />
+                                                <button
+                                                    onClick={handleAddEmail}
+                                                    disabled={!newEmail.trim() || isEmailLoading}
+                                                    className="px-4 py-2 bg-white text-black font-bold rounded-lg hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    {isEmailLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add"}
+                                                </button>
+                                            </div>
+                                            {linkEmailError && (
+                                                <p className="text-red-400 text-xs ml-1 flex items-center gap-1.5">
+                                                    <AlertTriangle className="h-3 w-3" />
+                                                    {linkEmailError}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {((currentSettings as any).forwardingEmails || []).map((email: string) => (
+                                                <div key={email} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-lg group hover:bg-white/10 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-white/5 rounded-lg text-white/50">
+                                                            <Mail className="h-4 w-4" />
+                                                        </div>
+                                                        <span className="text-sm font-medium text-white">{email}</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleRemoveEmail(email)}
+                                                        className="p-2 text-white/40 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all"
+                                                        title="Remove email"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+
+                                            {(!currentSettings as any).forwardingEmails?.length && (
+                                                <div className="text-center py-8 text-white/30 text-sm border border-dashed border-white/10 rounded-lg">
+                                                    No linked emails yet. Add one to start forwarding trips.
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
