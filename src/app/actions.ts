@@ -116,7 +116,7 @@ export async function parseTripDocument(formData: FormData) {
 
     // Construct trip object
     // Ensure we have an ID
-    const tripId = `${tripData.destination.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-${new Date().getFullYear()}`;
+    const tripId = `${tripData.destination.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-${new Date().getFullYear()}-${Date.now()}`;
 
     const newTrip = {
       id: tripId,

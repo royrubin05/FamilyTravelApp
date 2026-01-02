@@ -24,6 +24,17 @@ export async function getTrips() {
     }
 }
 
+export async function getTrip(id: string) {
+    try {
+        const doc = await db.collection("trips").doc(id).get();
+        if (!doc.exists) return null;
+        return { id: doc.id, ...doc.data() };
+    } catch (error) {
+        console.error("Error fetching trip:", error);
+        return null;
+    }
+}
+
 export async function saveTrip(newTrip: any) {
     try {
         // 1. Check for Exact ID Match (Update existing)
